@@ -7,6 +7,7 @@ from datetime import date, datetime
 from sqlalchemy import (
     UUID,
     BigInteger,
+    Boolean,
     Date,
     DateTime,
     Float,
@@ -214,6 +215,11 @@ class TeacherProduct(TimestampMixin, Base):
     type: Mapped[TeacherType] = mapped_column(  # noqa: A003
         ChoiceType(TeacherType, impl=String(16)),
         default=TeacherType.MENTOR,
+        nullable=False,
+    )
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
         nullable=False,
     )
     max_students: Mapped[int] = mapped_column(Integer, default=100, nullable=False)

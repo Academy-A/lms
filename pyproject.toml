@@ -18,10 +18,12 @@ asyncpg = "^0.28.0"
 loguru = "^0.7.0"
 sqlalchemy-utils = "^0.41.1"
 httpx = "^0.24.1"
+python-jose = "^3.3.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.3.3"
 mypy = "^1.5.1"
+types-python-jose = "^3.3.4.8"
 
 [build-system]
 requires = ["poetry-core"]
@@ -54,7 +56,21 @@ ignore_missing_imports = true
 [tool.ruff]
 select = ["ALL"]
 ignore = [
-    "D100", "D101", "D102", "D103", "D104", "D105","D107", "D211", "D212", "ANN101", "PLR0913", "ARG001", "ARG005", "RUF001","TCH003"
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    "D105",
+    "D107",
+    "D211",
+    "D212",
+    "ANN101",
+    "PLR0913",
+    "ARG001",
+    "ARG005",
+    "RUF001",
+    "TCH003",
 ]
 fixable = ["ALL"]
 line-length = 90

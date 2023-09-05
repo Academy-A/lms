@@ -6,6 +6,9 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Insperia LMS"
     DEBUG: bool = False
 
+    SECRET_KEY: str
+    SECURITY_ALGORITHM: str = "HS256"
+
     POSTGRES_HOST: str
     POSTGRES_PORT: int
     POSTGRES_USER: str

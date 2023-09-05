@@ -1,17 +1,22 @@
 from fastapi import APIRouter, BackgroundTasks, Depends
 
 from src.api.deps import DatabaseProviderMarker
+from src.api.services import token_required
 from src.api.v1.schemas import StatusResponseSchema
 from src.api.v1.student.schemas import (
     EnrollStudentSchema,
     ExpulsionStudentSchema,
     ReadStudentProductSchema,
 )
+from src.clients.autopilot import send_teacher_to_autopilot
 from src.db.provider import DatabaseProvider
 from src.exceptions import StudentNotFoundError, StudentProductNotFoundError
-from src.services.autopilot import send_teacher_to_autopilot
 
-router = APIRouter(prefix="/students", tags=["Students"])
+router = APIRouter(
+    prefix="/students",
+    tags=["Students"],
+    dependencies=[Depends(token_required)],
+)
 
 
 @router.post("/")

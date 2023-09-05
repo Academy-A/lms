@@ -26,18 +26,30 @@ def upgrade() -> None:
         sa.Column("name", sa.String(length=256), nullable=False),
         sa.Column("eng_name", sa.String(length=256), nullable=False),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False,
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.Column(
-            "updated_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False,
+            "updated_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk__product_group")),
     )
     op.create_index(
-        op.f("ix__product_group__eng_name"), "product_group", ["eng_name"], unique=False,
+        op.f("ix__product_group__eng_name"),
+        "product_group",
+        ["eng_name"],
+        unique=False,
     )
     op.create_index(
-        op.f("ix__product_group__name"), "product_group", ["name"], unique=False,
+        op.f("ix__product_group__name"),
+        "product_group",
+        ["name"],
+        unique=False,
     )
     op.create_table(
         "setting",
@@ -46,10 +58,16 @@ def upgrade() -> None:
         sa.Column("value", sa.String(length=2048), nullable=False),
         sa.Column("description", sa.String(length=512), nullable=False),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False,
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.Column(
-            "updated_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False,
+            "updated_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk__setting")),
     )
@@ -61,10 +79,16 @@ def upgrade() -> None:
         sa.Column("first_name", sa.String(length=128), nullable=False),
         sa.Column("last_name", sa.String(length=128), nullable=False),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False,
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.Column(
-            "updated_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False,
+            "updated_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk__student")),
         sa.UniqueConstraint("vk_id", name=op.f("uq__student__vk_id")),
@@ -77,10 +101,16 @@ def upgrade() -> None:
         sa.Column("autopilot_url", sa.String(length=1024), nullable=True),
         sa.Column("group_vk_link", sa.String(length=1024), nullable=False),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False,
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.Column(
-            "updated_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False,
+            "updated_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk__subject")),
     )
@@ -93,10 +123,16 @@ def upgrade() -> None:
         sa.Column("first_name", sa.String(length=128), nullable=False),
         sa.Column("last_name", sa.String(length=128), nullable=False),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False,
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.Column(
-            "updated_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False,
+            "updated_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk__teacher")),
     )
@@ -108,10 +144,16 @@ def upgrade() -> None:
         sa.Column("subject_id", sa.Integer(), nullable=False),
         sa.Column("product_group_id", sa.Integer(), nullable=False),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False,
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.Column(
-            "updated_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False,
+            "updated_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.ForeignKeyConstraint(
             ["product_group_id"],
@@ -133,7 +175,10 @@ def upgrade() -> None:
         unique=False,
     )
     op.create_index(
-        op.f("ix__product__subject_id"), "product", ["subject_id"], unique=False,
+        op.f("ix__product__subject_id"),
+        "product",
+        ["subject_id"],
+        unique=False,
     )
     op.create_table(
         "soho",
@@ -141,10 +186,16 @@ def upgrade() -> None:
         sa.Column("mail", sa.String(length=128), nullable=False),
         sa.Column("student_id", sa.BigInteger(), nullable=False),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False,
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.Column(
-            "updated_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False,
+            "updated_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.ForeignKeyConstraint(
             ["student_id"],
@@ -164,20 +215,31 @@ def upgrade() -> None:
         sa.Column("cohort", sa.Integer(), nullable=False),
         sa.Column("teacher_type", sa.String(length=16), nullable=True),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False,
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.Column(
-            "updated_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False,
+            "updated_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.ForeignKeyConstraint(
-            ["product_id"], ["product.id"], name=op.f("fk__offer__product_id__product"),
+            ["product_id"],
+            ["product.id"],
+            name=op.f("fk__offer__product_id__product"),
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk__offer")),
         sa.UniqueConstraint("name", name=op.f("uq__offer__name")),
     )
     op.create_index(op.f("ix__offer__cohort"), "offer", ["cohort"], unique=False)
     op.create_index(
-        op.f("ix__offer__product_id"), "offer", ["product_id"], unique=False,
+        op.f("ix__offer__product_id"),
+        "offer",
+        ["product_id"],
+        unique=False,
     )
     op.create_table(
         "teacher_product",
@@ -185,14 +247,21 @@ def upgrade() -> None:
         sa.Column("teacher_id", sa.Integer(), nullable=False),
         sa.Column("product_id", sa.Integer(), nullable=False),
         sa.Column("type", sa.String(length=16), nullable=False),
+        sa.Column("is_active", sa.Boolean(), nullable=False),
         sa.Column("max_students", sa.Integer(), nullable=False),
         sa.Column("average_rate", sa.Float(), nullable=False),
         sa.Column("rate_counter", sa.Integer(), nullable=False),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False,
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.Column(
-            "updated_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False,
+            "updated_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.ForeignKeyConstraint(
             ["product_id"],
@@ -231,10 +300,16 @@ def upgrade() -> None:
         sa.Column("teacher_rate_date", sa.Date(), nullable=False),
         sa.Column("expulsion_at", sa.DateTime(), nullable=False),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False,
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.Column(
-            "updated_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False,
+            "updated_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.ForeignKeyConstraint(
             ["offer_id"],
@@ -259,7 +334,10 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id", name=op.f("pk__student_product")),
     )
     op.create_index(
-        op.f("ix__student_product__cohort"), "student_product", ["cohort"], unique=False,
+        op.f("ix__student_product__cohort"),
+        "student_product",
+        ["cohort"],
+        unique=False,
     )
     op.create_index(
         op.f("ix__student_product__expulsion_at"),
@@ -300,10 +378,16 @@ def upgrade() -> None:
         sa.Column("assignment_at", sa.DateTime(), nullable=False),
         sa.Column("removed_at", sa.DateTime(), nullable=True),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False,
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.Column(
-            "updated_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False,
+            "updated_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.ForeignKeyConstraint(
             ["product_id"],
@@ -354,17 +438,20 @@ def downgrade() -> None:
         table_name="teacher_assignment",
     )
     op.drop_index(
-        op.f("ix__teacher_assignment__product_id"), table_name="teacher_assignment",
+        op.f("ix__teacher_assignment__product_id"),
+        table_name="teacher_assignment",
     )
     op.drop_table("teacher_assignment")
     op.drop_index(
-        op.f("ix__student_product__teacher_product_id"), table_name="student_product",
+        op.f("ix__student_product__teacher_product_id"),
+        table_name="student_product",
     )
     op.drop_index(op.f("ix__student_product__student_id"), table_name="student_product")
     op.drop_index(op.f("ix__student_product__product_id"), table_name="student_product")
     op.drop_index(op.f("ix__student_product__offer_id"), table_name="student_product")
     op.drop_index(
-        op.f("ix__student_product__expulsion_at"), table_name="student_product",
+        op.f("ix__student_product__expulsion_at"),
+        table_name="student_product",
     )
     op.drop_index(op.f("ix__student_product__cohort"), table_name="student_product")
     op.drop_table("student_product")
