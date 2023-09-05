@@ -37,12 +37,12 @@ class Student(TimestampMixin, Base):
         secondary="student_product",
     )
 
-    soho: Mapped[Soho] = relationship("Soho", back_populates="studnet", uselist=False)
+    soho: Mapped[Soho] = relationship("Soho", back_populates="student", uselist=False)
 
 
 class Soho(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    mail: Mapped[str] = mapped_column(String(128), unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(String(128), unique=True, nullable=False)
     student_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("student.id", ondelete="CASCADE"),
@@ -70,6 +70,8 @@ class ProductGroup(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(256), nullable=False, index=True)
     eng_name: Mapped[str] = mapped_column(String(256), nullable=False, index=True)
+
+    products: Mapped[list[Product]] = relationship("Product")
 
 
 class Product(TimestampMixin, Base):
@@ -223,7 +225,7 @@ class TeacherProduct(TimestampMixin, Base):
         nullable=False,
     )
     max_students: Mapped[int] = mapped_column(Integer, default=100, nullable=False)
-    average_rate: Mapped[int] = mapped_column(Float, default=0, nullable=False)
+    average_rate: Mapped[int] = mapped_column(Float, default=5, nullable=False)
     rate_counter: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     fullness: Mapped[float] = column_property(
@@ -289,15 +291,6 @@ class TeacherProduct(TimestampMixin, Base):
             ],
             else_=average_rate * (1 - fullness.expression) * removability.expression,
         ),
-    )
-
-    teacher: Mapped[Teacher] = relationship(
-        "Teacher",
-        back_populates="teacher_products",
-    )
-    product: Mapped[Product] = relationship(
-        "Product",
-        back_populates="teacher_products",
     )
 
     @property

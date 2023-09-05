@@ -183,7 +183,7 @@ def upgrade() -> None:
     op.create_table(
         "soho",
         sa.Column("id", sa.BigInteger(), nullable=False),
-        sa.Column("mail", sa.String(length=128), nullable=False),
+        sa.Column("email", sa.String(length=128), nullable=False),
         sa.Column("student_id", sa.BigInteger(), nullable=False),
         sa.Column(
             "created_at",

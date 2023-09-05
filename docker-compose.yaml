@@ -30,6 +30,7 @@ services:
       REDIS_DB: ${REDIS_DB}
 
       SOHO_API_TOKEN: ${SOHO_API_TOKEN}
+      SECRET_KEY: ${SECRET_KEY}
 
     ports:
       - 8000:8000
