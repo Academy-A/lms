@@ -1,6 +1,6 @@
 import uuid
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class CreateStudentSchema(BaseModel):
@@ -24,10 +24,11 @@ class ExpulsionStudentSchema(BaseModel):
 class ReadStudentSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    id: int
     first_name: str
     last_name: str
     vk_id: int
-    email: str
+    email: EmailStr
 
 
 class ReadStudentProductSchema(BaseModel):

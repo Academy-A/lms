@@ -7,6 +7,7 @@ from src.api.v1.student.schemas import (
     EnrollStudentSchema,
     ExpulsionStudentSchema,
     ReadStudentProductSchema,
+    ReadStudentSchema,
 )
 from src.clients.autopilot import send_teacher_to_autopilot
 from src.db.provider import DatabaseProvider
@@ -84,4 +85,19 @@ async def expulsion_student_route(
         ok=True,
         status_code=200,
         message="Student was expelled",
+    )
+
+
+@router.get(
+    "/{student_id}",
+    response_model=ReadStudentSchema,
+    responses={203: {"model": StatusResponseSchema}},
+)
+async def read_student_by_id(student_id: int) -> ReadStudentSchema:
+    return ReadStudentSchema(
+        id=student_id,
+        first_name="sergey",
+        last_name="natalenko",
+        vk_id=1,
+        email="asdf@asdf.ru",
     )
