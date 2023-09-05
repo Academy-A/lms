@@ -34,7 +34,6 @@ class ReadStudentProductSchema(BaseModel):
 
     student_id: int
     product_id: int
-    mentor_id: int | None
-    curator_id: int | None
+    teacher_product_id: int | None
     offer_id: int | None
     cohort: int

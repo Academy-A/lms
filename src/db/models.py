@@ -141,12 +141,6 @@ class TeacherAssignment(TimestampMixin, Base):
         index=True,
         nullable=False,
     )
-    product_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("product.id"),
-        index=True,
-        nullable=False,
-    )
     assignment_at: Mapped[datetime] = mapped_column(
         DateTime(),
         default=datetime.now,
@@ -192,10 +186,14 @@ class StudentProduct(TimestampMixin, Base):
         nullable=False,
     )
     cohort: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
-    teacher_rate: Mapped[int] = mapped_column(Integer, default=0)
-    teacher_rate_date: Mapped[date] = mapped_column(Date, default=None)
-
-    expulsion_at: Mapped[datetime] = mapped_column(DateTime, default=None, index=True)
+    teacher_rate: Mapped[int] = mapped_column(Integer, default=None, nullable=True)
+    teacher_rate_date: Mapped[date] = mapped_column(Date, default=None, nullable=True)
+    expulsion_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=None,
+        index=True,
+        nullable=True,
+    )
 
 
 class TeacherProduct(TimestampMixin, Base):
@@ -228,23 +226,22 @@ class TeacherProduct(TimestampMixin, Base):
 
     fullness: Mapped[float] = column_property(
         select(
-            func.count(TeacherAssignment.student_product_id).label("active_students"),
+            func.count(TeacherAssignment.student_product_id),
         )
-        .select_from(
-            select(TeacherAssignment)
-            .filter(
-                TeacherAssignment.removed_at.is_(None),
-                TeacherAssignment.teacher_product_id == id,
-            )
-            .group_by(TeacherAssignment.student_product_id)
-            .subquery(),
+        .select_from(TeacherAssignment)
+        .where(
+            TeacherAssignment.removed_at.is_(None),
+            TeacherAssignment.teacher_product_id == id,
         )
-        .scalar_subquery()
+        .group_by(TeacherAssignment.student_product_id)
+        .as_scalar()
         / max_students,
     )
 
     total_students: Mapped[int] = column_property(
-        select(func.count(TeacherAssignment.id).label("number_students"))
+        select(
+            func.count(TeacherAssignment.student_product_id),
+        )
         .select_from(TeacherAssignment)
         .where(TeacherAssignment.teacher_product_id == id)
         .group_by(TeacherAssignment.student_product_id)
@@ -253,7 +250,7 @@ class TeacherProduct(TimestampMixin, Base):
 
     removal_students: Mapped[int] = column_property(
         select(
-            func.count(TeacherAssignment.student_product_id).label("number_students"),
+            func.count(TeacherAssignment.student_product_id),
         )
         .select_from(TeacherAssignment)
         .where(

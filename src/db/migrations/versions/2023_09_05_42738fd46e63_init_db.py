@@ -296,9 +296,9 @@ def upgrade() -> None:
         sa.Column("teacher_type", sa.String(length=16), nullable=True),
         sa.Column("offer_id", sa.Integer(), nullable=False),
         sa.Column("cohort", sa.Integer(), nullable=False),
-        sa.Column("teacher_rate", sa.Integer(), nullable=False),
-        sa.Column("teacher_rate_date", sa.Date(), nullable=False),
-        sa.Column("expulsion_at", sa.DateTime(), nullable=False),
+        sa.Column("teacher_rate", sa.Integer(), nullable=True),
+        sa.Column("teacher_rate_date", sa.Date(), nullable=True),
+        sa.Column("expulsion_at", sa.DateTime(), nullable=True),
         sa.Column(
             "created_at",
             sa.DateTime(),
@@ -374,7 +374,6 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("student_product_id", sa.Integer(), nullable=False),
         sa.Column("teacher_product_id", sa.Integer(), nullable=False),
-        sa.Column("product_id", sa.Integer(), nullable=False),
         sa.Column("assignment_at", sa.DateTime(), nullable=False),
         sa.Column("removed_at", sa.DateTime(), nullable=True),
         sa.Column(
@@ -390,11 +389,6 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.ForeignKeyConstraint(
-            ["product_id"],
-            ["product.id"],
-            name=op.f("fk__teacher_assignment__product_id__product"),
-        ),
-        sa.ForeignKeyConstraint(
             ["student_product_id"],
             ["student_product.id"],
             name=op.f("fk__teacher_assignment__student_product_id__student_product"),
@@ -405,12 +399,6 @@ def upgrade() -> None:
             name=op.f("fk__teacher_assignment__teacher_product_id__teacher_product"),
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk__teacher_assignment")),
-    )
-    op.create_index(
-        op.f("ix__teacher_assignment__product_id"),
-        "teacher_assignment",
-        ["product_id"],
-        unique=False,
     )
     op.create_index(
         op.f("ix__teacher_assignment__student_product_id"),
@@ -435,10 +423,6 @@ def downgrade() -> None:
     )
     op.drop_index(
         op.f("ix__teacher_assignment__student_product_id"),
-        table_name="teacher_assignment",
-    )
-    op.drop_index(
-        op.f("ix__teacher_assignment__product_id"),
         table_name="teacher_assignment",
     )
     op.drop_table("teacher_assignment")
