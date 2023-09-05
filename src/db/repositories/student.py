@@ -1,4 +1,3 @@
-import uuid
 from datetime import datetime
 from typing import Any, NoReturn
 
@@ -86,7 +85,7 @@ class StudentRepository(Repository[Student]):
     async def enroll_student_to_product(
         self,
         student_id: int,
-        offer_id: uuid.UUID,
+        offer_id: int,
     ) -> StudentProduct:
         student_product = await self.find_student_product_by_offer_id(
             student_id=student_id,
@@ -104,7 +103,7 @@ class StudentRepository(Repository[Student]):
                 product_id=offer.product_id,
                 teacher_type=offer.teacher_type,
             )
-        student_product_data = {
+        student_product_data: dict[str, Any] = {
             "student_id": student_id,
             "product_id": offer.product_id,
             "offer_id": offer.id,
@@ -140,7 +139,7 @@ class StudentRepository(Repository[Student]):
     async def find_student_product_by_offer_id(
         self,
         student_id: int,
-        offer_id: uuid.UUID,
+        offer_id: int,
     ) -> StudentProduct | None:
         stmt = select(StudentProduct).where(
             StudentProduct.offer_id == offer_id,

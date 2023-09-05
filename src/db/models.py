@@ -1,11 +1,9 @@
 from __future__ import annotations
 
 import enum
-import uuid
 from datetime import date, datetime
 
 from sqlalchemy import (
-    UUID,
     BigInteger,
     Boolean,
     Date,
@@ -103,7 +101,7 @@ class TeacherType(enum.StrEnum):
 
 
 class Offer(TimestampMixin, Base):
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
     product_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("product.id"),
@@ -187,8 +185,8 @@ class StudentProduct(TimestampMixin, Base):
         nullable=True,
         default=None,
     )
-    offer_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+    offer_id: Mapped[int] = mapped_column(
+        Integer,
         ForeignKey("offer.id"),
         index=True,
         nullable=False,

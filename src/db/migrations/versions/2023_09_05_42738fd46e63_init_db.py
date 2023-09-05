@@ -204,12 +204,12 @@ def upgrade() -> None:
             ondelete="CASCADE",
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk__soho")),
-        sa.UniqueConstraint("mail", name=op.f("uq__soho__mail")),
+        sa.UniqueConstraint("email", name=op.f("uq__soho__mail")),
         sa.UniqueConstraint("student_id", name=op.f("uq__soho__student_id")),
     )
     op.create_table(
         "offer",
-        sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("product_id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(length=2048), nullable=False),
         sa.Column("cohort", sa.Integer(), nullable=False),
@@ -294,7 +294,7 @@ def upgrade() -> None:
         sa.Column("product_id", sa.Integer(), nullable=False),
         sa.Column("teacher_product_id", sa.Integer(), nullable=True),
         sa.Column("teacher_type", sa.String(length=16), nullable=True),
-        sa.Column("offer_id", sa.UUID(), nullable=False),
+        sa.Column("offer_id", sa.Integer(), nullable=False),
         sa.Column("cohort", sa.Integer(), nullable=False),
         sa.Column("teacher_rate", sa.Integer(), nullable=False),
         sa.Column("teacher_rate_date", sa.Date(), nullable=False),

@@ -1,5 +1,3 @@
-import uuid
-
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +11,7 @@ class ProductRepository(Repository[Product]):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(model=Product, session=session)
 
-    async def find_product_by_offer(self, offer_id: uuid.UUID) -> Product:
+    async def find_product_by_offer(self, offer_id: int) -> Product:
         stmt = (
             select(Product)
             .join(Offer, Product.id == Offer.id)

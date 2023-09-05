@@ -42,7 +42,7 @@ async def enroll_student_route(
         )
     student_product = await provider.student.enroll_student_to_product(
         student_id=student.id,
-        offer_id=enroll_student.offer_id,
+        offer_id=enroll_student.offer_ids[0],
     )
     if student_product.teacher_product_id and student_product.teacher_type:
         subject = await provider.product.find_subject_by_product(

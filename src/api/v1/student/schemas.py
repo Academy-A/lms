@@ -1,5 +1,3 @@
-import uuid
-
 from pydantic import BaseModel, ConfigDict, EmailStr
 
 
@@ -13,12 +11,12 @@ class CreateStudentSchema(BaseModel):
 
 class EnrollStudentSchema(BaseModel):
     student: CreateStudentSchema
-    offer_id: uuid.UUID
+    offer_ids: list[int]
 
 
 class ExpulsionStudentSchema(BaseModel):
     vk_id: int
-    offer_id: uuid.UUID
+    offer_id: int
 
 
 class ReadStudentSchema(BaseModel):
