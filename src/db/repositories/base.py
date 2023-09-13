@@ -1,11 +1,12 @@
 from abc import ABC
 from typing import Any, Generic, NoReturn, TypeVar
 
-from sqlalchemy import select, update
+from sqlalchemy import ScalarResult, Select, func, select, update
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.base import Base
+from src.db.dto import PaginationDTO
 
 Model = TypeVar("Model", bound=Base)
 
@@ -23,6 +24,22 @@ class Repository(ABC, Generic[Model]):
         result = await self._session.scalars(select(self._model).from_statement(stmt))
         await self._session.commit()
         return result.one_or_none()
+
+    async def _paginate(
+        self, query: Select, page: int, page_size: int
+    ) -> PaginationDTO:
+        items: ScalarResult[Model] = await self._session.scalars(
+            query.limit(page_size).offset((page - 1) * page_size)
+        )
+        total: int = await self._session.scalar(
+            select(func.count()).select_from(query.subquery())
+        )  # type: ignore
+        return PaginationDTO(
+            items=items.all(),
+            total=total,
+            page=page,
+            page_size=page_size,
+        )
 
     def _raise_error(self, e: DBAPIError) -> NoReturn:
         raise NotImplementedError

@@ -29,6 +29,7 @@ class Student(TimestampMixin, Base):
     vk_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=False)
     first_name: Mapped[str] = mapped_column(String(128), nullable=False, default="")
     last_name: Mapped[str] = mapped_column(String(128), nullable=False, default="")
+    fullname: Mapped[str] = column_property(first_name + " " + last_name)
 
     products: Mapped[list[Product]] = relationship(
         "Product",
@@ -56,7 +57,7 @@ class Subject(TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String, index=True, nullable=False)
     eng_name: Mapped[str] = mapped_column(String, index=True, unique=True)
     autopilot_url: Mapped[str] = mapped_column(String(1024), nullable=True)
-    group_vk_link: Mapped[str] = mapped_column(String(1024), nullable=False)
+    group_vk_url: Mapped[str] = mapped_column(String(1024), nullable=False)
 
     products: Mapped[list[Product]] = relationship(
         "Product",
@@ -87,6 +88,10 @@ class Product(TimestampMixin, Base):
         index=True,
         nullable=False,
     )
+    check_spreadsheet_id: Mapped[str] = mapped_column(String(256), nullable=False)
+    drive_folder_id: Mapped[str] = mapped_column(String(256), nullable=False)
+    start_date: Mapped[date] = mapped_column(Date, index=True, nullable=True)
+    end_date: Mapped[date] = mapped_column(Date, index=True, nullable=True)
 
     subject: Mapped[Subject] = relationship("Subject", back_populates="products")
     product_group: Mapped[ProductGroup] = relationship(
@@ -115,6 +120,8 @@ class Offer(TimestampMixin, Base):
         nullable=True,
         default=None,
     )
+
+    product: Mapped[Product] = relationship("Product")
 
 
 class Teacher(TimestampMixin, Base):
@@ -234,7 +241,7 @@ class TeacherProduct(TimestampMixin, Base):
             TeacherAssignment.teacher_product_id == id,
         )
         .group_by(TeacherAssignment.student_product_id)
-        .as_scalar()
+        .scalar_subquery()
         / max_students,
     )
 
@@ -245,7 +252,7 @@ class TeacherProduct(TimestampMixin, Base):
         .select_from(TeacherAssignment)
         .where(TeacherAssignment.teacher_product_id == id)
         .group_by(TeacherAssignment.student_product_id)
-        .as_scalar(),
+        .scalar_subquery(),
     )
 
     removal_students: Mapped[int] = column_property(
@@ -260,7 +267,7 @@ class TeacherProduct(TimestampMixin, Base):
             > (func.current_timestamp() - text("(interval '1 month')")),
         )
         .group_by(TeacherAssignment.student_product_id)
-        .as_scalar(),
+        .scalar_subquery(),
     )
 
     removability: Mapped[float] = column_property(
@@ -295,6 +302,28 @@ class TeacherProduct(TimestampMixin, Base):
     @property
     def is_curator(self) -> bool:
         return self.type == TeacherType.CURATOR
+
+
+class Reviewer(Base, TimestampMixin):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    first_name: Mapped[str] = mapped_column(String(128), nullable=False, default="")
+    last_name: Mapped[str] = mapped_column(String(128), nullable=False, default="")
+    fullname: Mapped[str] = column_property(first_name + " " + last_name)
+    product_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("product.id"),
+        nullable=False,
+    )
+    teacher_product_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("teacher_product.id"),
+        nullable=True,
+    )
+    email: Mapped[str] = mapped_column(String(128), nullable=False)
+    desired: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    max_: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    abs_max: Mapped[int] = mapped_column(Integer, default=1000, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
 
 class Setting(TimestampMixin, Base):

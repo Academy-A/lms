@@ -1,7 +1,7 @@
 from src.exceptions.base import EntityNotFoundError, LMSError
 from src.exceptions.product import ProductNotFoundError
 from src.exceptions.student import (
-    StudentAlreadyEnrolldError,
+    StudentAlreadyEnrolledError,
     StudentNotFoundError,
     StudentProductNotFoundError,
 )
@@ -16,7 +16,7 @@ __all__ = [
     "EntityNotFoundError",
     "LMSError",
     "ProductNotFoundError",
-    "StudentAlreadyEnrolldError",
+    "StudentAlreadyEnrolledError",
     "StudentNotFoundError",
     "StudentProductNotFoundError",
     "SubjectNotFoundError",

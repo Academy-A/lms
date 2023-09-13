@@ -1,8 +1,9 @@
+from typing import Sequence
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.db.models import Teacher, TeacherProduct
+from src.db.models import Reviewer, Teacher, TeacherProduct
 from src.db.repositories.base import Repository
 from src.exceptions import (
     TeacherNotFoundError,
@@ -23,3 +24,7 @@ class TeacherRepository(Repository[Teacher]):
             return (await self._session.scalars(stmt)).one()
         except NoResultFound as e:
             raise TeacherNotFoundError from e
+
+    async def get_reviewers_by_product_id(self, product_id: int) -> Sequence[Reviewer]:
+        query = select(Reviewer).where(Reviewer.product_id == product_id)
+        return (await self._session.scalars(query)).all()

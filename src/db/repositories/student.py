@@ -19,7 +19,8 @@ from src.db.repositories.base import Repository
 from src.exceptions import (
     EntityNotFoundError,
     LMSError,
-    StudentAlreadyEnrolldError,
+    StudentAlreadyEnrolledError,
+    StudentNotFoundError,
     StudentProductNotFoundError,
     TeacherAssignmentNotFoundError,
     TeacherProductNotFoundError,
@@ -30,9 +31,15 @@ class StudentRepository(Repository[Student]):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(model=Student, session=session)
 
-    async def read_student_by_vk_id(self, vk_id: int) -> Student | None:
+    async def read_by_vk_id(self, vk_id: int) -> Student | None:
         stmt = select(Student).where(Student.vk_id == vk_id)
         return (await self._session.scalars(stmt)).one_or_none()
+
+    async def read_by_id(self, student_id: int) -> Student:
+        student = await self._session.get(Student, student_id)
+        if student is None:
+            raise StudentNotFoundError
+        return student
 
     async def create_student(
         self,
@@ -92,7 +99,7 @@ class StudentRepository(Repository[Student]):
             offer_id=offer_id,
         )
         if student_product is not None:
-            raise StudentAlreadyEnrolldError
+            raise StudentAlreadyEnrolledError
         offer = await self._session.get(Offer, offer_id)
         if offer is None:
             raise EntityNotFoundError

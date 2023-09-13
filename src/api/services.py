@@ -9,6 +9,8 @@ async def token_required(
     token: str,
     settings: Settings = Depends(SettingsMarker),
 ) -> None:
+    if settings.DEBUG:
+        return
     try:
         jwt.decode(
             token=token,

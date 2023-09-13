@@ -8,11 +8,15 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - 5433:5432
+      - 5432:5432
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  lms:
+  rabbitmq:
+    image: rabbitmq
+    restart: unless-stopped
+
+  backend:
     restart: unless-stopped
     build:
       context: .
@@ -34,6 +38,21 @@ services:
 
     ports:
       - 8000:8000
+
+  worker:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: ./docker/worker.dockerfile
+    depends_on:
+      - backend
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    command: celery -A backend.celery.tasks.celery worker --loglevel=info --logfile=celery.log
 
 volumes:
   postgres_data:

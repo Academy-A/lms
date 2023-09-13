@@ -26,7 +26,7 @@ async def enroll_student_route(
     background_tasks: BackgroundTasks,
     provider: DatabaseProvider = Depends(DatabaseProviderMarker),
 ) -> ReadStudentProductSchema:
-    student = await provider.student.read_student_by_vk_id(
+    student = await provider.student.read_by_vk_id(
         vk_id=enroll_student.student.vk_id,
     )
     if student is None:
@@ -66,7 +66,7 @@ async def expulsion_student_route(
     expulsion_data: ExpulsionStudentSchema,
     provider: DatabaseProvider = Depends(DatabaseProviderMarker),
 ) -> StatusResponseSchema:
-    student = await provider.student.read_student_by_vk_id(
+    student = await provider.student.read_by_vk_id(
         vk_id=expulsion_data.vk_id,
     )
     if student is None:
@@ -91,13 +91,14 @@ async def expulsion_student_route(
 @router.get(
     "/{student_id}",
     response_model=ReadStudentSchema,
-    responses={203: {"model": StatusResponseSchema}},
+    responses={
+        203: {"model": StatusResponseSchema},
+        404: {"model": StatusResponseSchema},
+    },
 )
-async def read_student_by_id(student_id: int) -> ReadStudentSchema:
-    return ReadStudentSchema(
-        id=student_id,
-        first_name="sergey",
-        last_name="natalenko",
-        vk_id=1,
-        email="asdf@asdf.ru",
-    )
+async def read_student_by_id(
+    student_id: int,
+    provider: DatabaseProvider = Depends(DatabaseProviderMarker),
+) -> ReadStudentSchema:
+    student = await provider.student.read_by_id(student_id=student_id)
+    return ReadStudentSchema.model_validate(student)

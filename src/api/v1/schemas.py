@@ -1,6 +1,8 @@
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel
+
+from src.db.dto import PaginationDTO
 
 
 class MonitoringSchema(BaseModel):
@@ -11,3 +13,27 @@ class StatusResponseSchema(BaseModel):
     ok: bool
     status_code: int
     message: str
+
+
+class MetaPageSchema(BaseModel):
+    page: int
+    pages: int
+    total: int
+    page_size: int
+
+
+class PageSchema(BaseModel):
+    meta: MetaPageSchema
+    items: list[Any]
+
+    @classmethod
+    def from_pagination(cls, pagination: PaginationDTO):
+        return cls(
+            meta=MetaPageSchema(
+                page=pagination.page,
+                pages=pagination.pages,
+                total=pagination.total,
+                page_size=pagination.page_size,
+            ),
+            items=pagination.items,
+        )

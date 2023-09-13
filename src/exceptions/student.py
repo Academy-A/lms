@@ -1,7 +1,7 @@
 from src.exceptions.base import EntityNotFoundError, LMSError
 
 
-class StudentAlreadyEnrolldError(LMSError):
+class StudentAlreadyEnrolledError(LMSError):
     pass
 
 

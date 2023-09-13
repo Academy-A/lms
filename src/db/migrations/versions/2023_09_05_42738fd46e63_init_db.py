@@ -99,7 +99,7 @@ def upgrade() -> None:
         sa.Column("name", sa.String(), nullable=False),
         sa.Column("eng_name", sa.String(), nullable=False),
         sa.Column("autopilot_url", sa.String(length=1024), nullable=True),
-        sa.Column("group_vk_link", sa.String(length=1024), nullable=False),
+        sa.Column("group_vk_url", sa.String(length=1024), nullable=False),
         sa.Column(
             "created_at",
             sa.DateTime(),

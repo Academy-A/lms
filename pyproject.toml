@@ -20,11 +20,20 @@ sqlalchemy-utils = "^0.41.1"
 httpx = "^0.24.1"
 python-jose = "^3.3.0"
 pydantic = {extras = ["email"], version = "^2.3.0"}
+celery = "^5.3.4"
+psycopg2-binary = "^2.9.7"
+google-api-service-helper = "^0.0.6"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.3.3"
 mypy = "^1.5.1"
 types-python-jose = "^3.3.4.8"
+pytest = "^7.4.1"
+httpx = "^0.24.1"
+pytest-asyncio = "^0.21.1"
+pytest-randomly = "^3.15.0"
+pytest-deadfixtures = "^2.2.1"
+factory-boy = "^3.3.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -54,70 +63,6 @@ ignore_missing_imports = true
 module = "sqlalchemy_utils.*"
 ignore_missing_imports = true
 
-[tool.ruff]
-select = ["ALL"]
-ignore = [
-    "D100",
-    "D101",
-    "D102",
-    "D103",
-    "D104",
-    "D105",
-    "D107",
-    "D211",
-    "D212",
-    "ANN101",
-    "PLR0913",
-    "ARG001",
-    "ARG005",
-    "RUF001",
-    "TCH003",
-]
-fixable = ["ALL"]
-line-length = 90
-target-version = "py311"
-exclude = [
-    ".bzr",
-    ".direnv",
-    ".eggs",
-    ".git",
-    ".git-rewrite",
-    ".hg",
-    ".mypy_cache",
-    ".nox",
-    ".pants.d",
-    ".pytype",
-    ".ruff_cache",
-    ".svn",
-    ".tox",
-    ".venv",
-    "__pypackages__",
-    "_build",
-    "buck-out",
-    "build",
-    "dist",
-    "node_modules",
-    "venv",
-]
-
-
-[tool.ruff.flake8-annotations]
-allow-star-arg-any = true
-
-[tool.ruff.flake8-builtins]
-builtins-ignorelist = ["id"]
-
-[tool.ruff.flake8-quotes]
-docstring-quotes = "double"
-
-[tool.ruff.flake8-bugbear]
-extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Path"]
-
-[tool.ruff.flake8-self]
-ignore-names = ["_getframe"]
-
-[tool.ruff.isort]
-known-local-folder = ["src"]
-
-[tool.ruff.pep8-naming]
-ignore-names = ["__tablename__"]
+[[tool.mypy.overrides]]
+module = "celery.*"
+ignore_missing_imports = true
