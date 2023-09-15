@@ -19,7 +19,7 @@ from src.exceptions.base import LMSError
 logging.root.setLevel(level=logging.INFO)
 
 
-def get_appliation(settings: Settings) -> FastAPI:
+def get_application(settings: Settings) -> FastAPI:
     app = FastAPI(
         title=settings.PROJECT_NAME,
         debug=settings.DEBUG,
@@ -36,7 +36,9 @@ def get_appliation(settings: Settings) -> FastAPI:
     app.exception_handler(HTTPException)(http_exception_handler)
     app.exception_handler(LMSError)(lms_exception_handler)
 
-    engine = create_engine(connection_uri=settings.build_db_connection_uri())
+    engine = create_engine(
+        connection_uri=settings.build_db_connection_uri(), pool_pre_ping=True
+    )
     session_factory = create_session_factory(engine=engine)
 
     app.dependency_overrides.update(
