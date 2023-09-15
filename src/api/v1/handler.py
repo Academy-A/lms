@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 
 from src.api.v1.schemas import StatusResponseSchema
-from src.exceptions import LMSError
+from src.exceptions import LMSError, StudentAlreadyEnrolledError
 
 
 async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
@@ -11,6 +11,12 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
 
 
 async def lms_exception_handler(request: Request, exc: LMSError) -> JSONResponse:
+    if isinstance(exc, StudentAlreadyEnrolledError):
+        return exception_json_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Student already enrolled on product",
+        )
+
     logger.exception("Got unhandled error")
     return exception_json_response(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

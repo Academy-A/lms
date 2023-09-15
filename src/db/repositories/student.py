@@ -98,7 +98,7 @@ class StudentRepository(Repository[Student]):
             student_id=student_id,
             offer_id=offer_id,
         )
-        if student_product is not None:
+        if student_product is not None and student_product.expulsion_at is None:
             raise StudentAlreadyEnrolledError
         offer = await self._session.get(Offer, offer_id)
         if offer is None:
