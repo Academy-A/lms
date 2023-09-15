@@ -127,7 +127,7 @@ class StudentRepository(Repository[Student]):
         )
         try:
             result: ScalarResult[StudentProduct] = await self._session.scalars(
-                select(Soho).from_statement(stmt),
+                select(StudentProduct).from_statement(stmt),
             )
             await self._session.commit()
         except IntegrityError as e:
