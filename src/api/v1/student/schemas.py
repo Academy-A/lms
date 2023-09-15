@@ -37,3 +37,7 @@ class ReadStudentProductSchema(BaseModel):
     teacher_product_id: int | None
     offer_id: int | None
     cohort: int
+
+
+class ChangeVKIDSchema(BaseModel):
+    vk_id: int

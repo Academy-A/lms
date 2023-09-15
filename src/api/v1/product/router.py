@@ -27,7 +27,7 @@ async def read_products(
     return ProductPageSchema.from_pagination(pagination=pagination)
 
 
-@router.post("/{product_id}/distribute")
+# @router.post("/{product_id}/distribute")
 async def create_distribution(
     product_id: int,
     distribution_data: DistributionSchema,

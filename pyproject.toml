@@ -16,6 +16,7 @@ sqlalchemy-utils = "^0.41.1"
 httpx = "^0.24.1"
 pydantic = {extras = ["email"], version = "^2.3.0"}
 celery = "^5.3.4"
+orjson = "^3.9.7"
 
 [tool.poetry.group.backend.dependencies]
 fastapi = "^0.101.1"
@@ -27,7 +28,7 @@ gunicorn = "^21.2.0"
 
 [tool.poetry.group.worker.dependencies]
 psycopg2-binary = "^2.9.7"
-google-api-service-helper = "^0.0.6"
+google-api-service-helper = "^0.1.1"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.3.3"

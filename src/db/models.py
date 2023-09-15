@@ -266,9 +266,9 @@ class TeacherProduct(TimestampMixin, Base):
         case(
             *[
                 (
-                    total_students.expression > 0,
-                    (total_students.expression - removal_students.expression)
-                    / total_students.expression,
+                    total_students.expression > 0,  # type: ignore[attr-defined]
+                    (total_students.expression - removal_students.expression)  # type: ignore[attr-defined]
+                    / total_students.expression,  # type: ignore[attr-defined]
                 ),
             ],
             else_=1.0,
@@ -280,10 +280,10 @@ class TeacherProduct(TimestampMixin, Base):
             *[
                 (
                     average_rate == 0,
-                    5 * (1 - fullness.expression) * removability.expression,
+                    5 * (1 - fullness.expression) * removability.expression,  # type: ignore[attr-defined]
                 ),
             ],
-            else_=average_rate * (1 - fullness.expression) * removability.expression,
+            else_=average_rate * (1 - fullness.expression) * removability.expression,  # type: ignore[attr-defined]
         ),
     )
 
@@ -318,6 +318,21 @@ class Reviewer(Base, TimestampMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
 
+class VerifiedWorkFile(TimestampMixin, Base):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    subject_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("subject.id"), index=True, nullable=False
+    )
+    student_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("student.id"), index=True, nullable=True
+    )
+    file_id: Mapped[str] = mapped_column(
+        String(128), index=True, unique=True, nullable=False
+    )
+    name: Mapped[str] = mapped_column(String(512), nullable=False)
+    url: Mapped[str] = mapped_column(String(1024), nullable=False)
+
+
 class Setting(TimestampMixin, Base):
 
     """Dynamic config data for app."""
@@ -329,5 +344,5 @@ class Setting(TimestampMixin, Base):
         index=True,
         unique=True,
     )
-    value: Mapped[str] = mapped_column(String(2048), nullable=False)
+    value: Mapped[str] = mapped_column(String(4096), nullable=False)
     description: Mapped[str] = mapped_column(String(512), nullable=False, default="")

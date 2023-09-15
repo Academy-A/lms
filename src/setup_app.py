@@ -13,7 +13,11 @@ from src.api.deps import (
 from src.api.router import api_router
 from src.api.v1.handler import http_exception_handler, lms_exception_handler
 from src.config import Settings
-from src.db.factory import create_engine, create_provider, create_session_factory
+from src.db.factory import (
+    create_async_engine,
+    create_provider,
+    create_async_session_factory,
+)
 from src.exceptions.base import LMSError
 
 logging.root.setLevel(level=logging.INFO)
@@ -36,10 +40,10 @@ def get_application(settings: Settings) -> FastAPI:
     app.exception_handler(HTTPException)(http_exception_handler)
     app.exception_handler(LMSError)(lms_exception_handler)
 
-    engine = create_engine(
+    engine = create_async_engine(
         connection_uri=settings.build_db_connection_uri(), pool_pre_ping=True
     )
-    session_factory = create_session_factory(engine=engine)
+    session_factory = create_async_session_factory(engine=engine)
 
     app.dependency_overrides.update(
         {

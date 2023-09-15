@@ -8,7 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.models import (
     Offer,
-    Soho,
     Student,
     StudentProduct,
     TeacherAssignment,
@@ -36,7 +35,7 @@ class StudentRepository(Repository[Student]):
         return (await self._session.scalars(stmt)).one_or_none()
 
     async def read_by_id(self, student_id: int) -> Student:
-        student = await self._session.get(Student, student_id)
+        student = await self._read_by_id(student_id)
         if student is None:
             raise StudentNotFoundError
         return student
@@ -47,41 +46,13 @@ class StudentRepository(Repository[Student]):
         first_name: str | None,
         last_name: str | None,
     ) -> Student:
-        stmt = (
-            insert(Student)
+        query = (
+            insert(self._model)
             .values(vk_id=vk_id, first_name=first_name or "", last_name=last_name or "")
-            .returning(Student)
+            .returning(self._model)
         )
         try:
-            result: ScalarResult[Student] = await self._session.scalars(
-                select(Student).from_statement(stmt),
-            )
-            await self._session.commit()
-        except IntegrityError as e:
-            await self._session.rollback()
-            self._raise_error(e)
-        else:
-            return result.one()
-
-    async def create_soho_account(
-        self,
-        soho_id: int,
-        email: str,
-        student_id: int,
-    ) -> Soho:
-        stmt = (
-            insert(Soho)
-            .values(
-                id=soho_id,
-                email=email,
-                student_id=student_id,
-            )
-            .returning(Soho)
-        )
-        try:
-            result: ScalarResult[Soho] = await self._session.scalars(
-                select(Soho).from_statement(stmt),
-            )
+            result: ScalarResult[Student] = await self._session.scalars(query)
             await self._session.commit()
         except IntegrityError as e:
             await self._session.rollback()
@@ -120,15 +91,13 @@ class StudentRepository(Repository[Student]):
         if teacher_product and offer.teacher_type is not None:
             student_product_data["teacher_product_id"] = teacher_product.id
             student_product_data["teacher_type"] = offer.teacher_type
-        stmt = (
+        query = (
             insert(StudentProduct)
             .values(**student_product_data)
             .returning(StudentProduct)
         )
         try:
-            result: ScalarResult[StudentProduct] = await self._session.scalars(
-                select(StudentProduct).from_statement(stmt),
-            )
+            result: ScalarResult[StudentProduct] = await self._session.scalars(query)
             await self._session.commit()
         except IntegrityError as e:
             await self._session.rollback()
@@ -180,7 +149,7 @@ class StudentRepository(Repository[Student]):
         teacher_product_id: int,
         student_product_id: int,
     ) -> TeacherAssignment:
-        stmt = (
+        query = (
             insert(TeacherAssignment)
             .values(
                 teacher_product_id=teacher_product_id,
@@ -189,9 +158,7 @@ class StudentRepository(Repository[Student]):
             .returning(TeacherAssignment)
         )
         try:
-            result: ScalarResult[TeacherAssignment] = await self._session.scalars(
-                select(TeacherAssignment).from_statement(stmt),
-            )
+            result: ScalarResult[TeacherAssignment] = await self._session.scalars(query)
             await self._session.commit()
         except IntegrityError as e:
             await self._session.rollback()
@@ -230,21 +197,24 @@ class StudentRepository(Repository[Student]):
                 teacher_product_id=teacher_product_id,
             )
 
+    async def update(self, *args: Any, **kwargs: Any) -> Student:
+        try:
+            return await self._update(*args, **kwargs)
+        except NoResultFound:
+            await self._session.rollback()
+            raise StudentNotFoundError
+
     async def _update_student_product(
-        self,
-        *args: Any,
-        **kwargs: Any,
+        self, *args: Any, **kwargs: Any
     ) -> StudentProduct:
-        stmt = (
+        query = (
             update(StudentProduct)
             .where(*args)
             .values(**kwargs)
             .returning(StudentProduct)
         )
         try:
-            result = await self._session.scalars(
-                select(StudentProduct).from_statement(stmt),
-            )
+            result = await self._session.scalars(query)
             await self._session.commit()
             return result.one()
         except NoResultFound as e:
@@ -256,16 +226,14 @@ class StudentRepository(Repository[Student]):
         *args: Any,
         **kwargs: Any,
     ) -> TeacherAssignment:
-        stmt = (
+        query = (
             update(TeacherAssignment)
             .where(*args)
             .values(**kwargs)
             .returning(TeacherAssignment)
         )
         try:
-            result = await self._session.scalars(
-                select(TeacherAssignment).from_statement(stmt),
-            )
+            result = await self._session.scalars(query)
             await self._session.commit()
             return result.one()
         except NoResultFound as e:
@@ -273,7 +241,5 @@ class StudentRepository(Repository[Student]):
             raise TeacherAssignmentNotFoundError from e
 
     def _raise_error(self, e: DBAPIError) -> NoReturn:
-        logger.exception(
-            "Occured exc",
-        )
+        logger.exception("An error has occurred")
         raise LMSError from e

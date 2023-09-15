@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 from src.config import Settings
-from src.db.factory import create_engine
+from src.db.factory import create_async_engine
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ async def main() -> None:
     settings = Settings()
     while True:
         try:
-            engine = create_engine(
+            engine = create_async_engine(
                 connection_uri=settings.build_db_connection_uri(), pool_pre_ping=True
             )
             await check_connection(engine)

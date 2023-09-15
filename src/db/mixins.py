@@ -1,18 +1,31 @@
 from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, declarative_mixin, declared_attr
 
 
+@declarative_mixin
 class TimestampMixin:
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        server_default=func.now(),
-        server_onupdate=func.now(),  # type:ignore[arg-type]
-        onupdate=datetime.now,
-    )
+    @declared_attr
+    def created_at(cls) -> Mapped[datetime]:
+        return mapped_column(DateTime, server_default=func.now())
+
+    @declared_attr
+    def updated_at(cls) -> Mapped[datetime]:
+        return mapped_column(
+            DateTime,
+            server_default=func.now(),
+            server_onupdate=func.now(),  # type:ignore[arg-type]
+            onupdate=datetime.now,
+        )
 
 
+@declarative_mixin
 class DeletableMixin:
-    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    @declared_attr
+    def is_deleted(cls) -> Mapped[bool]:
+        return mapped_column(
+            Boolean,
+            default=False,
+            nullable=False,
+        )

@@ -5,12 +5,14 @@ from src.api.deps import DatabaseProviderMarker
 from src.api.services import token_required
 from src.api.v1.schemas import StatusResponseSchema
 from src.api.v1.student.schemas import (
+    ChangeVKIDSchema,
     EnrollStudentSchema,
     ExpulsionStudentSchema,
     ReadStudentProductSchema,
     ReadStudentSchema,
 )
 from src.clients.autopilot import send_teacher_to_autopilot
+from src.db.models import Student
 from src.db.provider import DatabaseProvider
 from src.exceptions import StudentNotFoundError, StudentProductNotFoundError
 
@@ -37,9 +39,9 @@ async def enroll_student_route(
             last_name=enroll_student.student.last_name,
             vk_id=enroll_student.student.vk_id,
         )
-        await provider.student.create_soho_account(
-            student_id=student.id,
+        await provider.soho.create(
             soho_id=enroll_student.student.soho_id,
+            student_id=student.id,
             email=enroll_student.student.email,
         )
     student_product = await provider.student.enroll_student_to_product(
@@ -103,4 +105,18 @@ async def read_student_by_id(
     provider: DatabaseProvider = Depends(DatabaseProviderMarker),
 ) -> ReadStudentSchema:
     student = await provider.student.read_by_id(student_id=student_id)
+    return ReadStudentSchema.model_validate(student)
+
+
+@router.post("/soho/{soho_id}/change-vk-id", response_model=ReadStudentSchema)
+async def change_vk_id_by_soho_id(
+    soho_id: int,
+    vk_id_data: ChangeVKIDSchema,
+    provider: DatabaseProvider = Depends(DatabaseProviderMarker),
+) -> ReadStudentSchema:
+    soho = await provider.soho.read_by_id(soho_id=soho_id)
+    student = await provider.student.update(
+        Student.id == soho.student_id,
+        vk_id=vk_id_data.vk_id,
+    )
     return ReadStudentSchema.model_validate(student)

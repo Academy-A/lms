@@ -19,11 +19,11 @@ class Repository(ABC, Generic[Model]):
     async def _read_by_id(self, object_id: int) -> Model | None:
         return await self._session.get(self._model, object_id)
 
-    async def _update(self, *args: Any, **kwargs: Any) -> Model | None:
-        stmt = update(self._model).where(*args).values(**kwargs).returning(self._model)
-        result = await self._session.scalars(select(self._model).from_statement(stmt))
+    async def _update(self, *args: Any, **kwargs: Any) -> Model:
+        query = update(self._model).where(*args).values(**kwargs).returning(self._model)
+        result = await self._session.scalars(query)
         await self._session.commit()
-        return result.one_or_none()
+        return result.one()
 
     async def _paginate(
         self, query: Select, page: int, page_size: int

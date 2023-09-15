@@ -170,7 +170,7 @@ class DistributionController:
         data: list[list[str | int]] = [[], []]
         for r in self.reviewers:
             counter += 1
-            column_identify = [
+            column_identify: list[str | int] = [
                 r.name,
                 "Максимум (без премиумных)",
                 "Премиумные:",
@@ -193,7 +193,7 @@ class DistributionController:
                 )
             data.extend([column_identify, column_name, [], [], []])
         extras_identify: list[int | str] = ["Переполнение максимума"]
-        extras_name = [""]
+        extras_name: list[str | int] = [""]
         for extra_student in self.extras:
             extras_identify.append(student.soho_student_id)
             extras_name.append(

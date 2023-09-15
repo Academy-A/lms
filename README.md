@@ -4,6 +4,16 @@
 
 ## Installation
 
+```bash
+git clone
+python -m venv .venv
+source .venv/bin/activate
+pip install -U pip poetry
+poetry install --no-root
+pre-commit install
+cp .env.dev .env
+```
+
 ## Configuration
 
 You need create `.env` file with actual variables:

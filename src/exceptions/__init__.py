@@ -5,6 +5,7 @@ from src.exceptions.student import (
     StudentNotFoundError,
     StudentProductNotFoundError,
 )
+from src.exceptions.soho import SohoNotFoundError
 from src.exceptions.subject import SubjectNotFoundError
 from src.exceptions.teacher import (
     TeacherAssignmentNotFoundError,
@@ -17,11 +18,12 @@ __all__ = [
     "LMSError",
     "OfferNotFoundError",
     "ProductNotFoundError",
+    "SohoNotFoundError",
     "StudentAlreadyEnrolledError",
     "StudentNotFoundError",
     "StudentProductNotFoundError",
     "SubjectNotFoundError",
+    "TeacherAssignmentNotFoundError",
     "TeacherNotFoundError",
     "TeacherProductNotFoundError",
-    "TeacherAssignmentNotFoundError",
 ]

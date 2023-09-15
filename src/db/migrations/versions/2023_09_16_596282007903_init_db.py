@@ -43,7 +43,7 @@ def upgrade() -> None:
         "setting",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("key", sa.String(length=128), nullable=False),
-        sa.Column("value", sa.String(length=2048), nullable=False),
+        sa.Column("value", sa.String(length=4096), nullable=False),
         sa.Column("description", sa.String(length=512), nullable=False),
         sa.Column(
             "created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False
