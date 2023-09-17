@@ -240,7 +240,6 @@ class TeacherProduct(TimestampMixin, Base):
             TeacherAssignment.removed_at.is_(None),
             TeacherAssignment.teacher_product_id == id,
         )
-        .group_by(TeacherAssignment.student_product_id)
         .scalar_subquery()
         / max_students,
     )
@@ -251,7 +250,6 @@ class TeacherProduct(TimestampMixin, Base):
         )
         .select_from(TeacherAssignment)
         .where(TeacherAssignment.teacher_product_id == id)
-        .group_by(TeacherAssignment.student_product_id)
         .scalar_subquery(),
     )
 
@@ -266,7 +264,6 @@ class TeacherProduct(TimestampMixin, Base):
             TeacherAssignment.removed_at
             > (func.current_timestamp() - text("(interval '1 month')")),
         )
-        .group_by(TeacherAssignment.student_product_id)
         .scalar_subquery(),
     )
 
