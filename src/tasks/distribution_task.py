@@ -1,20 +1,10 @@
-from celery import Celery
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from src.config import Settings
-from src.controllers.homework_distribution.distribution import distribute_homeworks
+
+from src.tasks.config import celery
 from src.tasks.base import DatabaseTask
-
-settings = Settings()
-
-celery = Celery(
-    __name__,
-    broker=settings.build_rabbitmq_connection_url(),
-    backend="db+" + settings.build_db_connection_uri(driver="psycopg2"),
-    task_cls=DatabaseTask,
-    result_extended=True,
-)
+from src.controllers.homework_distribution.distribution import distribute_homeworks
 
 
 @celery.task(name="homework_distribution_task", bind=True, track_started=True)

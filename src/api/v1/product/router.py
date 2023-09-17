@@ -5,7 +5,7 @@ from src.api.services import token_required
 from src.api.v1.product.schemas import DistributionSchema, ProductPageSchema
 from src.api.v1.schemas import StatusResponseSchema
 from src.db.provider import DatabaseProvider
-from src.tasks.celery_app import make_distribution_task
+from src.tasks.config import celery
 
 router = APIRouter(
     prefix="/products",
@@ -34,12 +34,14 @@ async def create_distribution(
     provider: DatabaseProvider = Depends(DatabaseProviderMarker),
 ) -> StatusResponseSchema:
     await provider.product.read_by_id(product_id=product_id)
-    make_distribution_task.delay(
-        homework_id=distribution_data.homework_id,
-        product_id=product_id,
-        teacher_types=distribution_data.teacher_types,
+    celery.send_task(
+        "make_distribution_task",
+        kwargs={
+            "homework_id": distribution_data.homework_id,
+            "product_id": product_id,
+            "teacher_types": distribution_data.teacher_types,
+        },
     )
-
     return StatusResponseSchema(
         ok=True,
         status_code=201,

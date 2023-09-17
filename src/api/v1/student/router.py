@@ -1,4 +1,5 @@
 from fastapi import APIRouter, BackgroundTasks, Depends
+from loguru import logger
 
 from src.api.deps import DatabaseProviderMarker
 from src.api.services import token_required
@@ -26,6 +27,7 @@ async def enroll_student_route(
     background_tasks: BackgroundTasks,
     provider: DatabaseProvider = Depends(DatabaseProviderMarker),
 ) -> ReadStudentProductSchema:
+    logger.info("Enroll student with data {data}", data=enroll_student.model_dump())
     student = await provider.student.read_by_vk_id(
         vk_id=enroll_student.student.vk_id,
     )

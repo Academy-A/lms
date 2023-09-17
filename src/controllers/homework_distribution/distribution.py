@@ -146,8 +146,8 @@ class DistributionController:
         self.reviewers = reviewers
         self.gs = gs
         self.gd = gd
-        self.max = sum((r.optimal_max for r in reviewers))
-        self.total_desired = sum((r.optimal_desired for r in reviewers))
+        self.max = sum(r.optimal_max for r in reviewers)
+        self.total_desired = sum(r.optimal_desired for r in reviewers)
         self.premium_homeworks = [h for h in homeworks if h.mentor_id is not None]
         self.other_homeworks = [h for h in homeworks if h.mentor_id is None]
         self.extras: list[HomeworkDTO] = []
@@ -178,7 +178,7 @@ class DistributionController:
                 "Всего",
                 "SOHO ID",
             ]
-            column_name = [
+            column_name: list[int | str] = [
                 r.id,
                 r.max_,
                 len(r.premium),

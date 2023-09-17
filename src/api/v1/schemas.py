@@ -1,4 +1,6 @@
-from typing import Any, Literal
+from __future__ import annotations
+
+from typing import Any, Literal, Self
 
 from pydantic import BaseModel
 
@@ -27,7 +29,7 @@ class PageSchema(BaseModel):
     items: list[Any]
 
     @classmethod
-    def from_pagination(cls, pagination: PaginationDTO):
+    def from_pagination(cls, pagination: PaginationDTO) -> Self:
         return cls(
             meta=MetaPageSchema(
                 page=pagination.page,

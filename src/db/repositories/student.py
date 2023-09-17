@@ -17,7 +17,7 @@ from src.db.models import (
 )
 from src.db.repositories.base import Repository
 from src.exceptions import (
-    EntityNotFoundError,
+    OfferNotFoundError,
     LMSError,
     StudentAlreadyEnrolledError,
     StudentNotFoundError,
@@ -102,7 +102,7 @@ class StudentRepository(Repository[Student]):
             raise StudentAlreadyEnrolledError
         offer = await self._session.get(Offer, offer_id)
         if offer is None:
-            raise EntityNotFoundError
+            raise OfferNotFoundError(offer_id=offer_id)
 
         teacher_product = None
         if offer.teacher_type is not None:

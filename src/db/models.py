@@ -41,7 +41,7 @@ class Student(TimestampMixin, Base):
 
 class Soho(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    email: Mapped[str] = mapped_column(String(128), unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(String(128), nullable=False)
     student_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("student.id", ondelete="CASCADE"),

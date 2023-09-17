@@ -20,18 +20,13 @@ services:
     restart: unless-stopped
     build:
       context: .
-      dockerfile: ./docker/lms.dockerfile
+      dockerfile: ./docker/lms/lms.dockerfile
     environment:
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_PORT: ${POSTGRES_PORT}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-
-      REDIS_HOST: ${REDIS_HOST}
-      REDIS_PORT: ${REDIS_PORT}
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      REDIS_DB: ${REDIS_DB}
 
       SOHO_API_TOKEN: ${SOHO_API_TOKEN}
       SECRET_KEY: ${SECRET_KEY}
@@ -43,7 +38,7 @@ services:
     restart: unless-stopped
     build:
       context: .
-      dockerfile: ./docker/worker.dockerfile
+      dockerfile: ./docker/worker/worker.dockerfile
     depends_on:
       - backend
     environment:
@@ -52,7 +47,10 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-    command: celery -A backend.celery.tasks.celery worker --loglevel=info --logfile=celery.log
+
+      SOHO_API_TOKEN: ${SOHO_API_TOKEN}
+      SECRET_KEY: ${SECRET_KEY}
+    command: celery -A src.tasks.config.celery worker --loglevel=info --logfile=celery.log
 
 volumes:
   postgres_data:
