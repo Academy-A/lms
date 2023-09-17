@@ -2,7 +2,7 @@ from datetime import date, datetime
 from pydantic import BaseModel, ConfigDict
 from src.api.v1.schemas import PageSchema
 
-from src.db.models import TeacherType
+from src.enums import TeacherType
 
 
 class DistributionSchema(BaseModel):

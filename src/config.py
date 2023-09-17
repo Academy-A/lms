@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Insperia LMS"
-    DEBUG: bool = True
+    DEBUG: bool = False
 
     SECRET_KEY: str
     SECURITY_ALGORITHM: str = "HS256"

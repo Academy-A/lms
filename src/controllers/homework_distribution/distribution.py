@@ -17,8 +17,8 @@ from src.db.models import (
     Setting,
     Student,
     StudentProduct,
-    TeacherType,
 )
+from src.enums import TeacherType
 from src.exceptions.product import ProductNotFoundError
 
 GOOGLE_KEYS_SETTING = "google_keys"

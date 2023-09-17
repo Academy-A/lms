@@ -8,8 +8,8 @@ from src.db.models import (
     Subject,
     ProductGroup,
     Product,
-    TeacherType,
 )
+from src.enums import TeacherType
 from tests.factories.base import AsyncFactory
 
 __all__ = [

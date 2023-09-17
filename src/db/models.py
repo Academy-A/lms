@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import enum
 from datetime import date, datetime
 
 from sqlalchemy import (
@@ -22,6 +21,7 @@ from sqlalchemy_utils import ChoiceType
 
 from src.db.base import Base
 from src.db.mixins import TimestampMixin
+from src.enums import TeacherType
 
 
 class Student(TimestampMixin, Base):
@@ -98,11 +98,6 @@ class Product(TimestampMixin, Base):
         "ProductGroup",
         back_populates="products",
     )
-
-
-class TeacherType(enum.StrEnum):
-    CURATOR = "CURATOR"
-    MENTOR = "MENTOR"
 
 
 class Offer(TimestampMixin, Base):

@@ -20,7 +20,7 @@ services:
     restart: unless-stopped
     build:
       context: .
-      dockerfile: ./docker/lms/lms.dockerfile
+      dockerfile: ./docker/backend/backend.dockerfile
     environment:
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_PORT: ${POSTGRES_PORT}
@@ -32,13 +32,13 @@ services:
       SECRET_KEY: ${SECRET_KEY}
 
     ports:
-      - 8000:8000
+      - 8000:80
 
   worker:
     restart: unless-stopped
     build:
       context: .
-      dockerfile: ./docker/worker/worker.dockerfile
+      dockerfile: ./docker/backend/worker.dockerfile
     depends_on:
       - backend
     environment:
@@ -50,7 +50,6 @@ services:
 
       SOHO_API_TOKEN: ${SOHO_API_TOKEN}
       SECRET_KEY: ${SECRET_KEY}
-    command: celery -A src.tasks.config.celery worker --loglevel=info --logfile=celery.log
 
 volumes:
   postgres_data:

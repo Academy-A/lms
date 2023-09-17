@@ -13,8 +13,8 @@ from src.db.models import (
     StudentProduct,
     TeacherAssignment,
     TeacherProduct,
-    TeacherType,
 )
+from src.enums import TeacherType
 from src.db.repositories.base import Repository
 from src.exceptions import (
     OfferNotFoundError,

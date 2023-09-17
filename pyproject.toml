@@ -9,18 +9,23 @@ packages = [{include = "new_lms"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-fastapi = "^0.101.1"
 pydantic-settings = "^2.0.3"
 SQLAlchemy = "^2.0.20"
-alembic = "^1.11.3"
-uvicorn = "^0.23.2"
-asyncpg = "^0.28.0"
 loguru = "^0.7.0"
 sqlalchemy-utils = "^0.41.1"
 httpx = "^0.24.1"
-python-jose = "^3.3.0"
 pydantic = {extras = ["email"], version = "^2.3.0"}
 celery = "^5.3.4"
+
+[tool.poetry.group.backend.dependencies]
+fastapi = "^0.101.1"
+alembic = "^1.11.3"
+uvicorn = "^0.23.2"
+asyncpg = "^0.28.0"
+python-jose = "^3.3.0"
+gunicorn = "^21.2.0"
+
+[tool.poetry.group.worker.dependencies]
 psycopg2-binary = "^2.9.7"
 google-api-service-helper = "^0.0.6"
 
