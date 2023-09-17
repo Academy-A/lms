@@ -165,6 +165,7 @@ class StudentRepository(Repository[Student]):
                 TeacherProduct.product_id == product_id,
                 TeacherProduct.type == teacher_type,
                 TeacherProduct.max_students > 0,
+                TeacherProduct.is_active.is_(True),
             )
             .order_by(desc(TeacherProduct.rating_coef))
             .limit(1)
