@@ -1,6 +1,7 @@
 import abc
 import re
 import time
+import httpx
 
 from loguru import logger
 from sqlalchemy.orm import Session
@@ -103,12 +104,12 @@ class BaseNotification(abc.ABC):
             if file.vk_id is None:
                 continue
             logger.info("save_new_files_")
-            # self.save_file(file)
+            self.save_file(file)
 
     def send_new_files_data(self) -> None:
         for file in self.parsed_files:
             if file.vk_id is None:
                 continue
             logger.info("send_new_files_data")
-            # httpx.get(self.autopilot_url, params=file.get_send_params())
+            httpx.get(self.autopilot_url, params=file.get_send_params())
             time.sleep(NOTIFICATION_TIME_PAUSE_SECONDS)
