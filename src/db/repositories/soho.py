@@ -1,4 +1,5 @@
 from typing import NoReturn
+
 from loguru import logger
 from sqlalchemy import ScalarResult, insert
 from sqlalchemy.exc import DBAPIError, IntegrityError
@@ -7,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.db.models import Soho
 from src.db.repositories.base import Repository
 from src.exceptions import LMSError, SohoNotFoundError
+from src.exceptions.base import EntityNotFoundError
 
 
 class SohoRepository(Repository[Soho]):
@@ -14,10 +16,10 @@ class SohoRepository(Repository[Soho]):
         super().__init__(model=Soho, session=session)
 
     async def read_by_id(self, soho_id: int) -> Soho:
-        soho = await self._read_by_id(soho_id)
-        if soho is None:
-            raise SohoNotFoundError
-        return soho
+        try:
+            return await self._read_by_id(soho_id)
+        except EntityNotFoundError as e:
+            raise SohoNotFoundError from e
 
     async def create(self, soho_id: int, email: str, student_id: int) -> Soho:
         query = (

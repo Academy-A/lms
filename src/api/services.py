@@ -1,4 +1,5 @@
 from fastapi import Depends, HTTPException
+from fastapi.security import APIKeyQuery
 from jose import JWTError, jwt
 
 from src.api.deps import SettingsMarker
@@ -6,7 +7,7 @@ from src.config import Settings
 
 
 async def token_required(
-    token: str,
+    token: str = Depends(APIKeyQuery(name="token")),
     settings: Settings = Depends(SettingsMarker),
 ) -> None:
     if settings.DEBUG:

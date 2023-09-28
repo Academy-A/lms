@@ -1,10 +1,11 @@
-from dataclasses import dataclass, field
 import math
-from typing import Any, Sequence
+from collections.abc import Sequence
+from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass
-class PaginationDTO:
+class PaginationData:
     items: Sequence[Any]
     page: int
     page_size: int

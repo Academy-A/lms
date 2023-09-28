@@ -1,18 +1,19 @@
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.db.dto import PaginationDTO
 
+from src.db.dto import PaginationData
 from src.db.models import Offer, Product, Subject
 from src.db.repositories.base import Repository
 from src.exceptions import ProductNotFoundError, SubjectNotFoundError
+from src.exceptions.base import EntityNotFoundError
 
 
 class ProductRepository(Repository[Product]):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(model=Product, session=session)
 
-    async def paginate(self, page: int, page_size: int) -> PaginationDTO:
+    async def paginate(self, page: int, page_size: int) -> PaginationData:
         query = select(Product).order_by(Product.name)
         return await self._paginate(
             query=query,
@@ -21,10 +22,10 @@ class ProductRepository(Repository[Product]):
         )
 
     async def read_by_id(self, product_id: int) -> Product:
-        product = await self._read_by_id(product_id)
-        if product is None:
-            raise ProductNotFoundError
-        return product
+        try:
+            return await self._read_by_id(product_id)
+        except EntityNotFoundError as e:
+            raise ProductNotFoundError from e
 
     async def find_product_by_offer(self, offer_id: int) -> Product:
         stmt = (

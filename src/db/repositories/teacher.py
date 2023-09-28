@@ -1,13 +1,12 @@
-from typing import Sequence
+from collections.abc import Sequence
+
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.models import Reviewer, Teacher, TeacherProduct
 from src.db.repositories.base import Repository
-from src.exceptions import (
-    TeacherNotFoundError,
-)
+from src.exceptions import TeacherNotFoundError
 
 
 class TeacherRepository(Repository[Teacher]):

@@ -13,17 +13,18 @@ from src.db.models import (
     TeacherAssignment,
     TeacherProduct,
 )
-from src.enums import TeacherType
 from src.db.repositories.base import Repository
+from src.enums import TeacherType
 from src.exceptions import (
-    OfferNotFoundError,
     LMSError,
+    OfferNotFoundError,
     StudentAlreadyEnrolledError,
     StudentNotFoundError,
     StudentProductNotFoundError,
     TeacherAssignmentNotFoundError,
     TeacherProductNotFoundError,
 )
+from src.exceptions.base import EntityNotFoundError
 
 
 class StudentRepository(Repository[Student]):
@@ -35,10 +36,10 @@ class StudentRepository(Repository[Student]):
         return (await self._session.scalars(stmt)).one_or_none()
 
     async def read_by_id(self, student_id: int) -> Student:
-        student = await self._read_by_id(student_id)
-        if student is None:
-            raise StudentNotFoundError
-        return student
+        try:
+            return await self._read_by_id(student_id)
+        except EntityNotFoundError as e:
+            raise StudentNotFoundError from e
 
     async def create_student(
         self,
