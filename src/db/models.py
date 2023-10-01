@@ -15,6 +15,8 @@ from sqlalchemy import (
     func,
     select,
     text,
+    CheckConstraint,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 from sqlalchemy_utils import ChoiceType
@@ -116,6 +118,10 @@ class Offer(TimestampMixin, Base):
         default=None,
     )
 
+    @property
+    def is_alone(self) -> bool:
+        return self.teacher_type is None
+
     product: Mapped[Product] = relationship("Product")
 
 
@@ -157,6 +163,13 @@ class TeacherAssignment(TimestampMixin, Base):
 
 
 class StudentProduct(TimestampMixin, Base):
+    __table_args__ = (
+        CheckConstraint(
+            "(teacher_type IS NULL) = (teacher_product_id IS NULL)",
+            name="check_teacher",
+        ),
+        UniqueConstraint("student_id", "product_id"),
+    )
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     student_id: Mapped[int] = mapped_column(
         BigInteger,
@@ -188,14 +201,26 @@ class StudentProduct(TimestampMixin, Base):
         nullable=False,
     )
     cohort: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
-    teacher_rate: Mapped[int] = mapped_column(Integer, default=None, nullable=True)
-    teacher_rate_date: Mapped[date] = mapped_column(Date, default=None, nullable=True)
-    expulsion_at: Mapped[datetime] = mapped_column(
+    teacher_rate: Mapped[int | None] = mapped_column(
+        Integer, default=None, nullable=True
+    )
+    teacher_rate_date: Mapped[date | None] = mapped_column(
+        Date, default=None, nullable=True
+    )
+    expulsion_at: Mapped[datetime | None] = mapped_column(
         DateTime,
         default=None,
         index=True,
         nullable=True,
     )
+
+    @property
+    def is_active(self) -> bool:
+        return self.expulsion_at is None
+
+    @property
+    def is_alone(self) -> bool:
+        return self.teacher_type is None
 
 
 class TeacherProduct(TimestampMixin, Base):
@@ -334,9 +359,6 @@ class VerifiedWorkFile(TimestampMixin, Base):
 
 
 class Setting(TimestampMixin, Base):
-
-    """Dynamic config data for app."""
-
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     key: Mapped[str] = mapped_column(
         String(128),
