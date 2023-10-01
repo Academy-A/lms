@@ -1,5 +1,6 @@
 from collections.abc import AsyncGenerator, Callable
 from typing import Any
+from fastapi import BackgroundTasks
 
 from sqlalchemy import Engine, create_engine as sa_create_engine
 from sqlalchemy.orm import sessionmaker
@@ -34,10 +35,12 @@ def create_async_session_factory(
 
 def create_provider(
     session_factory: async_sessionmaker[AsyncSession],
-) -> Callable[[], AsyncGenerator[DatabaseProvider, None]]:
-    async def wrapper() -> AsyncGenerator[DatabaseProvider, None]:
+) -> Callable[[BackgroundTasks], AsyncGenerator[DatabaseProvider, None]]:
+    async def wrapper(
+        background_tasks: BackgroundTasks,
+    ) -> AsyncGenerator[DatabaseProvider, None]:
         async with session_factory() as session:
-            yield DatabaseProvider(session=session)
+            yield DatabaseProvider(session=session, background_tasks=background_tasks)
 
     return wrapper
 

@@ -34,6 +34,12 @@ class Repository(ABC, Generic[Model]):
         await self._session.commit()
         return result.one()
 
+    async def save(self, obj: Model) -> Model:
+        self._session.add(obj)
+        await self._session.commit()
+        await self._session.refresh(obj)
+        return obj
+
     async def _paginate(
         self, query: Select, page: int, page_size: int
     ) -> PaginationData:
