@@ -69,14 +69,9 @@ class Subject(TimestampMixin, Base):
 
 class Flow(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    product_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("product.id"), nullable=False, index=True
-    )
-
-    product: Mapped[Product] = relationship("Product")
 
     def __repr__(self) -> str:
-        return f"<Flow id={self.id} product_id={self.product_id}"
+        return f"<Flow id={self.id}>"
 
 
 class ProductGroup(TimestampMixin, Base):
