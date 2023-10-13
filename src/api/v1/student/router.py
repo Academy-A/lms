@@ -35,6 +35,7 @@ async def enroll_student_route(
             email=enroll_student.student.email,
             first_name=enroll_student.student.first_name,
             last_name=enroll_student.student.last_name,
+            flow_id=enroll_student.student.flow_id,
         ),
         offer_ids=enroll_student.offer_ids,
     )

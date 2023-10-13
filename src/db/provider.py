@@ -75,7 +75,7 @@ class DatabaseProvider:
         return student_product
 
     async def enroll_student_by_offer_id(
-        self, student_id: int, offer_id: int
+        self, student_id: int, offer_id: int, flow_id: int | None = None
     ) -> StudentProduct:
         offer = await self.offer.read_by_id(offer_id=offer_id)
         teacher_product = None
@@ -84,6 +84,7 @@ class DatabaseProvider:
                 await self.teacher_product.find_teacher_product_for_student_on_product(
                     product_id=offer.product_id,
                     teacher_type=offer.teacher_type,
+                    flow_id=flow_id,
                 )
             )
         student_product = await self.student_product.create(
@@ -93,6 +94,7 @@ class DatabaseProvider:
             offer_id=offer.id,
             teacher_type=offer.teacher_type,
             teacher_product_id=teacher_product.id if teacher_product else None,
+            flow_id=flow_id,
         )
         if teacher_product is not None:
             await self.teacher_assignment.create(
@@ -136,6 +138,7 @@ class DatabaseProvider:
                 await self.teacher_product.find_teacher_product_for_student_on_product(
                     product_id=new_offer.product_id,
                     teacher_type=new_offer.teacher_type,  # type: ignore[arg-type]
+                    flow_id=student_product.flow_id,
                 )
             )
             student_product.teacher_type = new_offer.teacher_type

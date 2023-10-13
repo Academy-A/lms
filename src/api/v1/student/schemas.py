@@ -4,6 +4,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr
 class CreateStudentSchema(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
+    flow_id: int | None = None
     vk_id: int
     soho_id: int
     email: str
