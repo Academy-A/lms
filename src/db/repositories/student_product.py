@@ -35,6 +35,7 @@ class StudentProductRepository(Repository[StudentProduct]):
         cohort: int,
         teacher_type: TeacherType | None = None,
         teacher_product_id: int | None = None,
+        flow_id: int | None = None,
     ) -> StudentProduct:
         query = (
             insert(StudentProduct)
@@ -45,6 +46,7 @@ class StudentProductRepository(Repository[StudentProduct]):
                 cohort=cohort,
                 teacher_type=teacher_type,
                 teacher_product_id=teacher_product_id,
+                flow_id=flow_id,
             )
             .returning(StudentProduct)
         )

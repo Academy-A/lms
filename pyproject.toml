@@ -17,6 +17,7 @@ httpx = "^0.24.1"
 pydantic = {extras = ["email"], version = "^2.3.0"}
 celery = "^5.3.4"
 orjson = "^3.9.7"
+greenlet = "^3.0.0"
 
 [tool.poetry.group.backend.dependencies]
 fastapi = "^0.101.1"

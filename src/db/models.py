@@ -67,6 +67,18 @@ class Subject(TimestampMixin, Base):
     )
 
 
+class Flow(TimestampMixin, Base):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    product_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("product.id"), nullable=False, index=True
+    )
+
+    product: Mapped[Product] = relationship("Product")
+
+    def __repr__(self) -> str:
+        return f"<Flow id={self.id} product_id={self.product_id}"
+
+
 class ProductGroup(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(256), nullable=False, index=True)
@@ -200,6 +212,12 @@ class StudentProduct(TimestampMixin, Base):
         index=True,
         nullable=False,
     )
+    flow_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("flow.id"),
+        index=True,
+        nullable=True,
+    )
     cohort: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     teacher_rate: Mapped[int | None] = mapped_column(
         Integer, default=None, nullable=True
@@ -319,6 +337,11 @@ class TeacherProduct(TimestampMixin, Base):
     @property
     def is_curator(self) -> bool:
         return self.type == TeacherType.CURATOR
+
+
+class TeacherProductFlow(Base):
+    teacher_product_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    flow_id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
 
 class Reviewer(Base, TimestampMixin):
