@@ -1,10 +1,10 @@
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict
 
 
 class CreateStudentSchema(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
-    flow_id: int | None = None
+    raw_soho_flow_id: str
     vk_id: int
     soho_id: int
     email: str
@@ -17,7 +17,7 @@ class EnrollStudentSchema(BaseModel):
 
 class ExpulsionStudentSchema(BaseModel):
     vk_id: int
-    offer_id: int
+    raw_soho_flow_id: str
 
 
 class ReadStudentSchema(BaseModel):
@@ -27,7 +27,6 @@ class ReadStudentSchema(BaseModel):
     first_name: str
     last_name: str
     vk_id: int
-    email: EmailStr
 
 
 class ReadStudentProductSchema(BaseModel):

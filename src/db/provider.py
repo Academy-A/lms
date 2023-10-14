@@ -4,6 +4,7 @@ from fastapi import BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.clients.autopilot import send_teacher_to_autopilot
 from src.db.models import Offer, StudentProduct
+from src.db.repositories.flow import FlowRepository
 from src.db.repositories.offer import OfferRepository
 from loguru import logger
 from src.db.repositories.product import ProductRepository
@@ -22,6 +23,7 @@ class DatabaseProvider:
     def __init__(
         self, session: AsyncSession, background_tasks: BackgroundTasks
     ) -> None:
+        self.flow = FlowRepository(session=session)
         self.offer = OfferRepository(session=session)
         self.product = ProductRepository(session=session)
         self.soho = SohoRepository(session=session)
@@ -61,9 +63,11 @@ class DatabaseProvider:
                 student_product=old_student_product, new_offer=offer
             )
         else:
+            flow = await self.flow.get_by_soho_id(new_student.flow_id)
             student_product = await self.enroll_student_by_offer_id(
                 student_id=student.id,
                 offer_id=offer_id,
+                flow_id=flow.id if flow else None,
             )
             if student_product.teacher_product_id and student_product.teacher_type:
                 await self.send_teacher_assignment_to_autopilot(
@@ -162,6 +166,7 @@ class DatabaseProvider:
         self,
         student_vk_id: int,
         offer_id: int,
+        soho_flow_id: int,
     ) -> None:
         student = await self.student.read_by_vk_id(
             vk_id=student_vk_id,

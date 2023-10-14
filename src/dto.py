@@ -8,4 +8,4 @@ class NewStudentData:
     email: str
     first_name: str | None
     last_name: str | None
-    flow_id: int | None
+    flow_id: int
