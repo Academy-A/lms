@@ -5,18 +5,18 @@ from datetime import date, datetime
 from sqlalchemy import (
     BigInteger,
     Boolean,
+    CheckConstraint,
     Date,
     DateTime,
     Float,
     ForeignKey,
     Integer,
     String,
+    UniqueConstraint,
     case,
     func,
     select,
     text,
-    CheckConstraint,
-    UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 from sqlalchemy_utils import ChoiceType
@@ -31,14 +31,12 @@ class Student(TimestampMixin, Base):
     vk_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=False)
     first_name: Mapped[str] = mapped_column(String(128), nullable=False, default="")
     last_name: Mapped[str] = mapped_column(String(128), nullable=False, default="")
-    fullname: Mapped[str] = column_property(first_name + " " + last_name)
 
-    products: Mapped[list[Product]] = relationship(
-        "Product",
-        secondary="student_product",
-    )
-
-    soho: Mapped[Soho] = relationship("Soho", back_populates="student", uselist=False)
+    def __repr__(self) -> str:
+        return (
+            f"<Student id={self.id} vk_id={self.vk_id} "
+            f"first_name={self.first_name} last_name={self.last_name}>"
+        )
 
 
 class Soho(TimestampMixin, Base):
@@ -53,6 +51,9 @@ class Soho(TimestampMixin, Base):
 
     student: Mapped[Student] = relationship("Student")
 
+    def __repr__(self) -> str:
+        return f"<Soho id={self.id} email={self.email} student_id={self.email}>"
+
 
 class Subject(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -60,11 +61,6 @@ class Subject(TimestampMixin, Base):
     eng_name: Mapped[str] = mapped_column(String, index=True, unique=True)
     autopilot_url: Mapped[str] = mapped_column(String(1024), nullable=True)
     group_vk_url: Mapped[str] = mapped_column(String(1024), nullable=False)
-
-    products: Mapped[list[Product]] = relationship(
-        "Product",
-        back_populates="subject",
-    )
 
 
 class Flow(TimestampMixin, Base):
@@ -78,8 +74,6 @@ class ProductGroup(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(256), nullable=False, index=True)
     eng_name: Mapped[str] = mapped_column(String(256), nullable=False, index=True)
-
-    products: Mapped[list[Product]] = relationship("Product")
 
 
 class Product(TimestampMixin, Base):
@@ -102,11 +96,8 @@ class Product(TimestampMixin, Base):
     start_date: Mapped[date] = mapped_column(Date, index=True, nullable=True)
     end_date: Mapped[date] = mapped_column(Date, index=True, nullable=True)
 
-    subject: Mapped[Subject] = relationship("Subject", back_populates="products")
-    product_group: Mapped[ProductGroup] = relationship(
-        "ProductGroup",
-        back_populates="products",
-    )
+    subject: Mapped[Subject] = relationship("Subject")
+    product_group: Mapped[ProductGroup] = relationship("ProductGroup")
 
 
 class FlowProduct(Base):
@@ -117,6 +108,9 @@ class FlowProduct(Base):
         Integer, ForeignKey("product.id"), primary_key=True
     )
     soho_id: Mapped[int] = mapped_column(Integer, unique=True, primary_key=True)
+
+    product: Mapped[Product] = relationship("Product")
+    flow: Mapped[Flow] = relationship("Flow")
 
 
 class Offer(TimestampMixin, Base):
@@ -135,11 +129,11 @@ class Offer(TimestampMixin, Base):
         default=None,
     )
 
+    product: Mapped[Product] = relationship("Product")
+
     @property
     def is_alone(self) -> bool:
         return self.teacher_type is None
-
-    product: Mapped[Product] = relationship("Product")
 
 
 class Teacher(TimestampMixin, Base):
@@ -171,6 +165,9 @@ class TeacherAssignment(TimestampMixin, Base):
         default=datetime.now,
     )
     removed_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
+
+    student_product: Mapped[StudentProduct] = relationship("StudentProduct")
+    teacher_product: Mapped[TeacherProduct] = relationship("TeacherProduct")
 
     def __repr__(self) -> str:
         return (
@@ -236,6 +233,12 @@ class StudentProduct(TimestampMixin, Base):
         index=True,
         nullable=True,
     )
+
+    student: Mapped[Student] = relationship("Student")
+    product: Mapped[Product] = relationship("Product")
+    teacher_product: Mapped[TeacherProduct | None] = relationship("TeacherProduct")
+    offer: Mapped[Offer] = relationship("Offer")
+    flow: Mapped[Flow | None] = relationship("Flow")
 
     @property
     def is_active(self) -> bool:
@@ -335,6 +338,9 @@ class TeacherProduct(TimestampMixin, Base):
         ),
     )
 
+    teacher: Mapped[Teacher] = relationship("Teacher")
+    product: Mapped[Product] = relationship("Product")
+
     @property
     def is_mentor(self) -> bool:
         return self.type == TeacherType.MENTOR
@@ -352,12 +358,14 @@ class TeacherProductFlow(Base):
         Integer, ForeignKey("flow.id"), primary_key=True
     )
 
+    teacher_product: Mapped[TeacherProduct] = relationship("TeacherProduct")
+    flow: Mapped[Flow] = relationship("Flow")
+
 
 class Reviewer(Base, TimestampMixin):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     first_name: Mapped[str] = mapped_column(String(128), nullable=False, default="")
     last_name: Mapped[str] = mapped_column(String(128), nullable=False, default="")
-    fullname: Mapped[str] = column_property(first_name + " " + last_name)
     product_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("product.id"),
@@ -374,6 +382,9 @@ class Reviewer(Base, TimestampMixin):
     abs_max: Mapped[int] = mapped_column(Integer, default=1000, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
+    product: Mapped[Product] = relationship("Product")
+    teacher_product: Mapped[TeacherProduct | None] = relationship("TeacherProduct")
+
 
 class VerifiedWorkFile(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -388,6 +399,9 @@ class VerifiedWorkFile(TimestampMixin, Base):
     )
     name: Mapped[str] = mapped_column(String(512), nullable=False)
     url: Mapped[str] = mapped_column(String(1024), nullable=False)
+
+    subject: Mapped[Subject] = relationship("Subject")
+    student: Mapped[Student | None] = relationship("Student")
 
 
 class Setting(TimestampMixin, Base):

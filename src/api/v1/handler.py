@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 
 from src.api.v1.schemas import StatusResponseSchema
-from src.exceptions import LMSError, StudentAlreadyEnrolledError, OfferNotFoundError
+from src.exceptions import LMSError, OfferNotFoundError, StudentAlreadyEnrolledError
 
 
 async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
@@ -37,5 +37,5 @@ def exception_json_response(status_code: int, detail: str) -> JSONResponse:
             ok=False,
             status_code=status_code,
             message=detail,
-        ).dict(),
+        ).model_dump(),
     )

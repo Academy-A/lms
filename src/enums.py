@@ -1,6 +1,7 @@
-import enum
+from enum import StrEnum, unique
 
 
-class TeacherType(enum.StrEnum):
+@unique
+class TeacherType(StrEnum):
     CURATOR = "CURATOR"
     MENTOR = "MENTOR"

@@ -10,37 +10,39 @@ packages = [{include = "new_lms"}]
 [tool.poetry.dependencies]
 python = "^3.11"
 pydantic-settings = "^2.0.3"
-SQLAlchemy = "^2.0.20"
+SQLAlchemy = "^2.0.22"
 loguru = "^0.7.0"
 sqlalchemy-utils = "^0.41.1"
 httpx = "^0.24.1"
-pydantic = {extras = ["email"], version = "^2.3.0"}
+pydantic = {extras = ["email"], version = "^2.4.2"}
 celery = "^5.3.4"
-orjson = "^3.9.7"
+orjson = "^3.9.9"
 greenlet = "^3.0.0"
 
 [tool.poetry.group.backend.dependencies]
 fastapi = "^0.101.1"
-alembic = "^1.11.3"
+alembic = "^1.12.0"
 uvicorn = "^0.23.2"
 asyncpg = "^0.28.0"
 python-jose = "^3.3.0"
 gunicorn = "^21.2.0"
 
 [tool.poetry.group.worker.dependencies]
-psycopg2-binary = "^2.9.7"
+psycopg2-binary = "^2.9.9"
 google-api-service-helper = "^0.1.1"
 
 [tool.poetry.group.dev.dependencies]
-pre-commit = "^3.3.3"
-mypy = "^1.5.1"
+pre-commit = "^3.5.0"
+mypy = "^1.6.0"
 types-python-jose = "^3.3.4.8"
-pytest = "^7.4.1"
+pytest = "^7.4.2"
 httpx = "^0.24.1"
 pytest-asyncio = "^0.21.1"
-pytest-randomly = "^3.15.0"
 pytest-deadfixtures = "^2.2.1"
-factory-boy = "^3.3.0"
+polyfactory = "^2.9.0"
+pytest-cov = "^4.1.0"
+black = "^23.9.1"
+bandit = "^1.7.5"
 
 [build-system]
 requires = ["poetry-core"]

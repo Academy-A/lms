@@ -1,23 +1,18 @@
-from datetime import datetime, timedelta
 import json
+from datetime import datetime, timedelta
+
+from google_api_service_helper import GoogleDrive, GoogleSpreadsheet
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from google_api_service_helper import GoogleDrive, GoogleSpreadsheet
 
 from src.clients.soho.client import SohoClient
 from src.config import Settings
 from src.controllers.homework_distribution.dto import (
-    ReviewerDTO,
     HomeworkDTO,
     ProductDTO,
+    ReviewerDTO,
 )
-from src.db.models import (
-    Product,
-    Reviewer,
-    Setting,
-    Student,
-    StudentProduct,
-)
+from src.db.models import Product, Reviewer, Setting, Student, StudentProduct
 from src.enums import TeacherType
 from src.exceptions.product import ProductNotFoundError
 
@@ -76,7 +71,7 @@ def get_reviewers(session: Session, product_id: int) -> list[ReviewerDTO]:
     return [
         ReviewerDTO(
             id=r.id,
-            name=r.fullname,
+            name=r.first_name + " " + r.last_name,
             product_id=r.product_id,
             teacher_product_id=r.teacher_product_id,
             email=r.email,
@@ -99,7 +94,7 @@ def get_homeworks(
     homeworks = soho.get_homeworks_for_reviews_sync(homework_id=homework_id).homeworks
 
     query = (
-        select(Student.vk_id, Student.fullname, StudentProduct)
+        select(Student.vk_id, Student.first_name, Student.last_name, StudentProduct)
         .join(Student, Student.id == StudentProduct.student_id)
         .where(
             StudentProduct.product_id == product_id,
@@ -109,7 +104,7 @@ def get_homeworks(
         )
     )
     hws = []
-    for vk_id, fullname, student_product in session.execute(query).all():
+    for vk_id, first_name, last_name, student_product in session.execute(query).all():
         for homework in homeworks:
             if homework.vk_id == vk_id:
                 mentor_id = (
@@ -119,7 +114,7 @@ def get_homeworks(
                 )
                 hws.append(
                     HomeworkDTO(
-                        student_name=fullname,
+                        student_name=first_name + " " + last_name,
                         vk_student_id=vk_id,
                         soho_student_id=homework.client_id,
                         submission_url=str(homework.chat_url),
