@@ -66,7 +66,7 @@ async def expulsion_student_route(
     "/{student_id}",
     response_model=ReadStudentSchema,
     responses={
-        203: {"model": StatusResponseSchema},
+        403: {"model": StatusResponseSchema},
         404: {"model": StatusResponseSchema},
     },
 )

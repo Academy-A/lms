@@ -1,23 +1,25 @@
 import asyncio
+from collections.abc import AsyncGenerator
 from pathlib import Path
-from typing import AsyncGenerator
-from httpx import AsyncClient
-import pytest
 
-from alembic.config import Config as AlembicConfig
+import pytest
 import pytest_asyncio
+from alembic.config import Config as AlembicConfig
+from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import (
-    create_async_engine,
     AsyncEngine,
-    async_sessionmaker,
     AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
 )
 
+from tests.factories import factories
+from tests.utils import prepare_new_database, run_async_migrations
+
+from src.api.services import generate_token
 from src.config import Settings
 from src.db.models import Base
-from src.setup_app import get_appliation
-from tests.factories.models import factories
-from tests.utils import prepare_new_database, run_async_migrations
+from src.setup_app import get_application
 
 PROJECT_PATH = Path(__file__).parent.parent.resolve()
 
@@ -70,7 +72,7 @@ async def session(
         session: AsyncSession = sessionmaker()
 
         for factory in factories:
-            factory._meta.sqlalchemy_session = session
+            factory.__async_session__ = session
         yield session
     finally:
         await session.close()
@@ -78,8 +80,14 @@ async def session(
 
 @pytest_asyncio.fixture(scope="session")
 async def client(
-    settings: Settings, async_engine: AsyncEngine
+    settings: Settings,
+    async_engine: AsyncEngine,
 ) -> AsyncGenerator[AsyncClient, None]:
-    app = get_appliation(settings=settings)
+    app = get_application(settings=settings)
     async with AsyncClient(app=app, base_url="http://testserver") as client:
         yield client
+
+
+@pytest.fixture(scope="session")
+def token(settings: Settings) -> str:
+    return generate_token(data={"test_data": True}, secret_key=settings.SECRET_KEY)
