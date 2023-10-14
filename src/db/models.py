@@ -109,6 +109,16 @@ class Product(TimestampMixin, Base):
     )
 
 
+class FlowProduct(Base):
+    flow_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("flow.id"), primary_key=True
+    )
+    product_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("product.id"), primary_key=True
+    )
+    soho_id: Mapped[int] = mapped_column(Integer, unique=True, primary_key=True)
+
+
 class Offer(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     product_id: Mapped[int] = mapped_column(
@@ -335,8 +345,12 @@ class TeacherProduct(TimestampMixin, Base):
 
 
 class TeacherProductFlow(Base):
-    teacher_product_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    flow_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    teacher_product_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("teacher_product.id"), primary_key=True
+    )
+    flow_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("flow.id"), primary_key=True
+    )
 
 
 class Reviewer(Base, TimestampMixin):

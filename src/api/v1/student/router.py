@@ -1,6 +1,5 @@
 from fastapi import APIRouter, BackgroundTasks, Depends
 
-
 from src.api.deps import DatabaseProviderMarker
 from src.api.services import token_required
 from src.api.v1.schemas import StatusResponseSchema
@@ -11,6 +10,7 @@ from src.api.v1.student.schemas import (
     ReadStudentProductSchema,
     ReadStudentSchema,
 )
+from src.api.v1.student.utils import parse_soho_flow_id
 from src.db.models import Student
 from src.db.provider import DatabaseProvider
 from src.dto import NewStudentData
@@ -28,6 +28,8 @@ async def enroll_student_route(
     background_tasks: BackgroundTasks,
     provider: DatabaseProvider = Depends(DatabaseProviderMarker),
 ) -> ReadStudentProductSchema:
+    _, soho_flow_id = parse_soho_flow_id(enroll_student.student.raw_soho_flow_id)
+
     student_product = await provider.enroll_student(
         new_student=NewStudentData(
             vk_id=enroll_student.student.vk_id,
@@ -35,7 +37,7 @@ async def enroll_student_route(
             email=enroll_student.student.email,
             first_name=enroll_student.student.first_name,
             last_name=enroll_student.student.last_name,
-            flow_id=enroll_student.student.flow_id,
+            flow_id=soho_flow_id,
         ),
         offer_ids=enroll_student.offer_ids,
     )
@@ -47,9 +49,11 @@ async def expulsion_student_route(
     expulsion_data: ExpulsionStudentSchema,
     provider: DatabaseProvider = Depends(DatabaseProviderMarker),
 ) -> StatusResponseSchema:
+    offer_id, soho_flow_id = parse_soho_flow_id(expulsion_data.raw_soho_flow_id)
     await provider.expulse_student_by_offer_id(
         student_vk_id=expulsion_data.vk_id,
-        offer_id=expulsion_data.offer_id,
+        offer_id=offer_id,
+        soho_flow_id=soho_flow_id,
     )
     return StatusResponseSchema(
         ok=True,
