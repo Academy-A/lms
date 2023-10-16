@@ -3,7 +3,14 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 
 from src.api.v1.schemas import StatusResponseSchema
-from src.exceptions import LMSError, OfferNotFoundError, StudentAlreadyEnrolledError
+from src.exceptions import (
+    LMSError,
+    OfferNotFoundError,
+    SohoNotFoundError,
+    StudentAlreadyEnrolledError,
+    StudentNotFoundError,
+)
+from src.exceptions.student import StudentVKIDAlreadyUsedError
 
 
 async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
@@ -11,10 +18,25 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
 
 
 async def lms_exception_handler(request: Request, exc: LMSError) -> JSONResponse:
+    if isinstance(exc, SohoNotFoundError):
+        return exception_json_response(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Soho not found"
+        )
+
+    if isinstance(exc, StudentNotFoundError):
+        return exception_json_response(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Student not found"
+        )
+
     if isinstance(exc, StudentAlreadyEnrolledError):
         return exception_json_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Student already enrolled on product",
+        )
+
+    if isinstance(exc, StudentVKIDAlreadyUsedError):
+        return exception_json_response(
+            status_code=status.HTTP_409_CONFLICT, detail="VK ID already in database"
         )
 
     if isinstance(exc, OfferNotFoundError):

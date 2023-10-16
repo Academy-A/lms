@@ -5,14 +5,9 @@ from sqlalchemy import ScalarResult, insert, select
 from sqlalchemy.exc import DBAPIError, IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.db.models import (
-    Student,
-)
+from src.db.models import Student
 from src.db.repositories.base import Repository
-from src.exceptions import (
-    LMSError,
-    StudentNotFoundError,
-)
+from src.exceptions import LMSError, StudentNotFoundError, StudentVKIDAlreadyUsedError
 
 
 class StudentRepository(Repository[Student]):
@@ -55,7 +50,13 @@ class StudentRepository(Repository[Student]):
         except NoResultFound:
             await self._session.rollback()
             raise StudentNotFoundError
+        except IntegrityError as e:
+            await self._session.rollback()
+            self._raise_error(e)
 
     def _raise_error(self, e: DBAPIError) -> NoReturn:
         logger.exception("An error has occurred")
+        constraint = e.__cause__.__cause__.constraint_name  # type: ignore[union-attr]
+        if constraint == "uq__student__vk_id":
+            raise StudentVKIDAlreadyUsedError from e
         raise LMSError from e
