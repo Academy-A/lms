@@ -53,7 +53,7 @@ class SohoFactory(SQLAlchemyFactory[Soho]):
     __set_relationships__ = True
     __set_foreign_keys__ = False
 
-    student = Fixture(StudentFactory)
+    student = StudentFactory
 
 
 class OfferFactory(SQLAlchemyFactory[Offer]):

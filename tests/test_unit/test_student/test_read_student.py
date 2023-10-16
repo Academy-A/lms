@@ -27,6 +27,16 @@ async def test_invalid_token(client: AsyncClient) -> None:
     }
 
 
+async def test_student_not_found(client: AsyncClient, token: str) -> None:
+    response = await client.get(f"v1/students/0", params={"token": token})
+    assert response.status_code == 404
+    assert response.json() == {
+        "ok": False,
+        "status_code": 404,
+        "message": "Student not found",
+    }
+
+
 async def test_successful_read(
     client: AsyncClient, session: AsyncSession, token: str
 ) -> None:
