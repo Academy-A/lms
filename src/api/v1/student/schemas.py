@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class CreateStudentSchema(BaseModel):
@@ -41,3 +41,8 @@ class ReadStudentProductSchema(BaseModel):
 
 class ChangeVKIDSchema(BaseModel):
     vk_id: int
+
+
+class GradeTeacherSchema(BaseModel):
+    grade: int = Field(ge=0, le=5)
+    product_id: int

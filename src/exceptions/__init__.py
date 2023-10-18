@@ -4,6 +4,7 @@ from src.exceptions.soho import SohoNotFoundError
 from src.exceptions.student import (
     StudentAlreadyEnrolledError,
     StudentNotFoundError,
+    StudentProductHasNotTeacherError,
     StudentProductNotFoundError,
     StudentVKIDAlreadyUsedError,
 )
@@ -22,6 +23,7 @@ __all__ = [
     "SohoNotFoundError",
     "StudentAlreadyEnrolledError",
     "StudentNotFoundError",
+    "StudentProductHasNotTeacherError",
     "StudentProductNotFoundError",
     "StudentVKIDAlreadyUsedError",
     "SubjectNotFoundError",
