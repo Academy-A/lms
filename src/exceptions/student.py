@@ -1,7 +1,7 @@
 from src.exceptions.base import EntityNotFoundError, LMSError
 
 
-class StudentAlreadyEnrolldError(LMSError):
+class StudentAlreadyEnrolledError(LMSError):
     pass
 
 
@@ -10,4 +10,12 @@ class StudentNotFoundError(EntityNotFoundError):
 
 
 class StudentProductNotFoundError(EntityNotFoundError):
+    pass
+
+
+class StudentVKIDAlreadyUsedError(LMSError):
+    pass
+
+
+class StudentProductHasNotTeacherError(LMSError):
     pass

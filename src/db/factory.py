@@ -1,21 +1,24 @@
-from collections.abc import AsyncGenerator, Callable
 from typing import Any
 
-from sqlalchemy.ext.asyncio import (
-    AsyncEngine,
-    AsyncSession,
-    async_sessionmaker,
-    create_async_engine,
-)
-
-from src.db.provider import DatabaseProvider
+import orjson
+from sqlalchemy import Engine
+from sqlalchemy import create_engine as sa_create_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine as sa_create_async_engine
+from sqlalchemy.orm import sessionmaker
 
 
-def create_engine(connection_uri: str, **engine_kwargs: Any) -> AsyncEngine:
-    return create_async_engine(url=connection_uri, **engine_kwargs)
+def create_async_engine(connection_uri: str, **engine_kwargs: Any) -> AsyncEngine:
+    if engine_kwargs.get("json_serializer") is None:
+        engine_kwargs["json_serializer"] = orjson.dumps
+    if engine_kwargs.get("json_deserializer") is None:
+        engine_kwargs["json_deserializer"] = orjson.loads
+    return sa_create_async_engine(url=connection_uri, **engine_kwargs)
 
 
-def create_session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:
+def create_async_session_factory(
+    engine: AsyncEngine,
+) -> async_sessionmaker[AsyncSession]:
     return async_sessionmaker(
         bind=engine,
         class_=AsyncSession,
@@ -23,11 +26,15 @@ def create_session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSessi
     )
 
 
-def create_provider(
-    session_factory: async_sessionmaker[AsyncSession],
-) -> Callable[[], AsyncGenerator[DatabaseProvider, None]]:
-    async def wrapper() -> AsyncGenerator[DatabaseProvider, None]:
-        async with session_factory() as session:
-            yield DatabaseProvider(session=session)
+def create_engine(connection_uri: str, **engine_kwargs: Any) -> Engine:
+    if engine_kwargs.get("json_serializer") is None:
+        engine_kwargs["json_serializer"] = orjson.dumps
+    if engine_kwargs.get("json_deserializer") is None:
+        engine_kwargs["json_deserializer"] = orjson.loads
+    return sa_create_engine(url=connection_uri, **engine_kwargs)
 
-    return wrapper
+
+def create_session_factory(
+    engine: Engine,
+) -> sessionmaker:
+    return sessionmaker(bind=engine, autoflush=False, autocommit=False)

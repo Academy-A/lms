@@ -1,11 +1,10 @@
-import uuid
-
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class CreateStudentSchema(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
+    raw_soho_flow_id: str
     vk_id: int
     soho_id: int
     email: str
@@ -13,21 +12,21 @@ class CreateStudentSchema(BaseModel):
 
 class EnrollStudentSchema(BaseModel):
     student: CreateStudentSchema
-    offer_id: uuid.UUID
+    offer_ids: list[int]
 
 
 class ExpulsionStudentSchema(BaseModel):
     vk_id: int
-    offer_id: uuid.UUID
+    raw_soho_flow_id: str
 
 
 class ReadStudentSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    id: int
     first_name: str
     last_name: str
     vk_id: int
-    email: str
 
 
 class ReadStudentProductSchema(BaseModel):
@@ -35,7 +34,15 @@ class ReadStudentProductSchema(BaseModel):
 
     student_id: int
     product_id: int
-    mentor_id: int | None
-    curator_id: int | None
+    teacher_product_id: int | None
     offer_id: int | None
     cohort: int
+
+
+class ChangeVKIDSchema(BaseModel):
+    vk_id: int
+
+
+class GradeTeacherSchema(BaseModel):
+    grade: int = Field(ge=0, le=5)
+    product_id: int

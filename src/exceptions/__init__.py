@@ -1,9 +1,12 @@
 from src.exceptions.base import EntityNotFoundError, LMSError
-from src.exceptions.product import ProductNotFoundError
+from src.exceptions.product import OfferNotFoundError, ProductNotFoundError
+from src.exceptions.soho import SohoNotFoundError
 from src.exceptions.student import (
-    StudentAlreadyEnrolldError,
+    StudentAlreadyEnrolledError,
     StudentNotFoundError,
+    StudentProductHasNotTeacherError,
     StudentProductNotFoundError,
+    StudentVKIDAlreadyUsedError,
 )
 from src.exceptions.subject import SubjectNotFoundError
 from src.exceptions.teacher import (
@@ -15,12 +18,16 @@ from src.exceptions.teacher import (
 __all__ = [
     "EntityNotFoundError",
     "LMSError",
+    "OfferNotFoundError",
     "ProductNotFoundError",
-    "StudentAlreadyEnrolldError",
+    "SohoNotFoundError",
+    "StudentAlreadyEnrolledError",
     "StudentNotFoundError",
+    "StudentProductHasNotTeacherError",
     "StudentProductNotFoundError",
+    "StudentVKIDAlreadyUsedError",
     "SubjectNotFoundError",
+    "TeacherAssignmentNotFoundError",
     "TeacherNotFoundError",
     "TeacherProductNotFoundError",
-    "TeacherAssignmentNotFoundError",
 ]

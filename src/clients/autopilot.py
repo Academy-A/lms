@@ -4,7 +4,7 @@ import httpx
 from loguru import logger
 from pydantic import BaseModel
 
-from src.db.models import TeacherType
+from src.enums import TeacherType
 
 AUTOPILOT_TEACHER_TYPE = {
     TeacherType.CURATOR: 2,

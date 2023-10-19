@@ -6,17 +6,19 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Insperia LMS"
     DEBUG: bool = False
 
+    SECRET_KEY: str
+    SECURITY_ALGORITHM: str = "HS256"
+
     POSTGRES_HOST: str
     POSTGRES_PORT: int
     POSTGRES_USER: str
     POSTGRES_PASSWORD: SecretStr
     POSTGRES_DB: str
 
-    REDIS_HOST: str
-    REDIS_PORT: int
-    REDIS_USER: str = ""
-    REDIS_PASSWORD: SecretStr
-    REDIS_DB: str
+    RABBITMQ_HOST: str = "rabbitmq"
+    RABBITMQ_PORT: int = 5672
+    RABBITMQ_USER: str = "guest"
+    RABBITMQ_PASSWORD: str = "guest"
 
     SOHO_API_TOKEN: str
 
@@ -39,19 +41,19 @@ class Settings(BaseSettings):
             database or self.POSTGRES_DB,
         )
 
-    def build_redis_connection_uri(
+    def build_rabbitmq_connection_url(
         self,
         *,
+        driver: str | None = None,
         host: str | None = None,
         port: int | None = None,
         user: str | None = None,
         password: str | None = None,
-        database: str | None = None,
     ) -> str:
-        return "redis://{}:{}@{}:{}/{}".format(
-            user or self.REDIS_USER,
-            password or self.REDIS_PASSWORD.get_secret_value(),
-            host or self.REDIS_HOST,
-            port or self.REDIS_PORT,
-            database or self.REDIS_DB,
+        return "{}://{}:{}@{}:{}//".format(
+            driver or "amqp",
+            user or self.RABBITMQ_USER,
+            password or self.RABBITMQ_PASSWORD,
+            host or self.RABBITMQ_HOST,
+            port or self.RABBITMQ_PORT,
         )
