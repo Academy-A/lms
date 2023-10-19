@@ -17,7 +17,7 @@ class TeacherProductRepository(Repository[TeacherProduct]):
             raise TeacherProductNotFoundError
         return teacher_product
 
-    async def find_teacher_product_for_student_on_product(
+    async def get_for_enroll(
         self,
         product_id: int,
         teacher_type: TeacherType,

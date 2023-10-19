@@ -217,11 +217,11 @@ class StudentProduct(TimestampMixin, Base):
         nullable=True,
     )
     cohort: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
-    teacher_rate: Mapped[int | None] = mapped_column(
+    teacher_grade: Mapped[int | None] = mapped_column(
         Integer, default=None, nullable=True
     )
-    teacher_rate_date: Mapped[date | None] = mapped_column(
-        Date, default=None, nullable=True
+    teacher_graded_at: Mapped[datetime | None] = mapped_column(
+        DateTime, default=None, nullable=True
     )
     expulsion_at: Mapped[datetime | None] = mapped_column(
         DateTime,
@@ -235,14 +235,6 @@ class StudentProduct(TimestampMixin, Base):
     teacher_product: Mapped[TeacherProduct | None] = relationship("TeacherProduct")
     offer: Mapped[Offer] = relationship("Offer")
     flow: Mapped[Flow | None] = relationship("Flow")
-
-    @property
-    def is_active(self) -> bool:
-        return self.expulsion_at is None
-
-    @property
-    def is_alone(self) -> bool:
-        return self.teacher_type is None
 
 
 class TeacherProduct(TimestampMixin, Base):

@@ -1,9 +1,12 @@
 from typing import Any
+
 from sqlalchemy import ScalarResult, insert, select
+from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import NoResultFound, IntegrityError
+
 from src.db.models import StudentProduct
 from src.db.repositories.base import Repository
+from src.dto import StudentProductData
 from src.enums import TeacherType
 from src.exceptions import StudentProductNotFoundError
 
@@ -12,20 +15,21 @@ class StudentProductRepository(Repository[StudentProduct]):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(model=StudentProduct, session=session)
 
-    async def read_by_id(self, student_product_id: int) -> StudentProduct:
+    async def read_by_id(self, student_product_id: int) -> StudentProductData:
         student_product = await self._read_by_id(object_id=student_product_id)
         if student_product is None:
             raise StudentProductNotFoundError
-        return student_product
+        return StudentProductData.from_orm(student_product)
 
     async def find_by_student_and_product(
         self, student_id: int, product_id: int
-    ) -> StudentProduct | None:
+    ) -> StudentProductData | None:
         query = select(StudentProduct).filter_by(
             student_id=student_id,
             product_id=product_id,
         )
-        return (await self._session.scalars(query)).one_or_none()
+        student_product = (await self._session.scalars(query)).one_or_none()
+        return StudentProductData.from_orm(student_product) if student_product else None
 
     async def create(
         self,
@@ -36,7 +40,7 @@ class StudentProductRepository(Repository[StudentProduct]):
         teacher_type: TeacherType | None = None,
         teacher_product_id: int | None = None,
         flow_id: int | None = None,
-    ) -> StudentProduct:
+    ) -> StudentProductData:
         query = (
             insert(StudentProduct)
             .values(
@@ -52,16 +56,17 @@ class StudentProductRepository(Repository[StudentProduct]):
         )
         try:
             result: ScalarResult[StudentProduct] = await self._session.scalars(query)
-            await self._session.commit()
+            await self._session.flush()
         except IntegrityError as e:
             await self._session.rollback()
             self._raise_error(e)
         else:
-            return result.one()
+            return StudentProductData.from_orm(result.one())
 
-    async def update(self, *args: Any, **kwargs: Any) -> StudentProduct:
+    async def update(self, *args: Any, **kwargs: Any) -> StudentProductData:
         try:
-            return await self._update(*args, **kwargs)
+            obj = await self._update(*args, **kwargs)
+            return StudentProductData.from_orm(obj)
         except NoResultFound as e:
             await self._session.rollback()
             raise StudentProductNotFoundError from e

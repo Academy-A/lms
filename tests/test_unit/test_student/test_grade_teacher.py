@@ -234,6 +234,8 @@ async def test_successful(
     student_product = await StudentProductFactory.create_async(
         teacher_product=teacher_product,
         product=teacher_product.product,
+        teacher_grade=None,
+        teacher_graded_at=None,
     )
     soho = await SohoFactory.create_async(student=student_product.student)
     response = await client.post(
@@ -253,3 +255,7 @@ async def test_successful(
     await session.refresh(teacher_product)
     assert teacher_product.grade_counter == 3
     assert teacher_product.average_grade == 4
+
+    await session.refresh(student_product)
+    assert student_product.teacher_grade == 2
+    assert student_product.teacher_graded_at is not None

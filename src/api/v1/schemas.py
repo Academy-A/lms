@@ -4,7 +4,7 @@ from typing import Any, Literal, Self
 
 from pydantic import BaseModel
 
-from src.db.dto import PaginationDTO
+from src.dto import PaginationDTO
 
 
 class MonitoringSchema(BaseModel):
