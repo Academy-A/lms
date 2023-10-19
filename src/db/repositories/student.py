@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.models import Student
 from src.db.repositories.base import Repository
+from src.dto import StudentData
 from src.exceptions import LMSError, StudentNotFoundError, StudentVKIDAlreadyUsedError
 
 
@@ -18,11 +19,11 @@ class StudentRepository(Repository[Student]):
         stmt = select(Student).where(Student.vk_id == vk_id)
         return (await self._session.scalars(stmt)).one_or_none()
 
-    async def read_by_id(self, student_id: int) -> Student:
+    async def read_by_id(self, student_id: int) -> StudentData:
         student = await self._read_by_id(student_id)
         if student is None:
             raise StudentNotFoundError
-        return student
+        return StudentData.from_orm(student)
 
     async def create(
         self,
@@ -37,16 +38,17 @@ class StudentRepository(Repository[Student]):
         )
         try:
             result: ScalarResult[Student] = await self._session.scalars(query)
-            await self._session.commit()
+            await self._session.flush()
         except IntegrityError as e:
             await self._session.rollback()
             self._raise_error(e)
         else:
             return result.one()
 
-    async def update(self, *args: Any, **kwargs: Any) -> Student:
+    async def update(self, *args: Any, **kwargs: Any) -> StudentData:
         try:
-            return await self._update(*args, **kwargs)
+            obj = await self._update(*args, **kwargs)
+            return StudentData.from_orm(obj)
         except NoResultFound:
             await self._session.rollback()
             raise StudentNotFoundError

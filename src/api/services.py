@@ -2,6 +2,7 @@ from collections.abc import MutableMapping
 from typing import Any
 
 from fastapi import Depends, HTTPException
+from fastapi.security import APIKeyQuery
 from jose import JWTError, jwt
 
 from src.api.deps import SettingsMarker
@@ -11,12 +12,12 @@ SECURITY_ALGORITHM = "HS256"
 
 
 async def token_required(
-    token: str = "",
+    token: str = Depends(APIKeyQuery(name="token", auto_error=False)),
     settings: Settings = Depends(SettingsMarker),
 ) -> None:
     if settings.DEBUG:
         return
-    if token == "":
+    if not token:
         raise HTTPException(status_code=401, detail="Unauthorized")
     if not check_token(token=token, secret_key=settings.SECRET_KEY):
         raise HTTPException(status_code=403, detail="Token not recognized")
