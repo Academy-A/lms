@@ -1,3 +1,5 @@
+from typing import Any
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,64 +32,66 @@ async def test_invalid_token(client: AsyncClient) -> None:
     }
 
 
+@pytest.mark.parametrize(
+    ("json_data", "answer"),
+    (
+        pytest.param(
+            None,
+            {
+                "detail": [
+                    {
+                        "input": None,
+                        "loc": ["body"],
+                        "msg": "Field required",
+                        "type": "missing",
+                    }
+                ]
+            },
+            id="check missing body",
+        ),
+        pytest.param(
+            {},
+            {
+                "detail": [
+                    {
+                        "type": "missing",
+                        "loc": ["body", "vk_id"],
+                        "msg": "Field required",
+                        "input": {},
+                    }
+                ]
+            },
+            id="check vk id missing",
+        ),
+        pytest.param(
+            {"vk_id": "asdf"},
+            {
+                "detail": [
+                    {
+                        "type": "int_parsing",
+                        "loc": ["body", "vk_id"],
+                        "msg": "Input should be a valid integer, unable to parse string as an integer",
+                        "input": "asdf",
+                    }
+                ]
+            },
+            id="check vk id type",
+        ),
+    ),
+)
 async def test_validate_data(
-    client: AsyncClient, session: AsyncSession, token: str
+    json_data: dict[str, Any] | None,
+    answer: dict[str, Any],
+    client: AsyncClient,
+    token: str,
 ) -> None:
-    # check missing body
     response = await client.post(
         "v1/students/soho/1/change-vk-id",
         params={"token": token},
+        json=json_data,
     )
     assert response.status_code == 422
-    assert response.json() == {
-        "detail": [
-            {
-                "input": None,
-                "loc": ["body"],
-                "msg": "Field required",
-                "type": "missing",
-                "url": "https://errors.pydantic.dev/2.4/v/missing",
-            }
-        ]
-    }
-
-    # check vk id missing
-    response = await client.post(
-        "v1/students/soho/1/change-vk-id",
-        params={"token": token},
-        json={},
-    )
-    assert response.status_code == 422
-    assert response.json() == {
-        "detail": [
-            {
-                "type": "missing",
-                "loc": ["body", "vk_id"],
-                "msg": "Field required",
-                "input": {},
-                "url": "https://errors.pydantic.dev/2.4/v/missing",
-            }
-        ]
-    }
-
-    # check vk id type
-    response = await client.post(
-        f"v1/students/soho/1/change-vk-id",
-        params={"token": token},
-        json={"vk_id": "asdf"},
-    )
-    assert response.status_code == 422
-    assert response.json() == {
-        "detail": [
-            {
-                "type": "int_parsing",
-                "loc": ["body", "vk_id"],
-                "msg": "Input should be a valid integer, unable to parse string as an integer",
-                "input": "asdf",
-                "url": "https://errors.pydantic.dev/2.4/v/int_parsing",
-            }
-        ]
-    }
+    assert response.json() == answer
 
 
 async def test_soho_not_found(client: AsyncClient, token: str) -> None:

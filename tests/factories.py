@@ -1,8 +1,17 @@
-from polyfactory import Fixture, Use
-from polyfactory.decorators import post_generated
+from polyfactory import Use
 from polyfactory.factories.sqlalchemy_factory import SQLAlchemyFactory
 
-from src.db.models import Offer, Product, ProductGroup, Soho, Student, Subject
+from src.db.models import (
+    Offer,
+    Product,
+    ProductGroup,
+    Soho,
+    Student,
+    StudentProduct,
+    Subject,
+    Teacher,
+    TeacherProduct,
+)
 from src.enums import TeacherType
 
 __all__ = [
@@ -33,19 +42,14 @@ class ProductFactory(SQLAlchemyFactory[Product]):
     __set_relationships__ = True
     __set_foreign_keys__ = False
 
-    subject = Fixture(SubjectFactory)
-    product_group = Fixture(ProductGroupFactory)
+    subject = SubjectFactory
+    product_group = ProductGroupFactory
 
 
 class StudentFactory(SQLAlchemyFactory[Student]):
     __model__ = Student
     __set_relationships__ = True
     __set_foreign_keys__ = False
-
-    @post_generated
-    @classmethod
-    def fullname(cls, first_name: str, last_name: str) -> str:
-        return first_name + " " + last_name
 
 
 class SohoFactory(SQLAlchemyFactory[Soho]):
@@ -61,9 +65,39 @@ class OfferFactory(SQLAlchemyFactory[Offer]):
     __set_relationships__ = True
     __set_foreign_keys__ = False
 
-    teacher_type = Use(SQLAlchemyFactory.__random__.choice, list(TeacherType) + [None])
+    teacher_type = Use(SQLAlchemyFactory.__random__.choice, list(TeacherType))
 
-    product = Fixture(ProductFactory)
+    product = ProductFactory
+
+
+class TeacherFactory(SQLAlchemyFactory[Teacher]):
+    __model__ = Teacher
+    __set_relationships__ = True
+    __set_foreign_keys__ = False
+
+
+class TeacherProductFactory(SQLAlchemyFactory[TeacherProduct]):
+    __model__ = TeacherProduct
+    __set_relationships__ = True
+    __set_foreign_keys__ = False
+
+    type = Use(SQLAlchemyFactory.__random__.choice, list(TeacherType))
+
+    teacher = TeacherFactory
+    product = ProductFactory
+
+
+class StudentProductFactory(SQLAlchemyFactory[StudentProduct]):
+    __model__ = StudentProduct
+    __set_relationships__ = True
+    __set_foreign_keys__ = False
+
+    teacher_type = Use(SQLAlchemyFactory.__random__.choice, list(TeacherType))
+
+    offer = OfferFactory
+    product = ProductFactory
+    student = StudentFactory
+    teacher_product = TeacherProductFactory
 
 
 factories: list[type[SQLAlchemyFactory]] = [
@@ -73,4 +107,6 @@ factories: list[type[SQLAlchemyFactory]] = [
     StudentFactory,
     SohoFactory,
     OfferFactory,
+    StudentProductFactory,
+    TeacherProductFactory,
 ]

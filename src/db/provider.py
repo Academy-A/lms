@@ -1,12 +1,14 @@
 from dataclasses import asdict
 from datetime import datetime
+
 from fastapi import BackgroundTasks
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.clients.autopilot import send_teacher_to_autopilot
 from src.db.models import Offer, StudentProduct
 from src.db.repositories.flow import FlowRepository
 from src.db.repositories.offer import OfferRepository
-from loguru import logger
 from src.db.repositories.product import ProductRepository
 from src.db.repositories.soho import SohoRepository
 from src.db.repositories.student import StudentRepository
@@ -16,7 +18,11 @@ from src.db.repositories.teacher_assignment import TeacherAssignmentRepository
 from src.db.repositories.teacher_product import TeacherProductRepository
 from src.dto import NewStudentData
 from src.enums import TeacherType
-from src.exceptions.student import StudentNotFoundError, StudentProductNotFoundError
+from src.exceptions import (
+    StudentNotFoundError,
+    StudentProductHasNotTeacherError,
+    StudentProductNotFoundError,
+)
 
 
 class DatabaseProvider:
@@ -212,4 +218,24 @@ class DatabaseProvider:
             student_vk_id=student.vk_id,
             teacher_vk_id=teacher.vk_id,
             teacher_type=teacher_type,
+        )
+
+    async def grade_teacher(
+        self,
+        soho_id: int,
+        product_id: int,
+        grade: int,
+    ) -> None:
+        soho = await self.soho.read_by_id(soho_id=soho_id)
+        product = await self.product.read_by_id(product_id=product_id)
+        student_product = await self.student_product.find_by_student_and_product(
+            student_id=soho.student_id,
+            product_id=product.id,
+        )
+        if student_product is None:
+            raise StudentProductNotFoundError
+        if student_product.teacher_product_id is None:
+            raise StudentProductHasNotTeacherError
+        await self.teacher_product.add_grade(
+            teacher_product_id=student_product.teacher_product_id, grade=grade
         )

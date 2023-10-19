@@ -1,5 +1,6 @@
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.db.models import TeacherProduct, TeacherProductFlow
 from src.db.repositories.base import Repository
 from src.enums import TeacherType
@@ -9,6 +10,12 @@ from src.exceptions import TeacherProductNotFoundError
 class TeacherProductRepository(Repository[TeacherProduct]):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(model=TeacherProduct, session=session)
+
+    async def read_by_id(self, teacher_product_id: int) -> TeacherProduct:
+        teacher_product = await self._read_by_id(teacher_product_id)
+        if teacher_product is None:
+            raise TeacherProductNotFoundError
+        return teacher_product
 
     async def find_teacher_product_for_student_on_product(
         self,
@@ -45,7 +52,7 @@ class TeacherProductRepository(Repository[TeacherProduct]):
                 TeacherProduct.is_active.is_(True),
                 TeacherProductFlow.flow_id == flow_id,
             )
-            .order_by(desc(TeacherProduct.rating_coef))
+            .order_by(desc(TeacherProduct.average_grade))
             .limit(1)
         )
 
@@ -64,7 +71,7 @@ class TeacherProductRepository(Repository[TeacherProduct]):
                 TeacherProduct.max_students > 0,
                 TeacherProduct.is_active.is_(True),
             )
-            .order_by(desc(TeacherProduct.rating_coef))
+            .order_by(desc(TeacherProduct.average_grade))
             .limit(1)
         )
 
@@ -72,3 +79,14 @@ class TeacherProductRepository(Repository[TeacherProduct]):
         if teacher_product is None:
             raise TeacherProductNotFoundError
         return teacher_product
+
+    async def add_grade(self, teacher_product_id: int, grade: int) -> None:
+        teacher_product = await self.read_by_id(teacher_product_id=teacher_product_id)
+        new_average_grade = (
+            teacher_product.average_grade * teacher_product.grade_counter + grade
+        ) / (teacher_product.grade_counter + 1)
+        await self._update(
+            TeacherProduct.id == teacher_product.id,
+            average_grade=new_average_grade,
+            grade_counter=teacher_product.grade_counter + 1,
+        )

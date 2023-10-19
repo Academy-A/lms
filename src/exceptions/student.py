@@ -15,3 +15,7 @@ class StudentProductNotFoundError(EntityNotFoundError):
 
 class StudentVKIDAlreadyUsedError(LMSError):
     pass
+
+
+class StudentProductHasNotTeacherError(LMSError):
+    pass

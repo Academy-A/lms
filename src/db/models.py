@@ -13,12 +13,8 @@ from sqlalchemy import (
     Integer,
     String,
     UniqueConstraint,
-    case,
-    func,
-    select,
-    text,
 )
-from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils import ChoiceType
 
 from src.db.base import Base
@@ -274,69 +270,69 @@ class TeacherProduct(TimestampMixin, Base):
         nullable=False,
     )
     max_students: Mapped[int] = mapped_column(Integer, default=100, nullable=False)
-    average_rate: Mapped[int] = mapped_column(Float, default=5, nullable=False)
-    rate_counter: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    average_grade: Mapped[int] = mapped_column(Float, default=5, nullable=False)
+    grade_counter: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
-    fullness: Mapped[float] = column_property(
-        select(
-            func.count(TeacherAssignment.student_product_id),
-        )
-        .select_from(TeacherAssignment)
-        .where(
-            TeacherAssignment.removed_at.is_(None),
-            TeacherAssignment.teacher_product_id == id,
-        )
-        .scalar_subquery()
-        / max_students,
-    )
+    # fullness: Mapped[float] = column_property(
+    #     select(
+    #         func.count(TeacherAssignment.student_product_id),
+    #     )
+    #     .select_from(TeacherAssignment)
+    #     .where(
+    #         TeacherAssignment.removed_at.is_(None),
+    #         TeacherAssignment.teacher_product_id == id,
+    #     )
+    #     .scalar_subquery()
+    #     / max_students,
+    # )
 
-    total_students: Mapped[int] = column_property(
-        select(
-            func.count(TeacherAssignment.student_product_id),
-        )
-        .select_from(TeacherAssignment)
-        .where(TeacherAssignment.teacher_product_id == id)
-        .scalar_subquery(),
-    )
+    # total_students: Mapped[int] = column_property(
+    #     select(
+    #         func.count(TeacherAssignment.student_product_id),
+    #     )
+    #     .select_from(TeacherAssignment)
+    #     .where(TeacherAssignment.teacher_product_id == id)
+    #     .scalar_subquery(),
+    # )
 
-    removal_students: Mapped[int] = column_property(
-        select(
-            func.count(TeacherAssignment.student_product_id),
-        )
-        .select_from(TeacherAssignment)
-        .where(
-            TeacherAssignment.removed_at.is_not(None),
-            TeacherAssignment.teacher_product_id == id,
-            TeacherAssignment.removed_at
-            > (func.current_timestamp() - text("(interval '1 month')")),
-        )
-        .scalar_subquery(),
-    )
+    # removal_students: Mapped[int] = column_property(
+    #     select(
+    #         func.count(TeacherAssignment.student_product_id),
+    #     )
+    #     .select_from(TeacherAssignment)
+    #     .where(
+    #         TeacherAssignment.removed_at.is_not(None),
+    #         TeacherAssignment.teacher_product_id == id,
+    #         TeacherAssignment.removed_at
+    #         > (func.current_timestamp() - text("(interval '1 month')")),
+    #     )
+    #     .scalar_subquery(),
+    # )
 
-    removability: Mapped[float] = column_property(
-        case(
-            *[
-                (
-                    total_students.expression > 0,  # type: ignore[attr-defined]
-                    (total_students.expression - removal_students.expression)  # type: ignore[attr-defined]
-                    / total_students.expression,  # type: ignore[attr-defined]
-                ),
-            ],
-            else_=1.0,
-        ),
-    )
+    # removability: Mapped[float] = column_property(
+    #     case(
+    #         *[
+    #             (
+    #                 total_students.expression > 0,  # type: ignore[attr-defined]
+    #                 (total_students.expression - removal_students.expression)  # type: ignore[attr-defined]
+    #                 / total_students.expression,  # type: ignore[attr-defined]
+    #             ),
+    #         ],
+    #         else_=1.0,
+    #     ),
+    # )
 
-    rating_coef: Mapped[float] = column_property(
-        case(
-            *[
-                (
-                    average_rate == 0,
-                    5 * (1 - fullness.expression) * removability.expression,  # type: ignore[attr-defined]
-                ),
-            ],
-            else_=average_rate * (1 - fullness.expression) * removability.expression,  # type: ignore[attr-defined]
-        ),
-    )
+    # rating_coef: Mapped[float] = column_property(
+    #     case(
+    #         *[
+    #             (
+    #                 average_grade == 0,
+    #                 5 * (1 - fullness.expression) * removability.expression,  # type: ignore[attr-defined]
+    #             ),
+    #         ],
+    #         else_=average_grade * (1 - fullness.expression) * removability.expression,  # type: ignore[attr-defined]
+    #     ),
+    # )
 
     teacher: Mapped[Teacher] = relationship("Teacher")
     product: Mapped[Product] = relationship("Product")

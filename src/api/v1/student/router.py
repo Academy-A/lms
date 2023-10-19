@@ -7,6 +7,7 @@ from src.api.v1.student.schemas import (
     ChangeVKIDSchema,
     EnrollStudentSchema,
     ExpulsionStudentSchema,
+    GradeTeacherSchema,
     ReadStudentProductSchema,
     ReadStudentSchema,
 )
@@ -90,3 +91,19 @@ async def change_vk_id_by_soho_id(
         vk_id=vk_id_data.vk_id,
     )
     return ReadStudentSchema.model_validate(student)
+
+
+@router.post("/soho/{soho_id}/grade-teacher", response_model=StatusResponseSchema)
+async def grade_teacher(
+    soho_id: int,
+    grade_data: GradeTeacherSchema,
+    provider: DatabaseProvider = Depends(DatabaseProviderMarker),
+) -> StatusResponseSchema:
+    await provider.grade_teacher(
+        soho_id=soho_id, grade=grade_data.grade, product_id=grade_data.product_id
+    )
+    return StatusResponseSchema(
+        ok=True,
+        status_code=200,
+        message="Teacher was graded",
+    )
