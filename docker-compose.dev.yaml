@@ -19,6 +19,7 @@ services:
   backend:
     restart: unless-stopped
     build:
+      context: .
       dockerfile: ./docker/backend/backend.dockerfile
     environment:
       POSTGRES_HOST: ${POSTGRES_HOST}
@@ -36,6 +37,7 @@ services:
   worker:
     restart: unless-stopped
     build:
+      context: .
       dockerfile: ./docker/backend/worker.dockerfile
     depends_on:
       - backend
@@ -52,6 +54,7 @@ services:
   cron:
     restart: unless-stopped
     build:
+      context: .
       dockerfile: ./docker/cron/cron.dockerfile
     environment:
       POSTGRES_HOST: ${POSTGRES_HOST}
@@ -62,6 +65,7 @@ services:
 
       SOHO_API_TOKEN: ${SOHO_API_TOKEN}
       SECRET_KEY: ${SECRET_KEY}
+
 
 volumes:
   postgres_data:

@@ -1,10 +1,12 @@
 from datetime import datetime
 from typing import Any
+
 from sqlalchemy import ScalarResult, desc, insert, select
+from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import NoResultFound, IntegrityError
-from src.db.repositories.base import Repository
+
 from src.db.models import TeacherAssignment
+from src.db.repositories.base import Repository
 from src.exceptions import TeacherAssignmentNotFoundError
 
 
@@ -27,7 +29,7 @@ class TeacherAssignmentRepository(Repository[TeacherAssignment]):
         )
         try:
             result: ScalarResult[TeacherAssignment] = await self._session.scalars(query)
-            await self._session.commit()
+            await self._session.flush()
         except IntegrityError as e:
             await self._session.rollback()
             self._raise_error(e)

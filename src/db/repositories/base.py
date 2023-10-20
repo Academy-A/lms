@@ -6,8 +6,8 @@ from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.base import Base
-from src.db.dto import PaginationData
 from src.db.mixins import DeletableMixin
+from src.dto import PaginationData
 from src.exceptions.base import EntityNotFoundError
 
 Model = TypeVar("Model", bound=Base)
@@ -31,12 +31,12 @@ class Repository(ABC, Generic[Model]):
     async def _update(self, *args: Any, **kwargs: Any) -> Model:
         query = update(self._model).where(*args).values(**kwargs).returning(self._model)
         result = await self._session.scalars(query)
-        await self._session.commit()
+        await self._session.flush()
         return result.one()
 
     async def save(self, obj: Model) -> Model:
         self._session.add(obj)
-        await self._session.commit()
+        await self._session.flush()
         await self._session.refresh(obj)
         return obj
 

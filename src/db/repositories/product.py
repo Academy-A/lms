@@ -2,9 +2,9 @@ from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.db.dto import PaginationData
 from src.db.models import Offer, Product, Subject
 from src.db.repositories.base import Repository
+from src.dto import PaginationData
 from src.exceptions import ProductNotFoundError, SubjectNotFoundError
 from src.exceptions.base import EntityNotFoundError
 

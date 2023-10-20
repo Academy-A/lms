@@ -1,9 +1,9 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.db.dto import PaginationData
 from src.db.models import Subject
 from src.db.repositories.base import Repository
+from src.dto import PaginationData
 from src.exceptions import EntityNotFoundError, SubjectNotFoundError
 
 

@@ -1,18 +1,11 @@
-from collections.abc import AsyncGenerator, Callable
 from typing import Any
-from fastapi import BackgroundTasks
 
-from sqlalchemy import Engine, create_engine as sa_create_engine
-from sqlalchemy.orm import sessionmaker
 import orjson
-from sqlalchemy.ext.asyncio import (
-    AsyncEngine,
-    AsyncSession,
-    async_sessionmaker,
-    create_async_engine as sa_create_async_engine,
-)
-
-from src.db.provider import DatabaseProvider
+from sqlalchemy import Engine
+from sqlalchemy import create_engine as sa_create_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine as sa_create_async_engine
+from sqlalchemy.orm import sessionmaker
 
 
 def create_async_engine(connection_uri: str, **engine_kwargs: Any) -> AsyncEngine:
@@ -31,18 +24,6 @@ def create_async_session_factory(
         class_=AsyncSession,
         expire_on_commit=False,
     )
-
-
-def create_provider(
-    session_factory: async_sessionmaker[AsyncSession],
-) -> Callable[[BackgroundTasks], AsyncGenerator[DatabaseProvider, None]]:
-    async def wrapper(
-        background_tasks: BackgroundTasks,
-    ) -> AsyncGenerator[DatabaseProvider, None]:
-        async with session_factory() as session:
-            yield DatabaseProvider(session=session, background_tasks=background_tasks)
-
-    return wrapper
 
 
 def create_engine(connection_uri: str, **engine_kwargs: Any) -> Engine:

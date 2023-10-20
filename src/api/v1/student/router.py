@@ -1,19 +1,23 @@
 from fastapi import APIRouter, BackgroundTasks, Depends
 
-
-from src.api.deps import DatabaseProviderMarker
+from src.api.deps import UnitOfWorkMarker
 from src.api.services import token_required
 from src.api.v1.schemas import StatusResponseSchema
 from src.api.v1.student.schemas import (
     ChangeVKIDSchema,
     EnrollStudentSchema,
     ExpulsionStudentSchema,
+    GradeTeacherSchema,
     ReadStudentProductSchema,
     ReadStudentSchema,
 )
-from src.db.models import Student
-from src.db.provider import DatabaseProvider
+from src.api.v1.student.utils import parse_soho_flow_id
+from src.db.uow import UnitOfWork
 from src.dto import NewStudentData
+from src.services.change_vk_id import change_student_vk_id_by_soho_id
+from src.services.enroll_student import enroll_student
+from src.services.expulse_student import expulse_student_by_offer_id
+from src.services.grade_teacher import grade_teacher
 
 router = APIRouter(
     prefix="/students",
@@ -24,32 +28,42 @@ router = APIRouter(
 
 @router.post("/")
 async def enroll_student_route(
-    enroll_student: EnrollStudentSchema,
+    enrollment: EnrollStudentSchema,
     background_tasks: BackgroundTasks,
-    provider: DatabaseProvider = Depends(DatabaseProviderMarker),
+    uow: UnitOfWork = Depends(UnitOfWorkMarker),
 ) -> ReadStudentProductSchema:
-    student_product = await provider.enroll_student(
-        new_student=NewStudentData(
-            vk_id=enroll_student.student.vk_id,
-            soho_id=enroll_student.student.soho_id,
-            email=enroll_student.student.email,
-            first_name=enroll_student.student.first_name,
-            last_name=enroll_student.student.last_name,
-        ),
-        offer_ids=enroll_student.offer_ids,
-    )
+    _, soho_flow_id = parse_soho_flow_id(enrollment.student.raw_soho_flow_id)
+    async with uow:
+        student_product = await enroll_student(
+            uow=uow,
+            background_tasks=background_tasks,
+            new_student=NewStudentData(
+                vk_id=enrollment.student.vk_id,
+                soho_id=enrollment.student.soho_id,
+                email=enrollment.student.email,
+                first_name=enrollment.student.first_name,
+                last_name=enrollment.student.last_name,
+                flow_id=soho_flow_id,
+            ),
+            offer_ids=enrollment.offer_ids,
+        )
+        await uow.commit()
     return ReadStudentProductSchema.model_validate(student_product)
 
 
 @router.post("/expulse")
 async def expulsion_student_route(
     expulsion_data: ExpulsionStudentSchema,
-    provider: DatabaseProvider = Depends(DatabaseProviderMarker),
+    uow: UnitOfWork = Depends(UnitOfWorkMarker),
 ) -> StatusResponseSchema:
-    await provider.expulse_student_by_offer_id(
-        student_vk_id=expulsion_data.vk_id,
-        offer_id=expulsion_data.offer_id,
-    )
+    offer_id, soho_flow_id = parse_soho_flow_id(expulsion_data.raw_soho_flow_id)
+    async with uow:
+        await expulse_student_by_offer_id(
+            uow=uow,
+            student_vk_id=expulsion_data.vk_id,
+            offer_id=offer_id,
+        )
+        await uow.commit()
     return StatusResponseSchema(
         ok=True,
         status_code=200,
@@ -61,27 +75,51 @@ async def expulsion_student_route(
     "/{student_id}",
     response_model=ReadStudentSchema,
     responses={
-        203: {"model": StatusResponseSchema},
+        403: {"model": StatusResponseSchema},
         404: {"model": StatusResponseSchema},
     },
 )
-async def read_student_by_id(
+async def read_student_by_id_route(
     student_id: int,
-    provider: DatabaseProvider = Depends(DatabaseProviderMarker),
+    uow: UnitOfWork = Depends(UnitOfWorkMarker),
 ) -> ReadStudentSchema:
-    student = await provider.student.read_by_id(student_id=student_id)
+    async with uow:
+        student = await uow.student.read_by_id(student_id=student_id)
     return ReadStudentSchema.model_validate(student)
 
 
 @router.post("/soho/{soho_id}/change-vk-id", response_model=ReadStudentSchema)
-async def change_vk_id_by_soho_id(
+async def change_vk_id_by_soho_id_route(
     soho_id: int,
     vk_id_data: ChangeVKIDSchema,
-    provider: DatabaseProvider = Depends(DatabaseProviderMarker),
+    uow: UnitOfWork = Depends(UnitOfWorkMarker),
 ) -> ReadStudentSchema:
-    soho = await provider.soho.read_by_id(soho_id=soho_id)
-    student = await provider.student.update(
-        Student.id == soho.student_id,
-        vk_id=vk_id_data.vk_id,
-    )
+    async with uow:
+        student = await change_student_vk_id_by_soho_id(
+            uow=uow,
+            soho_id=soho_id,
+            vk_id=vk_id_data.vk_id,
+        )
+        await uow.commit()
     return ReadStudentSchema.model_validate(student)
+
+
+@router.post("/soho/{soho_id}/grade-teacher", response_model=StatusResponseSchema)
+async def grade_teacher_route(
+    soho_id: int,
+    grade_data: GradeTeacherSchema,
+    uow: UnitOfWork = Depends(UnitOfWorkMarker),
+) -> StatusResponseSchema:
+    async with uow:
+        await grade_teacher(
+            uow=uow,
+            soho_id=soho_id,
+            product_id=grade_data.product_id,
+            grade=grade_data.grade,
+        )
+        await uow.commit()
+    return StatusResponseSchema(
+        ok=True,
+        status_code=200,
+        message="Teacher was graded",
+    )

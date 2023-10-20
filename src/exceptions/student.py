@@ -11,3 +11,11 @@ class StudentNotFoundError(EntityNotFoundError):
 
 class StudentProductNotFoundError(EntityNotFoundError):
     pass
+
+
+class StudentVKIDAlreadyUsedError(LMSError):
+    pass
+
+
+class StudentProductHasNotTeacherError(LMSError):
+    pass
