@@ -1,7 +1,7 @@
 from polyfactory import Use
 from polyfactory.factories.sqlalchemy_factory import SQLAlchemyFactory
 
-from src.db.models import (
+from lms.db.models import (
     Offer,
     Product,
     ProductGroup,
@@ -12,7 +12,7 @@ from src.db.models import (
     Teacher,
     TeacherProduct,
 )
-from src.enums import TeacherType
+from lms.enums import TeacherType
 
 __all__ = [
     "SubjectFactory",

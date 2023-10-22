@@ -1,8 +1,8 @@
 #! /usr/bin/env sh
 set -e
 
-if [ -f /app/src/main.py ]; then
-    DEFAULT_MODULE_NAME=src.main
+if [ -f /app/lms/main.py ]; then
+    DEFAULT_MODULE_NAME=lms.main
 elif [ -f /app/main.py ]; then
     DEFAULT_MODULE_NAME=main
 fi
@@ -12,8 +12,8 @@ export APP_MODULE=${APP_MODULE:-"$MODULE_NAME:$VARIABLE_NAME"}
 
 if [ -f /app/gunicorn_conf.py ]; then
     DEFAULT_GUNICORN_CONF=/app/gunicorn_conf.py
-elif [ -f /app/src/gunicorn_conf.py ]; then
-    DEFAULT_GUNICORN_CONF=/app/src/gunicorn_conf.py
+elif [ -f /app/lms/gunicorn_conf.py ]; then
+    DEFAULT_GUNICORN_CONF=/app/lms/gunicorn_conf.py
 else
     DEFAULT_GUNICORN_CONF=/gunicorn_conf.py
 fi

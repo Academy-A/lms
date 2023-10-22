@@ -10,7 +10,7 @@ RUN poetry install --no-interaction --no-ansi --no-root --with backend --without
 COPY ./docker/backend/pre-start.sh ./docker/backend/start.sh /app/
 RUN chmod +x /app/start.sh
 
-COPY ./src /app/src
+COPY ./lms /app/lms
 
 ENV PYTHONPATH=/app
 CMD ["/app/start.sh"]

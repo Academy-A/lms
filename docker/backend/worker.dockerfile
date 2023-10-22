@@ -8,7 +8,7 @@ COPY ./pyproject.toml ./poery.lock* /app/
 
 RUN poetry install --no-interaction --no-ansi --no-root --with worker --without backend,dev
 
-COPY ./src /app/src
+COPY ./lms /app/lms
 
 ENV PYTHONPATH=/app
-CMD ["celery", "-A", "src.tasks.config.celery", "worker", "--loglevel=info", "--logfile=celery.log"]
+CMD ["celery", "-A", "lms.tasks.config.celery", "worker", "--loglevel=info", "--logfile=celery.log"]
