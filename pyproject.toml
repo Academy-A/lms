@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "new-lms"
+name = "lms"
 version = "0.1.0"
 description = "New LMS for Insperia School with Soho.LMS"
 authors = ["Sergey Natalenko <sergey.natalenko@mail.ru>"]
@@ -52,7 +52,7 @@ build-backend = "poetry.core.masonry.api"
 target-version = ["py311"]
 
 [tool.isort]
-known_local_folder = "src"
+known_local_folder = ["lms", "tests"]
 py_version = "311"
 profile = "black"
 

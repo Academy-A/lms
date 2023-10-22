@@ -11,7 +11,7 @@ COPY ./pyproject.toml ./poery.lock* /app/
 
 RUN poetry install --no-interaction --no-ansi --no-root --with worker --without backend,dev
 
-COPY ./src /app/src
+COPY ./lms /app/lms
 
 COPY ./docker/cron/docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh

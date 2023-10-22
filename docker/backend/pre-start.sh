@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 
-python /app/src/pre_start.py
+python /app/lms/pre_start.py
 
-alembic -c /app/src/alembic.ini upgrade head
+alembic -c /app/lms/alembic.ini upgrade head
 
-python /app/src/initial_data.py
+python /app/lms/initial_data.py

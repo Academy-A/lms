@@ -1,17 +1,14 @@
-from alembic.autogenerate import compare_metadata
 from alembic.config import Config as AlembicConfig
 from alembic.runtime.environment import EnvironmentContext
-from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
-
-from sqlalchemy import Connection, text, MetaData, pool
+from sqlalchemy import Connection, MetaData, pool, text
 from sqlalchemy.ext.asyncio import (
-    create_async_engine,
     AsyncConnection,
     async_engine_from_config,
+    create_async_engine,
 )
 
-from src.config import Settings
+from lms.config import Settings
 
 
 async def run_async_migrations(
