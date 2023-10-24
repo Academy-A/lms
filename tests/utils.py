@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from src.config import Settings
+from lms.config import Settings
 
 
 async def run_async_migrations(

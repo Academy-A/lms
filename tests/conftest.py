@@ -13,13 +13,12 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
+from lms.api.services import generate_token
+from lms.config import Settings
+from lms.db.models import Base
+from lms.setup_app import get_application
 from tests.factories import factories
 from tests.utils import prepare_new_database, run_async_migrations
-
-from src.api.services import generate_token
-from src.config import Settings
-from src.db.models import Base
-from src.setup_app import get_application
 
 PROJECT_PATH = Path(__file__).parent.parent.resolve()
 
@@ -39,7 +38,7 @@ def settings():
 
 @pytest.fixture(scope="session")
 def alembic_config(settings: Settings) -> AlembicConfig:
-    alembic_cfg = AlembicConfig(PROJECT_PATH / "src/alembic.ini")
+    alembic_cfg = AlembicConfig(PROJECT_PATH / "lms/alembic.ini")
     alembic_cfg.set_main_option("sqlalchemy.url", settings.build_db_connection_uri())
     return alembic_cfg
 
