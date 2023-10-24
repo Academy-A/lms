@@ -1,8 +1,10 @@
 import logging
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
-from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncEngine
 from starlette.middleware.cors import CORSMiddleware
 
 from lms.api.deps import (
@@ -22,13 +24,24 @@ from lms.db.factory import create_async_engine, create_async_session_factory
 from lms.db.uow import UnitOfWork
 from lms.exceptions.base import LMSError
 
-logging.root.setLevel(level=logging.INFO)
+log = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    yield
+
+    engine: AsyncEngine = app.dependency_overrides[DatabaseEngineMarker]()
+    await engine.dispose()
 
 
 def get_application(settings: Settings) -> FastAPI:
     app = FastAPI(
         title=settings.PROJECT_NAME,
         debug=settings.DEBUG,
+        description=settings.DESCRIPTION,
+        version=settings.VERSION,
+        lifespan=lifespan,
     )
     app.add_middleware(
         CORSMiddleware,
@@ -56,5 +69,5 @@ def get_application(settings: Settings) -> FastAPI:
             UnitOfWorkMarker: lambda: uow,
         },
     )
-    logger.info("App configured")
+    log.info("App configured")
     return app

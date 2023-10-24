@@ -6,7 +6,8 @@ from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from lms.db.base import Base
-from lms.dto import PaginationDTO
+from lms.dto import PaginationData
+from lms.exceptions import EntityNotFoundError
 
 Model = TypeVar("Model", bound=Base)
 
@@ -16,8 +17,11 @@ class Repository(ABC, Generic[Model]):
         self._model = model
         self._session = session
 
-    async def _read_by_id(self, object_id: int) -> Model | None:
-        return await self._session.get(self._model, object_id)
+    async def _read_by_id(self, object_id: int) -> Model:
+        obj = await self._session.get(self._model, object_id)
+        if obj is None:
+            raise EntityNotFoundError
+        return obj
 
     async def _update(self, *args: Any, **kwargs: Any) -> Model:
         query = update(self._model).where(*args).values(**kwargs).returning(self._model)
@@ -33,14 +37,14 @@ class Repository(ABC, Generic[Model]):
 
     async def _paginate(
         self, query: Select, page: int, page_size: int
-    ) -> PaginationDTO:
+    ) -> PaginationData:
         items: ScalarResult[Model] = await self._session.scalars(
             query.limit(page_size).offset((page - 1) * page_size)
         )
         total: int = await self._session.scalar(
             select(func.count()).select_from(query.subquery())
         )  # type: ignore
-        return PaginationDTO(
+        return PaginationData(
             items=items.all(),
             total=total,
             page=page,

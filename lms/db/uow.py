@@ -9,6 +9,7 @@ from lms.db.repositories.product import ProductRepository
 from lms.db.repositories.soho import SohoRepository
 from lms.db.repositories.student import StudentRepository
 from lms.db.repositories.student_product import StudentProductRepository
+from lms.db.repositories.subject import SubjectRepository
 from lms.db.repositories.teacher import TeacherRepository
 from lms.db.repositories.teacher_assignment import TeacherAssignmentRepository
 from lms.db.repositories.teacher_product import TeacherProductRepository
@@ -26,6 +27,7 @@ class UnitOfWork:
         self.soho = SohoRepository(session=self._session)
         self.student = StudentRepository(session=self._session)
         self.student_product = StudentProductRepository(session=self._session)
+        self.subject = SubjectRepository(session=self._session)
         self.teacher = TeacherRepository(session=self._session)
         self.teacher_assignment = TeacherAssignmentRepository(session=self._session)
         self.teacher_product = TeacherProductRepository(session=self._session)

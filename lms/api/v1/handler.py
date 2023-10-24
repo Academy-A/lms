@@ -1,8 +1,9 @@
+import logging
+
 from fastapi import HTTPException, Request, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from loguru import logger
 
 from lms.api.v1.schemas import StatusResponseSchema
 from lms.exceptions import (
@@ -17,6 +18,8 @@ from lms.exceptions import (
 )
 from lms.exceptions.product import ProductNotFoundError
 from lms.exceptions.student import StudentProductNotFoundError
+
+log = logging.getLogger(__name__)
 
 
 async def requset_validation_handler(
@@ -83,12 +86,12 @@ async def lms_exception_handler(request: Request, exc: LMSError) -> JSONResponse
         )
 
     if isinstance(exc, EntityNotFoundError):
-        logger.exception("Not concrete entity not found error")
+        log.exception("Not concrete entity not found error")
         return exception_json_response(
             status_code=status.HTTP_404_NOT_FOUND, detail="Entity not found"
         )
 
-    logger.exception("Got unhandled error")
+    log.exception("Got unhandled error")
     return exception_json_response(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         detail="Got unhandled exception. See logs",

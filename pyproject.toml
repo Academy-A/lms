@@ -11,11 +11,10 @@ packages = [{include = "new_lms"}]
 python = "^3.11"
 pydantic-settings = "^2.0.3"
 SQLAlchemy = "^2.0.22"
-loguru = "^0.7.0"
 sqlalchemy-utils = "^0.41.1"
 httpx = "^0.24.1"
 pydantic = {extras = ["email"], version = "^2.4.2"}
-celery = "^5.3.4"
+celery = {extras = ["msgpack"], version = "^5.3.4"}
 orjson = "^3.9.9"
 greenlet = "^3.0.0"
 

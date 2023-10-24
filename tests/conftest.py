@@ -33,9 +33,7 @@ def event_loop():
 
 @pytest.fixture(scope="session")
 def settings():
-    settings = Settings()
-    settings.POSTGRES_DB = "test_" + settings.POSTGRES_DB
-    return settings
+    return Settings()
 
 
 @pytest.fixture(scope="session")
@@ -69,7 +67,6 @@ async def session(
 ) -> AsyncGenerator[AsyncSession, None]:
     try:
         session: AsyncSession = sessionmaker()
-
         for factory in factories:
             factory.__async_session__ = session
         yield session

@@ -9,6 +9,7 @@ from lms.db.repositories.base import Repository
 from lms.dto import StudentProductData
 from lms.enums import TeacherType
 from lms.exceptions import StudentProductNotFoundError
+from lms.exceptions.base import EntityNotFoundError
 
 
 class StudentProductRepository(Repository[StudentProduct]):
@@ -16,10 +17,11 @@ class StudentProductRepository(Repository[StudentProduct]):
         super().__init__(model=StudentProduct, session=session)
 
     async def read_by_id(self, student_product_id: int) -> StudentProductData:
-        student_product = await self._read_by_id(object_id=student_product_id)
-        if student_product is None:
-            raise StudentProductNotFoundError
-        return StudentProductData.from_orm(student_product)
+        try:
+            obj = await self._read_by_id(object_id=student_product_id)
+        except EntityNotFoundError as e:
+            raise StudentProductNotFoundError from e
+        return StudentProductData.from_orm(obj)
 
     async def find_by_student_and_product(
         self, student_id: int, product_id: int

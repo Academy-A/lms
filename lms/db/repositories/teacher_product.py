@@ -5,6 +5,7 @@ from lms.db.models import TeacherProduct, TeacherProductFlow
 from lms.db.repositories.base import Repository
 from lms.enums import TeacherType
 from lms.exceptions import TeacherProductNotFoundError
+from lms.exceptions.base import EntityNotFoundError
 
 
 class TeacherProductRepository(Repository[TeacherProduct]):
@@ -12,10 +13,10 @@ class TeacherProductRepository(Repository[TeacherProduct]):
         super().__init__(model=TeacherProduct, session=session)
 
     async def read_by_id(self, teacher_product_id: int) -> TeacherProduct:
-        teacher_product = await self._read_by_id(teacher_product_id)
-        if teacher_product is None:
+        try:
+            return await self._read_by_id(teacher_product_id)
+        except EntityNotFoundError:
             raise TeacherProductNotFoundError
-        return teacher_product
 
     async def get_for_enroll(
         self,

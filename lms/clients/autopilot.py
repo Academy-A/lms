@@ -1,10 +1,12 @@
+import logging
 from typing import Literal
 
 import httpx
-from loguru import logger
 from pydantic import BaseModel
 
 from lms.enums import TeacherType
+
+log = logging.getLogger(__name__)
 
 AUTOPILOT_TEACHER_TYPE = {
     TeacherType.CURATOR: 2,
@@ -40,8 +42,4 @@ async def call_autopilot(target_url: str, params: dict[str, str | int]) -> None:
         try:
             await client.get(target_url, params=params)
         except httpx.HTTPError as exc:
-            logger.exception(
-                "Got HTTP Exception for {url} - {exc}",
-                url=exc.request.url,
-                exc=exc,
-            )
+            log.exception("Got HTTP Exception for %s - %s", exc.request.url, exc)

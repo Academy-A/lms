@@ -5,6 +5,8 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Insperia LMS"
     DEBUG: bool = False
+    DESCRIPTION: str = "New LMS for working with SOHO.LMS"
+    VERSION: str = "0.1.0"
 
     SECRET_KEY: str
     SECURITY_ALGORITHM: str = "HS256"
