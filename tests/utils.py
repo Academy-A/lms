@@ -1,5 +1,7 @@
+from alembic.autogenerate import compare_metadata
 from alembic.config import Config as AlembicConfig
 from alembic.runtime.environment import EnvironmentContext
+from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
 from sqlalchemy import Connection, MetaData, pool, text
 from sqlalchemy.ext.asyncio import (
@@ -36,7 +38,9 @@ async def run_async_migrations(
         )
         async with engine.connect() as connection:
             await connection.run_sync(
-                _do_run_migrations, target_metadata=target_metadata, context=context
+                _do_run_migrations,
+                target_metadata=target_metadata,
+                context=context,
             )
 
 
@@ -46,9 +50,8 @@ async def prepare_new_database(settings: Settings) -> None:
 
     engine = create_async_engine(connection_url)
     async with engine.begin() as conn:
-        if await _database_exists(conn, settings.POSTGRES_DB):
-            await _drop_database(conn, settings.POSTGRES_DB)
-        await _create_database(conn, settings.POSTGRES_DB)
+        if not await _database_exists(conn, settings.POSTGRES_DB):
+            await _create_database(conn, settings.POSTGRES_DB)
     await engine.dispose()
 
 
@@ -80,3 +83,8 @@ def _do_run_migrations(
     context.configure(connection=connection, target_metadata=target_metadata)
     with context.begin_transaction():
         context.run_migrations()
+
+
+def get_diff_db_metadata(connection: Connection, metadata: MetaData):
+    migration_ctx = MigrationContext.configure(connection)
+    return compare_metadata(context=migration_ctx, metadata=metadata)

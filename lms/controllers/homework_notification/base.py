@@ -1,4 +1,5 @@
 import abc
+import logging
 import re
 import time
 from typing import ClassVar
@@ -7,15 +8,17 @@ import httpx
 import orjson
 from google_api_service_helper import GoogleDrive, GoogleKeys
 from google_api_service_helper.drive.schemas import FileResponse
-from loguru import logger
 from pyparsing import Any
 from sqlalchemy.orm import Session
 
 from lms.controllers.homework_notification.dto import FileDTO
 from lms.controllers.homework_notification.utils import get_cleaned_folder_ids
-from lms.db.models import Setting, Student, VerifiedWorkFile
+from lms.db.models import Student, VerifiedWorkFile
+from lms.utils import get_setting
 
 NOTIFICATION_TIME_PAUSE_SECONDS = 0.3
+
+log = logging.getLogger(__name__)
 
 
 class BaseNotification(abc.ABC):
@@ -42,31 +45,24 @@ class BaseNotification(abc.ABC):
         self._subject_eng_name = subject_eng_name
 
     def init(self) -> None:
-        google_keys = get_settings(self._session, "google_keys")
-        if google_keys is None:
-            raise ValueError("Google Keys not loaded!")
+        google_keys = get_setting(self._session, "google_keys")
         self._google_drive = GoogleDrive(
             google_keys=GoogleKeys(**orjson.loads(google_keys))
         )
         folder_ids_key = self.folder_ids_prefix + self._subject_eng_name
-        folder_ids = get_settings(session=self._session, key=folder_ids_key)
-        if folder_ids is None:
-            raise ValueError(f"Folder IDs on key `{folder_ids_key}` not loaded")
+        folder_ids = get_setting(session=self._session, key=folder_ids_key)
         self._folder_ids = get_cleaned_folder_ids(folder_ids)
-        self._autopilot_url = get_settings(
+        self._autopilot_url = get_setting(
             key=self.autopilot_url_key,
             session=self._session,
         )
-        if self._autopilot_url is None:
-            raise ValueError("Autopilot url not loaded")
         regexp_key = self.regexp_setting + self._subject_eng_name
-        self._regexp = get_settings(session=self._session, key=regexp_key)
-        if self._regexp is None:
-            raise ValueError(f"Regexp on key `{regexp_key}` not loaded")
+        self._regexp = get_setting(session=self._session, key=regexp_key)
 
     def notify(self) -> None:
         self.get_new_files()
         self.parse_file_names()
+        self.filter_parsed_files()
         self.send_new_files_data()
         self.save_new_files()
 
@@ -82,7 +78,8 @@ class BaseNotification(abc.ABC):
 
                 new_files.append(file)
             self.new_files.extend(new_files)
-        logger.info("Total new files {count}", count=len(self.new_files))
+        log.info("Total new files %s", len(self.new_files))
+        raise Exception
 
     def read_file_by_id(self, file_id: str) -> VerifiedWorkFile | None:
         return self._session.query(VerifiedWorkFile).filter_by(file_id=file_id).first()
@@ -103,18 +100,18 @@ class BaseNotification(abc.ABC):
         for file in self.new_files:
             result = re.match(self._regexp, file.name)
             if result is None:
-                logger.info(
-                    "File ID {file_id} error: file name does'nt match with pattern",
-                    file_id=file.id,
+                log.info(
+                    "File ID %s error: file name does'nt match with pattern",
+                    file.id,
                 )
                 continue
             vk_id, essay_number = int(result[1]), result[2]
             student = self.get_student_by_vk_id(vk_id)
             if student is None:
-                logger.info(
-                    "File ID {file_id} error: student with VK ID: {vk_id} not found",
-                    file_id=file.id,
-                    vk_id=vk_id,
+                log.info(
+                    "File ID %s error: student with VK ID: %s not found",
+                    file.id,
+                    vk_id,
                 )
             self.parsed_files.append(
                 FileDTO(
@@ -132,7 +129,7 @@ class BaseNotification(abc.ABC):
 
     def save_new_files(self) -> None:
         for file in self.filtered_files:
-            logger.info("save file {file}", file=file)
+            log.info("save file %s", file)
             self.save_file(file)
 
     def get_student_by_vk_id(self, vk_id: int) -> Student | None:
@@ -140,7 +137,7 @@ class BaseNotification(abc.ABC):
 
     def send_new_files_data(self) -> None:
         for file in self.filtered_files:
-            logger.info("send file {file}", file=file)
+            log.info("send file %s", file)
             httpx.get(self._autopilot_url, params=self.get_send_params(file))
             time.sleep(NOTIFICATION_TIME_PAUSE_SECONDS)
 
@@ -152,10 +149,3 @@ class BaseNotification(abc.ABC):
             "soch": file.url,
             "title": file.essay_number,
         }
-
-
-def get_settings(session: Session, key: str, default: str | None = None) -> str:
-    setting = session.query(Setting).filter_by(key=key).first()
-    if setting is None and default is None:
-        raise KeyError(f"{key} not in table Setting")
-    return str(getattr(setting, "value", default))

@@ -1,13 +1,15 @@
+import logging
 from collections.abc import Sequence
 from dataclasses import asdict
 
 from fastapi import BackgroundTasks
-from loguru import logger as log
 
 from lms.clients.autopilot import send_teacher_to_autopilot
 from lms.db.models import Offer, StudentProduct
 from lms.db.uow import UnitOfWork
 from lms.dto import NewStudentData, StudentProductData
+
+log = logging.getLogger(__name__)
 
 
 async def enroll_student(
@@ -16,7 +18,7 @@ async def enroll_student(
     new_student: NewStudentData,
     offer_ids: Sequence[int],
 ) -> StudentProductData:
-    log.info("Enroll student with data {data}", data=asdict(new_student))
+    log.info("Enroll student with data %s", asdict(new_student))
     student = await uow.student.read_by_vk_id(vk_id=new_student.vk_id)
     if student is None:
         student = await uow.student.create(

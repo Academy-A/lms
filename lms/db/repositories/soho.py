@@ -1,6 +1,6 @@
+import logging
 from typing import NoReturn
 
-from loguru import logger
 from sqlalchemy import ScalarResult, insert
 from sqlalchemy.exc import DBAPIError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +9,9 @@ from lms.db.models import Soho
 from lms.db.repositories.base import Repository
 from lms.dto import SohoData
 from lms.exceptions import LMSError, SohoNotFoundError
+from lms.exceptions.base import EntityNotFoundError
+
+log = logging.getLogger(__name__)
 
 
 class SohoRepository(Repository[Soho]):
@@ -16,10 +19,11 @@ class SohoRepository(Repository[Soho]):
         super().__init__(model=Soho, session=session)
 
     async def read_by_id(self, soho_id: int) -> SohoData:
-        soho = await self._read_by_id(soho_id)
-        if soho is None:
-            raise SohoNotFoundError
-        return SohoData.from_orm(soho)
+        try:
+            obj = await self._read_by_id(soho_id)
+        except EntityNotFoundError as e:
+            raise SohoNotFoundError from e
+        return SohoData.from_orm(obj)
 
     async def create(self, soho_id: int, email: str, student_id: int) -> SohoData:
         query = (
@@ -41,5 +45,5 @@ class SohoRepository(Repository[Soho]):
             return SohoData.from_orm(result.one())
 
     def _raise_error(self, e: DBAPIError) -> NoReturn:
-        logger.exception("An error has occurred")
+        log.exception("An error has occurred")
         raise LMSError from e

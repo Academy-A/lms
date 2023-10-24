@@ -6,9 +6,20 @@ from lms.api.v1.schemas import PageSchema
 from lms.enums import TeacherType
 
 
-class DistributionSchema(BaseModel):
+class DistributionFilterSchema(BaseModel):
+    flow_id: int
+    teacher_type: TeacherType | None
+
+
+class DistributionHomeworkSchema(BaseModel):
     homework_id: int
-    teacher_types: list[TeacherType | None]
+    filters: list[DistributionFilterSchema]
+
+
+class DistributionTaskSchema(BaseModel):
+    product_id: int
+    name: str
+    homeworks: list[DistributionHomeworkSchema]
 
 
 class ProductSchema(BaseModel):

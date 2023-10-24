@@ -89,8 +89,8 @@ class Product(TimestampMixin, Base):
     )
     check_spreadsheet_id: Mapped[str] = mapped_column(String(256), nullable=False)
     drive_folder_id: Mapped[str] = mapped_column(String(256), nullable=False)
-    start_date: Mapped[date] = mapped_column(Date, index=True, nullable=True)
-    end_date: Mapped[date] = mapped_column(Date, index=True, nullable=True)
+    start_date: Mapped[date | None] = mapped_column(Date, index=True, nullable=True)
+    end_date: Mapped[date | None] = mapped_column(Date, index=True, nullable=True)
 
     subject: Mapped[Subject] = relationship("Subject")
     product_group: Mapped[ProductGroup] = relationship("ProductGroup")

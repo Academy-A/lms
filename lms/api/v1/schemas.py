@@ -4,7 +4,7 @@ from typing import Any, Literal, Self
 
 from pydantic import BaseModel
 
-from lms.dto import PaginationDTO
+from lms.dto import PaginationData
 
 
 class MonitoringSchema(BaseModel):
@@ -29,7 +29,7 @@ class PageSchema(BaseModel):
     items: list[Any]
 
     @classmethod
-    def from_pagination(cls, pagination: PaginationDTO) -> Self:
+    def from_pagination(cls, pagination: PaginationData) -> Self:
         return cls(
             meta=MetaPageSchema(
                 page=pagination.page,

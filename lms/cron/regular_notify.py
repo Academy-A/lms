@@ -1,20 +1,17 @@
-from loguru import logger
+import logging
+
 from sqlalchemy.orm import Session
 
 from lms.config import Settings
 from lms.controllers.homework_notification.regular import RegularNotification
 from lms.db.factory import create_engine, create_session_factory
-from lms.db.models import Setting, Subject
+from lms.db.models import Subject
 
-
-def get_settings(session: Session, key: str, default: str | None = None) -> str:
-    setting = session.query(Setting).filter_by(key=key).first()
-    if setting is None and default is None:
-        raise KeyError(f"{key} not in table Setting")
-    return str(getattr(setting, "value", default))
+log = logging.getLogger(__name__)
 
 
 def main() -> None:
+    log.info("Start regular notify")
     settings = Settings()
     engine = create_engine(
         connection_uri=settings.build_db_connection_uri(driver="psycopg2")
@@ -23,6 +20,7 @@ def main() -> None:
     with SessionLocal() as session:
         notify(session=session)
     engine.dispose()
+    log.info("End regular notify")
 
 
 def notify(session: Session) -> None:
@@ -38,7 +36,7 @@ def notify(session: Session) -> None:
             notification.notify()
         except Exception:
             session.rollback()
-            logger.exception("Occurred error:")
+            log.exception("Occurred error:")
 
 
 if __name__ == "__main__":
