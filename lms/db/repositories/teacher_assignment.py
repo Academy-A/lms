@@ -18,15 +18,18 @@ class TeacherAssignmentRepository(Repository[TeacherAssignment]):
         self,
         student_product_id: int,
         teacher_product_id: int,
+        assignment_at: datetime | None = None,
+        removed_at: datetime | None = None,
     ) -> TeacherAssignment:
-        query = (
-            insert(TeacherAssignment)
-            .values(
-                teacher_product_id=teacher_product_id,
-                student_product_id=student_product_id,
-            )
-            .returning(TeacherAssignment)
-        )
+        values: dict[str, int | datetime] = {
+            "teacher_product_id": teacher_product_id,
+            "student_product_id": student_product_id,
+        }
+        if assignment_at:
+            values["assignment_at"] = assignment_at
+        if removed_at:
+            values["removed_at"] = removed_at
+        query = insert(TeacherAssignment).values(**values).returning(TeacherAssignment)
         try:
             result: ScalarResult[TeacherAssignment] = await self._session.scalars(query)
             await self._session.flush()

@@ -4,6 +4,7 @@ from lms.exceptions.soho import SohoNotFoundError
 from lms.exceptions.student import (
     StudentAlreadyEnrolledError,
     StudentNotFoundError,
+    StudentProductAlreadyExpulsedError,
     StudentProductHasNotTeacherError,
     StudentProductNotFoundError,
     StudentVKIDAlreadyUsedError,
@@ -23,6 +24,7 @@ __all__ = [
     "SohoNotFoundError",
     "StudentAlreadyEnrolledError",
     "StudentNotFoundError",
+    "StudentProductAlreadyExpulsedError",
     "StudentProductHasNotTeacherError",
     "StudentProductNotFoundError",
     "StudentVKIDAlreadyUsedError",

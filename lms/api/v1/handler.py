@@ -10,14 +10,15 @@ from lms.exceptions import (
     EntityNotFoundError,
     LMSError,
     OfferNotFoundError,
+    ProductNotFoundError,
     SohoNotFoundError,
     StudentAlreadyEnrolledError,
     StudentNotFoundError,
+    StudentProductAlreadyExpulsedError,
     StudentProductHasNotTeacherError,
+    StudentProductNotFoundError,
     StudentVKIDAlreadyUsedError,
 )
-from lms.exceptions.product import ProductNotFoundError
-from lms.exceptions.student import StudentProductNotFoundError
 
 log = logging.getLogger(__name__)
 
@@ -83,6 +84,12 @@ async def lms_exception_handler(request: Request, exc: LMSError) -> JSONResponse
         return exception_json_response(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="StudentProduct not found",
+        )
+
+    if isinstance(exc, StudentProductAlreadyExpulsedError):
+        return exception_json_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="StudentProduct already expulsed",
         )
 
     if isinstance(exc, EntityNotFoundError):
