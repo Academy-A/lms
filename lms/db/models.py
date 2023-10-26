@@ -402,3 +402,11 @@ class Setting(TimestampMixin, Base):
     )
     value: Mapped[str] = mapped_column(String(4096), nullable=False)
     description: Mapped[str] = mapped_column(String(512), nullable=False, default="")
+
+
+class User(TimestampMixin, Base):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    username: Mapped[str] = mapped_column(
+        String(128), unique=True, index=True, nullable=False
+    )
+    password: Mapped[str] = mapped_column(String(128), nullable=False)

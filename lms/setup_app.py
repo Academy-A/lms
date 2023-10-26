@@ -7,6 +7,7 @@ from fastapi.exceptions import RequestValidationError
 from sqlalchemy.ext.asyncio import AsyncEngine
 from starlette.middleware.cors import CORSMiddleware
 
+from lms.admin.setup_admin import build_admin
 from lms.api.deps import (
     DatabaseEngineMarker,
     DatabaseSessionMarker,
@@ -69,5 +70,6 @@ def get_application(settings: Settings) -> FastAPI:
             UnitOfWorkMarker: lambda: uow,
         },
     )
+    build_admin(app=app, settings=settings, engine=engine)
     log.info("App configured")
     return app
