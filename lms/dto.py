@@ -109,6 +109,8 @@ class StudentProductData:
     teacher_grade: int | None
     teacher_graded_at: datetime | None
     expulsion_at: datetime | None
+    created_at: datetime
+    updated_at: datetime
 
     @property
     def is_active(self) -> bool:
@@ -132,6 +134,8 @@ class StudentProductData:
             teacher_grade=model.teacher_grade,
             teacher_graded_at=model.teacher_graded_at,
             expulsion_at=model.expulsion_at,
+            created_at=model.created_at,
+            updated_at=model.created_at,
         )
 
 

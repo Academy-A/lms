@@ -37,7 +37,7 @@ async def test_invalid_token(client: AsyncClient) -> None:
 
 
 @pytest.mark.parametrize(
-    "json_data,answer",
+    ("json_data", "answer"),
     (
         pytest.param(
             None,
@@ -200,7 +200,8 @@ async def test_student_product_not_found(client: AsyncClient, token: str) -> Non
 
 
 async def test_student_product_has_not_teacher_product(
-    client: AsyncClient, token: str, session: AsyncSession
+    client: AsyncClient,
+    token: str,
 ) -> None:
     student_product = await StudentProductFactory.create_async(
         teacher_product=None,

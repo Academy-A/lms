@@ -19,3 +19,7 @@ class StudentVKIDAlreadyUsedError(LMSError):
 
 class StudentProductHasNotTeacherError(LMSError):
     pass
+
+
+class StudentProductAlreadyExpulsedError(LMSError):
+    pass
