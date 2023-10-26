@@ -10,6 +10,7 @@ from lms.db.models import (
     StudentProduct,
     Subject,
     Teacher,
+    TeacherAssignment,
     TeacherProduct,
 )
 from lms.enums import TeacherType
@@ -100,6 +101,15 @@ class StudentProductFactory(SQLAlchemyFactory[StudentProduct]):
     teacher_product = TeacherProductFactory
 
 
+class TeacherAssignmentFactory(SQLAlchemyFactory[TeacherAssignment]):
+    __model__ = TeacherAssignment
+    __set_relationships__ = True
+    __set_foreign_keys__ = False
+
+    student_product = StudentProductFactory
+    teacher_product = TeacherProductFactory
+
+
 factories: list[type[SQLAlchemyFactory]] = [
     SubjectFactory,
     ProductGroupFactory,
@@ -109,4 +119,5 @@ factories: list[type[SQLAlchemyFactory]] = [
     OfferFactory,
     StudentProductFactory,
     TeacherProductFactory,
+    TeacherAssignmentFactory,
 ]

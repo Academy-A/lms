@@ -17,7 +17,7 @@ class EnrollStudentSchema(BaseModel):
 
 class ExpulsionStudentSchema(BaseModel):
     vk_id: int
-    raw_soho_flow_id: str
+    product_id: int
 
 
 class ReadStudentSchema(BaseModel):
