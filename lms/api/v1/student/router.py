@@ -56,18 +56,17 @@ async def expulsion_student_route(
     expulsion_data: ExpulsionStudentSchema,
     uow: UnitOfWork = Depends(UnitOfWorkMarker),
 ) -> StatusResponseSchema:
-    offer_id, soho_flow_id = parse_soho_flow_id(expulsion_data.raw_soho_flow_id)
     async with uow:
         await expulse_student_by_offer_id(
             uow=uow,
             student_vk_id=expulsion_data.vk_id,
-            offer_id=offer_id,
+            product_id=expulsion_data.product_id,
         )
         await uow.commit()
     return StatusResponseSchema(
         ok=True,
         status_code=200,
-        message="Student was expulsed",
+        message="Student was expulsed from product",
     )
 
 

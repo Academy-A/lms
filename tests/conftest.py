@@ -18,7 +18,7 @@ from lms.config import Settings
 from lms.db.models import Base
 from lms.setup_app import get_application
 from tests.factories import factories
-from tests.utils import prepare_new_database, run_async_migrations
+from tests.utils import clear_db, prepare_new_database, run_async_migrations
 
 PROJECT_PATH = Path(__file__).parent.parent.resolve()
 
@@ -33,7 +33,7 @@ def event_loop():
 
 @pytest.fixture(scope="session")
 def settings():
-    return Settings()
+    return Settings(POSTGRES_DB="test_lms_database")
 
 
 @pytest.fixture(scope="session")
@@ -61,9 +61,10 @@ async def sessionmaker(async_engine: AsyncEngine):
     )
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(autouse=True)
 async def session(
     sessionmaker: async_sessionmaker[AsyncSession],
+    async_engine: AsyncEngine,
 ) -> AsyncGenerator[AsyncSession, None]:
     try:
         session: AsyncSession = sessionmaker()
@@ -72,6 +73,7 @@ async def session(
         yield session
     finally:
         await session.close()
+        await clear_db(async_engine)
 
 
 @pytest_asyncio.fixture(scope="session")

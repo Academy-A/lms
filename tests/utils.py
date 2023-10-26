@@ -6,11 +6,31 @@ from alembic.script import ScriptDirectory
 from sqlalchemy import Connection, MetaData, pool, text
 from sqlalchemy.ext.asyncio import (
     AsyncConnection,
+    AsyncEngine,
     async_engine_from_config,
     create_async_engine,
 )
 
 from lms.config import Settings
+
+TABLES_FOR_TRUNCATE = (
+    "flow",
+    "flow_product",
+    "offer",
+    "product",
+    "product_group",
+    "reviewer",
+    "setting",
+    "soho",
+    "student",
+    "student_product",
+    "subject",
+    "teacher",
+    "teacher_assignment",
+    "teacher_product",
+    "teacher_product_flow",
+    "verified_work_file",
+)
 
 
 async def run_async_migrations(
@@ -50,8 +70,9 @@ async def prepare_new_database(settings: Settings) -> None:
 
     engine = create_async_engine(connection_url)
     async with engine.begin() as conn:
-        if not await _database_exists(conn, settings.POSTGRES_DB):
-            await _create_database(conn, settings.POSTGRES_DB)
+        if await _database_exists(conn, settings.POSTGRES_DB):
+            await _drop_database(conn, settings.POSTGRES_DB)
+        await _create_database(conn, settings.POSTGRES_DB)
     await engine.dispose()
 
 
@@ -88,3 +109,11 @@ def _do_run_migrations(
 def get_diff_db_metadata(connection: Connection, metadata: MetaData):
     migration_ctx = MigrationContext.configure(connection)
     return compare_metadata(context=migration_ctx, metadata=metadata)
+
+
+async def clear_db(engine: AsyncEngine) -> None:
+    """Truncate tables on each test"""
+    tables = ", ".join(TABLES_FOR_TRUNCATE)
+    sql = f"TRUNCATE TABLE {tables} CASCADE"
+    async with engine.connect() as conn:
+        await conn.execute(text(sql))
