@@ -111,13 +111,14 @@ class TeacherAssignmentFactory(SQLAlchemyFactory[TeacherAssignment]):
 
 
 factories: list[type[SQLAlchemyFactory]] = [
-    SubjectFactory,
-    ProductGroupFactory,
-    ProductFactory,
-    StudentFactory,
-    SohoFactory,
     OfferFactory,
+    ProductFactory,
+    ProductGroupFactory,
+    SohoFactory,
+    StudentFactory,
     StudentProductFactory,
-    TeacherProductFactory,
+    SubjectFactory,
     TeacherAssignmentFactory,
+    TeacherFactory,
+    TeacherProductFactory,
 ]

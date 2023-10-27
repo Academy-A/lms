@@ -2,7 +2,9 @@ from lms.exceptions.base import EntityNotFoundError
 
 
 class ProductNotFoundError(EntityNotFoundError):
-    pass
+    def __init__(self, *args: object) -> None:
+        detail = "Product not found"
+        super().__init__(detail, *args)
 
 
 class OfferNotFoundError(EntityNotFoundError):

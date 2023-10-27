@@ -36,16 +36,17 @@ class Repository(ABC, Generic[Model]):
         return obj
 
     async def _paginate(
-        self, query: Select, page: int, page_size: int
+        self, query: Select, page: int, page_size: int, dto: Any
     ) -> PaginationData:
-        items: ScalarResult[Model] = await self._session.scalars(
+        result: ScalarResult[Model] = await self._session.scalars(
             query.limit(page_size).offset((page - 1) * page_size)
         )
         total: int = await self._session.scalar(
             select(func.count()).select_from(query.subquery())
         )  # type: ignore
+
         return PaginationData(
-            items=items.all(),
+            items=[dto.from_orm(obj) for obj in result.all()],
             total=total,
             page=page,
             page_size=page_size,

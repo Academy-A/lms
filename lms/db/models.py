@@ -55,7 +55,7 @@ class Subject(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String, index=True, nullable=False)
     eng_name: Mapped[str] = mapped_column(String, index=True, unique=True)
-    autopilot_url: Mapped[str] = mapped_column(String(1024), nullable=True)
+    autopilot_url: Mapped[str] = mapped_column(String(1024), nullable=False, default="")
     group_vk_url: Mapped[str] = mapped_column(String(1024), nullable=False)
 
 
@@ -262,7 +262,7 @@ class TeacherProduct(TimestampMixin, Base):
         nullable=False,
     )
     max_students: Mapped[int] = mapped_column(Integer, default=100, nullable=False)
-    average_grade: Mapped[int] = mapped_column(Float, default=5, nullable=False)
+    average_grade: Mapped[float] = mapped_column(Float, default=5, nullable=False)
     grade_counter: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     # fullness: Mapped[float] = column_property(
@@ -328,14 +328,6 @@ class TeacherProduct(TimestampMixin, Base):
 
     teacher: Mapped[Teacher] = relationship("Teacher")
     product: Mapped[Product] = relationship("Product")
-
-    @property
-    def is_mentor(self) -> bool:
-        return self.type == TeacherType.MENTOR
-
-    @property
-    def is_curator(self) -> bool:
-        return self.type == TeacherType.CURATOR
 
 
 class TeacherProductFlow(Base):

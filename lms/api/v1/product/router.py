@@ -1,8 +1,13 @@
 from fastapi import APIRouter, Depends, Query
+from pydantic import PositiveInt
 
 from lms.api.deps import UnitOfWorkMarker
 from lms.api.services import token_required
-from lms.api.v1.product.schemas import DistributionTaskSchema, ProductPageSchema
+from lms.api.v1.product.schemas import (
+    DistributionTaskSchema,
+    ProductPageSchema,
+    ReadProductSchema,
+)
 from lms.api.v1.schemas import StatusResponseSchema
 from lms.db.uow import UnitOfWork
 from lms.tasks.config import celery
@@ -26,6 +31,16 @@ async def read_products(
             page_size=page_size,
         )
     return ProductPageSchema.from_pagination(pagination=pagination)
+
+
+@router.get("/{product_id}/")
+async def read_product_by_id(
+    product_id: PositiveInt,
+    uow: UnitOfWork = Depends(UnitOfWorkMarker),
+) -> ReadProductSchema:
+    async with uow:
+        product = await uow.product.read_by_id(product_id=product_id)
+    return ReadProductSchema.model_validate(product)
 
 
 @router.post("/distribute/")

@@ -6,11 +6,15 @@ class StudentAlreadyEnrolledError(LMSError):
 
 
 class StudentNotFoundError(EntityNotFoundError):
-    pass
+    def __init__(self, *args: object) -> None:
+        detail = "Student not found"
+        super().__init__(detail, *args)
 
 
 class StudentProductNotFoundError(EntityNotFoundError):
-    pass
+    def __init__(self, detail: str = "Entity not found", *args: object) -> None:
+        detail = "StudentProduct not found"
+        super().__init__(detail, *args)
 
 
 class StudentVKIDAlreadyUsedError(LMSError):

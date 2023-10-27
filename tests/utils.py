@@ -117,3 +117,4 @@ async def clear_db(engine: AsyncEngine) -> None:
     sql = f"TRUNCATE TABLE {tables} CASCADE"
     async with engine.connect() as conn:
         await conn.execute(text(sql))
+        await conn.commit()

@@ -9,14 +9,9 @@ from lms.api.v1.schemas import StatusResponseSchema
 from lms.exceptions import (
     EntityNotFoundError,
     LMSError,
-    OfferNotFoundError,
-    ProductNotFoundError,
-    SohoNotFoundError,
     StudentAlreadyEnrolledError,
-    StudentNotFoundError,
     StudentProductAlreadyExpulsedError,
     StudentProductHasNotTeacherError,
-    StudentProductNotFoundError,
     StudentVKIDAlreadyUsedError,
 )
 
@@ -41,16 +36,6 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
 
 
 async def lms_exception_handler(request: Request, exc: LMSError) -> JSONResponse:
-    if isinstance(exc, SohoNotFoundError):
-        return exception_json_response(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Soho not found"
-        )
-
-    if isinstance(exc, StudentNotFoundError):
-        return exception_json_response(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Student not found"
-        )
-
     if isinstance(exc, StudentAlreadyEnrolledError):
         return exception_json_response(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -62,28 +47,10 @@ async def lms_exception_handler(request: Request, exc: LMSError) -> JSONResponse
             status_code=status.HTTP_409_CONFLICT, detail="VK ID already in database"
         )
 
-    if isinstance(exc, OfferNotFoundError):
-        return exception_json_response(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Offer {exc.offer_id} not found",
-        )
-
     if isinstance(exc, StudentProductHasNotTeacherError):
         return exception_json_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Student has not mentor or motivator on this product",
-        )
-
-    if isinstance(exc, ProductNotFoundError):
-        return exception_json_response(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Product not found",
-        )
-
-    if isinstance(exc, StudentProductNotFoundError):
-        return exception_json_response(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="StudentProduct not found",
         )
 
     if isinstance(exc, StudentProductAlreadyExpulsedError):
@@ -93,9 +60,9 @@ async def lms_exception_handler(request: Request, exc: LMSError) -> JSONResponse
         )
 
     if isinstance(exc, EntityNotFoundError):
-        log.exception("Not concrete entity not found error")
         return exception_json_response(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Entity not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=exc.detail,
         )
 
     log.exception("Got unhandled error")

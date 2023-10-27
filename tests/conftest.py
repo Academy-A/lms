@@ -61,19 +61,16 @@ async def sessionmaker(async_engine: AsyncEngine):
     )
 
 
-@pytest_asyncio.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True, scope="function")
 async def session(
     sessionmaker: async_sessionmaker[AsyncSession],
     async_engine: AsyncEngine,
 ) -> AsyncGenerator[AsyncSession, None]:
-    try:
-        session: AsyncSession = sessionmaker()
+    async with sessionmaker() as session:
         for factory in factories:
             factory.__async_session__ = session
         yield session
-    finally:
-        await session.close()
-        await clear_db(async_engine)
+    await clear_db(async_engine)
 
 
 @pytest_asyncio.fixture(scope="session")

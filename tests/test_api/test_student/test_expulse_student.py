@@ -1,4 +1,5 @@
 from datetime import datetime
+from http import HTTPStatus
 from typing import Any
 
 import pytest
@@ -21,23 +22,23 @@ pytestmark = [pytest.mark.asyncio]
 
 
 async def test_unauthorized_user(client: AsyncClient) -> None:
-    response = await client.post("v1/students/expulse")
-    assert response.status_code == 401
+    response = await client.post("/v1/students/expulse/")
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
     assert response.json() == {
         "ok": False,
-        "status_code": 401,
+        "status_code": HTTPStatus.UNAUTHORIZED,
         "message": "Unauthorized",
     }
 
 
 async def test_invalid_token(client: AsyncClient) -> None:
     response = await client.post(
-        "v1/students/expulse", params={"token": "invalid-token"}
+        "/v1/students/expulse/", params={"token": "invalid-token"}
     )
-    assert response.status_code == 403
+    assert response.status_code == HTTPStatus.FORBIDDEN
     assert response.json() == {
         "ok": False,
-        "status_code": 403,
+        "status_code": HTTPStatus.FORBIDDEN,
         "message": "Token not recognized",
     }
 
@@ -106,24 +107,24 @@ async def test_validate_data(
     json_data: dict[str, Any], answer: dict[str, Any], client: AsyncClient, token: str
 ) -> None:
     response = await client.post(
-        "v1/students/expulse",
+        "/v1/students/expulse/",
         params={"token": token},
         json=json_data,
     )
-    assert response.status_code == 422
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
     assert response.json() == answer
 
 
 async def test_student_not_found(client: AsyncClient, token: str) -> None:
     response = await client.post(
-        "v1/students/expulse",
+        "/v1/students/expulse/",
         params={"token": token},
-        json={"vk_id": -1, "product_id": 1},
+        json={"vk_id": 1234, "product_id": 1},
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json() == {
         "ok": False,
-        "status_code": 404,
+        "status_code": HTTPStatus.NOT_FOUND,
         "message": "Student not found",
     }
 
@@ -131,17 +132,17 @@ async def test_student_not_found(client: AsyncClient, token: str) -> None:
 async def test_product_not_found(client: AsyncClient, token: str) -> None:
     student = await StudentFactory.create_async()
     response = await client.post(
-        "v1/students/expulse",
+        "/v1/students/expulse/",
         params={"token": token},
         json={
             "vk_id": student.vk_id,
-            "product_id": -1,
+            "product_id": 1234,
         },
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json() == {
         "ok": False,
-        "status_code": 404,
+        "status_code": HTTPStatus.NOT_FOUND,
         "message": "Product not found",
     }
 
@@ -150,17 +151,17 @@ async def test_student_product_not_found(client: AsyncClient, token: str) -> Non
     student = await StudentFactory.create_async()
     product = await ProductFactory.create_async()
     response = await client.post(
-        "v1/students/expulse",
+        "/v1/students/expulse/",
         params={"token": token},
         json={
             "vk_id": student.vk_id,
             "product_id": product.id,
         },
     )
-    response.status_code == 404
+    response.status_code == HTTPStatus.NOT_FOUND
     assert response.json() == {
         "ok": False,
-        "status_code": 404,
+        "status_code": HTTPStatus.NOT_FOUND,
         "message": "StudentProduct not found",
     }
 
@@ -179,17 +180,17 @@ async def test_student_product_already_expulsed_error(
         expulsion_at=datetime.now(),
     )
     response = await client.post(
-        "v1/students/expulse",
+        "/v1/students/expulse/",
         params={"token": token},
         json={
             "vk_id": student.vk_id,
             "product_id": product.id,
         },
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response.json() == {
         "ok": False,
-        "status_code": 400,
+        "status_code": HTTPStatus.BAD_REQUEST,
         "message": "StudentProduct already expulsed",
     }
 
@@ -208,17 +209,17 @@ async def test_successful_expulse_student_without_teacher(
         expulsion_at=None,
     )
     response = await client.post(
-        "v1/students/expulse",
+        "/v1/students/expulse/",
         params={"token": token},
         json={
             "vk_id": student.vk_id,
             "product_id": product.id,
         },
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {
         "ok": True,
-        "status_code": 200,
+        "status_code": HTTPStatus.OK,
         "message": "Student was expulsed from product",
     }
 
@@ -250,17 +251,17 @@ async def test_successful_expulse_student_with_teacher(
         removed_at=None,
     )
     response = await client.post(
-        "v1/students/expulse",
+        "/v1/students/expulse/",
         params={"token": token},
         json={
             "vk_id": student.vk_id,
             "product_id": product.id,
         },
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {
         "ok": True,
-        "status_code": 200,
+        "status_code": HTTPStatus.OK,
         "message": "Student was expulsed from product",
     }
 
@@ -292,17 +293,17 @@ async def test_successful_expulse_with_teacher_if_not_assignment(
         expulsion_at=None,
     )
     response = await client.post(
-        "v1/students/expulse",
+        "/v1/students/expulse/",
         params={"token": token},
         json={
             "vk_id": student.vk_id,
             "product_id": product.id,
         },
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {
         "ok": True,
-        "status_code": 200,
+        "status_code": HTTPStatus.OK,
         "message": "Student was expulsed from product",
     }
 
