@@ -2,38 +2,27 @@ from __future__ import annotations
 
 import math
 from collections.abc import Sequence
-from dataclasses import field
+from dataclasses import dataclass, field
 from datetime import date, datetime
 from typing import TYPE_CHECKING, Any
-
-from pydantic.dataclasses import dataclass
 
 from lms.enums import TeacherType
 
 if TYPE_CHECKING:
-    from lms.db.models import Flow, Product, Reviewer, Soho, Student, StudentProduct
+    from lms.db.models import (
+        Flow,
+        Product,
+        Reviewer,
+        Soho,
+        Student,
+        StudentProduct,
+        Subject,
+        Teacher,
+        TeacherProduct,
+    )
 
 
-@dataclass(frozen=True, slots=True)
-class SubGroupDto:
-    teacher_type: TeacherType | None
-    flow_id: int | None
-
-
-@dataclass(frozen=True, slots=True)
-class HomeworkGroupDto:
-    homework_id: int
-    subgroups: Sequence[SubGroupDto]
-
-
-@dataclass(frozen=True, slots=True)
-class DistributionTaskDto:
-    product_id: int
-    name: str
-    groups: Sequence[HomeworkGroupDto]
-
-
-@dataclass
+@dataclass(slots=True)
 class PaginationData:
     items: Sequence[Any]
     page: int
@@ -56,19 +45,23 @@ class NewStudentData:
 
 
 @dataclass
-class StudentData:
+class StudentDto:
     id: int
     vk_id: int
     first_name: str
     last_name: str
+    created_at: datetime
+    updated_at: datetime
 
     @classmethod
-    def from_orm(cls, model: Student) -> StudentData:
-        return StudentData(
+    def from_orm(cls, model: Student) -> StudentDto:
+        return cls(
             id=model.id,
             vk_id=model.vk_id,
             first_name=model.first_name,
             last_name=model.last_name,
+            created_at=model.created_at,
+            updated_at=model.updated_at,
         )
 
 
@@ -142,6 +135,8 @@ class StudentProductData:
 @dataclass(frozen=True, slots=True)
 class ProductDto:
     id: int
+    created_at: datetime
+    updated_at: datetime
     name: str
     subject_id: int
     product_group_id: int
@@ -154,6 +149,8 @@ class ProductDto:
     def from_orm(cls, obj: Product) -> ProductDto:
         return cls(
             id=obj.id,
+            created_at=obj.created_at,
+            updated_at=obj.updated_at,
             name=obj.name,
             subject_id=obj.subject_id,
             product_group_id=obj.product_group_id,
@@ -161,6 +158,87 @@ class ProductDto:
             drive_folder_id=obj.drive_folder_id,
             start_date=obj.start_date,
             end_date=obj.end_date,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class SubjectDto:
+    id: int
+    name: str
+    eng_name: str
+    autopilot_url: str
+    group_vk_url: str
+    created_at: datetime
+    updated_at: datetime
+
+    @classmethod
+    def from_orm(cls, obj: Subject) -> SubjectDto:
+        return cls(
+            id=obj.id,
+            name=obj.name,
+            eng_name=obj.eng_name,
+            autopilot_url=obj.autopilot_url,
+            group_vk_url=obj.group_vk_url,
+            created_at=obj.created_at,
+            updated_at=obj.updated_at,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class TeacherDto:
+    id: int
+    created_at: datetime
+    updated_at: datetime
+    vk_id: int
+    first_name: str
+    last_name: str
+
+    @classmethod
+    def from_orm(cls, obj: Teacher) -> TeacherDto:
+        return cls(
+            id=obj.id,
+            created_at=obj.created_at,
+            updated_at=obj.updated_at,
+            vk_id=obj.vk_id,
+            first_name=obj.first_name,
+            last_name=obj.last_name,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class TeacherProductDto:
+    id: int
+    created_at: datetime
+    updated_at: datetime
+    teacher_id: int
+    product_id: int
+    type: TeacherType
+    is_active: bool
+    max_students: int
+    average_grade: float
+    grade_counter: int
+
+    @property
+    def is_mentor(self) -> bool:
+        return self.type == TeacherType.MENTOR
+
+    @property
+    def is_curator(self) -> bool:
+        return self.type == TeacherType.CURATOR
+
+    @classmethod
+    def from_orm(cls, obj: TeacherProduct) -> TeacherProductDto:
+        return cls(
+            id=obj.id,
+            created_at=obj.created_at,
+            updated_at=obj.updated_at,
+            teacher_id=obj.teacher_id,
+            product_id=obj.product_id,
+            type=obj.type,
+            is_active=obj.is_active,
+            max_students=obj.max_students,
+            average_grade=obj.average_grade,
+            grade_counter=obj.grade_counter,
         )
 
 
@@ -222,3 +300,22 @@ class ReviewerDto:
     @property
     def can_add_other(self) -> bool:
         return self.abs_max > len(self.premium) + len(self.other)
+
+
+@dataclass(frozen=True, slots=True)
+class SubGroupDto:
+    teacher_type: TeacherType | None
+    flow_id: int | None
+
+
+@dataclass(frozen=True, slots=True)
+class HomeworkGroupDto:
+    homework_id: int
+    subgroups: Sequence[SubGroupDto]
+
+
+@dataclass(frozen=True, slots=True)
+class DistributionTaskDto:
+    product_id: int
+    name: str
+    groups: Sequence[HomeworkGroupDto]

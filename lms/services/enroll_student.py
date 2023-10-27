@@ -52,7 +52,7 @@ async def enroll_student(
         flow_id=flow.id if flow else None,
     )
     if student_product.teacher_product_id and student_product.teacher_type:
-        subject = await uow.product.find_subject_by_product(
+        subject = await uow.subject.find_by_product(
             product_id=student_product.product_id,
         )
         teacher = await uow.teacher.find_teacher_by_teacher_product(
@@ -143,7 +143,7 @@ async def enroll_student_again_by_offer(
             student_product_id=student_product.id,
             teacher_product_id=teacher_product.id,
         )
-        subject = await uow.product.find_subject_by_product(student_product.product_id)
+        subject = await uow.subject.find_by_product(student_product.product_id)
         student = await uow.student.read_by_id(student_id=student_product.student_id)
         teacher = await uow.teacher.find_teacher_by_teacher_product(teacher_product.id)
         background_tasks.add_task(

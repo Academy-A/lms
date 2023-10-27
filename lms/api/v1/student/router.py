@@ -1,9 +1,11 @@
-from fastapi import APIRouter, BackgroundTasks, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends, Path
+from pydantic import PositiveInt
 
 from lms.api.deps import UnitOfWorkMarker
 from lms.api.services import token_required
 from lms.api.v1.schemas import StatusResponseSchema
 from lms.api.v1.student.schemas import (
+    ChangeTeacherSchema,
     ChangeVKIDSchema,
     EnrollStudentSchema,
     ExpulsionStudentSchema,
@@ -14,6 +16,7 @@ from lms.api.v1.student.schemas import (
 from lms.api.v1.student.utils import parse_soho_flow_id
 from lms.db.uow import UnitOfWork
 from lms.dto import NewStudentData
+from lms.services.change_teacher_product import change_teacher_for_student
 from lms.services.change_vk_id import change_student_vk_id_by_soho_id
 from lms.services.enroll_student import enroll_student
 from lms.services.expulse_student import expulse_student_by_offer_id
@@ -51,7 +54,7 @@ async def enroll_student_route(
     return ReadStudentProductSchema.model_validate(student_product)
 
 
-@router.post("/expulse")
+@router.post("/expulse/")
 async def expulsion_student_route(
     expulsion_data: ExpulsionStudentSchema,
     uow: UnitOfWork = Depends(UnitOfWorkMarker),
@@ -70,8 +73,30 @@ async def expulsion_student_route(
     )
 
 
+@router.post("/change-teacher/")
+async def change_teacher_product(
+    change_teacher_data: ChangeTeacherSchema,
+    background_tasks: BackgroundTasks,
+    uow: UnitOfWork = Depends(UnitOfWorkMarker),
+) -> StatusResponseSchema:
+    async with uow:
+        await change_teacher_for_student(
+            uow=uow,
+            background_tasks=background_tasks,
+            product_id=change_teacher_data.product_id,
+            student_vk_id=change_teacher_data.student_vk_id,
+            teacher_vk_id=change_teacher_data.teacher_vk_id,
+        )
+        await uow.commit()
+    return StatusResponseSchema(
+        ok=True,
+        status_code=200,
+        message="Teacher was changed for student",
+    )
+
+
 @router.get(
-    "/{student_id}",
+    "/{student_id}/",
     response_model=ReadStudentSchema,
     responses={
         403: {"model": StatusResponseSchema},
@@ -79,7 +104,7 @@ async def expulsion_student_route(
     },
 )
 async def read_student_by_id_route(
-    student_id: int,
+    student_id: PositiveInt = Path(),
     uow: UnitOfWork = Depends(UnitOfWorkMarker),
 ) -> ReadStudentSchema:
     async with uow:
@@ -87,9 +112,9 @@ async def read_student_by_id_route(
     return ReadStudentSchema.model_validate(student)
 
 
-@router.post("/soho/{soho_id}/change-vk-id", response_model=ReadStudentSchema)
+@router.post("/soho/{soho_id}/change-vk-id/", response_model=ReadStudentSchema)
 async def change_vk_id_by_soho_id_route(
-    soho_id: int,
+    soho_id: PositiveInt,
     vk_id_data: ChangeVKIDSchema,
     uow: UnitOfWork = Depends(UnitOfWorkMarker),
 ) -> ReadStudentSchema:
@@ -103,9 +128,9 @@ async def change_vk_id_by_soho_id_route(
     return ReadStudentSchema.model_validate(student)
 
 
-@router.post("/soho/{soho_id}/grade-teacher", response_model=StatusResponseSchema)
+@router.post("/soho/{soho_id}/grade-teacher/", response_model=StatusResponseSchema)
 async def grade_teacher_route(
-    soho_id: int,
+    soho_id: PositiveInt,
     grade_data: GradeTeacherSchema,
     uow: UnitOfWork = Depends(UnitOfWorkMarker),
 ) -> StatusResponseSchema:
