@@ -34,7 +34,7 @@ class PaymentSchema(BaseModel):
     percent: int
 
 
-class ProductSchema(BaseModel):
+class SohoProductSchema(BaseModel):
     id: int = Field(alias="productId")
     flow_id: int | None = Field(alias="flowId", default=None)
     name: str
@@ -42,4 +42,4 @@ class ProductSchema(BaseModel):
 
 
 class ProductListSchema(BaseModel):
-    products: ProductSchema
+    products: SohoProductSchema
