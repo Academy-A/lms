@@ -453,7 +453,7 @@ class VerifiedWorkFile(TimestampMixin, Base):
     subject_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("subject.id"), index=True, nullable=False
     )
-    student_id: Mapped[int] = mapped_column(
+    student_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("student.id"), index=True, nullable=True
     )
     file_id: Mapped[str] = mapped_column(

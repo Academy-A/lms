@@ -64,8 +64,8 @@ def make_alembic_config(cmd_opts: Namespace, base_path: Path = PROJECT_PATH) -> 
     if not os.path.isabs(alembic_location):
         config.set_main_option("script_location", str(base_path / alembic_location))
 
-    if cmd_opts.pg_url:
-        config.set_main_option("sqlalchemy.url", cmd_opts.pg_url)
+    if cmd_opts.pg_dsn:
+        config.set_main_option("sqlalchemy.url", cmd_opts.pg_dsn)
 
     config.attributes["configure_logger"] = False
 

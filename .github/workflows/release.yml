@@ -46,25 +46,3 @@ jobs:
           tags: |
             andytakker/insperia-lms-backend:latest
             andytakker/insperia-lms-backend:${{ steps.vars.outputs.sha_short }}
-
-      - name: Build and push worker image
-        uses: docker/build-push-action@v5
-        with:
-          push: true
-          platforms: linux/amd64,linux/arm64
-          file: ./docker/backend/worker.dockerfile
-          context: ./
-          tags: |
-            andytakker/insperia-lms-worker:latest
-            andytakker/insperia-lms-worker:${{ steps.vars.outputs.sha_short }}
-
-      - name: Build and push cron image
-        uses: docker/build-push-action@v5
-        with:
-          push: true
-          platforms: linux/amd64,linux/arm64
-          file: ./docker/cron/cron.dockerfile
-          context: ./
-          tags: |
-            andytakker/insperia-lms-cron:latest
-            andytakker/insperia-lms-cron:${{ steps.vars.outputs.sha_short }}

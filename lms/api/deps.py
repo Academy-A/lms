@@ -1,8 +1,4 @@
-class SettingsMarker:
-    pass
-
-
-class DatabaseEngineMarker:
+class DebugMarker:
     pass
 
 
@@ -11,4 +7,8 @@ class DatabaseSessionMarker:
 
 
 class UnitOfWorkMarker:
+    pass
+
+
+class SecretKeyMarker:
     pass

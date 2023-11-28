@@ -4,42 +4,9 @@ services:
     restart: unless-stopped
     image: andytakker/insperia-lms-backend:latest
     environment:
-      POSTGRES_HOST: ${POSTGRES_HOST}
-      POSTGRES_PORT: ${POSTGRES_PORT}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-
-      SOHO_API_TOKEN: ${SOHO_API_TOKEN}
-      SECRET_KEY: ${SECRET_KEY}
+      APP_SOHO_API_TOKEN: ${SOHO_API_TOKEN}
+      APP_API_SECRET_KEY: ${SECRET_KEY}
+      APP_PG_DSN: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgetset.ru:5433/${POSTGRES_DB}
 
     ports:
       - 8000:80
-
-  # worker:
-  #   restart: unless-stopped
-  #   image: andytakker/insperia-lms-worker:latest
-  #   depends_on:
-  #     - backend
-  #   environment:
-  #     POSTGRES_HOST: ${POSTGRES_HOST}
-  #     POSTGRES_PORT: ${POSTGRES_PORT}
-  #     POSTGRES_USER: ${POSTGRES_USER}
-  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-  #     POSTGRES_DB: ${POSTGRES_DB}
-
-  #     SOHO_API_TOKEN: ${SOHO_API_TOKEN}
-  #     SECRET_KEY: ${SECRET_KEY}
-
-  cron:
-    restart: unless-stopped
-    image: andytakker/insperia-lms-cron:latest
-    environment:
-      POSTGRES_HOST: ${POSTGRES_HOST}
-      POSTGRES_PORT: ${POSTGRES_PORT}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-
-      SOHO_API_TOKEN: ${SOHO_API_TOKEN}
-      SECRET_KEY: ${SECRET_KEY}

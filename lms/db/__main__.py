@@ -6,7 +6,7 @@ from alembic.config import CommandLine
 
 from lms.db.utils import make_alembic_config
 
-DEFAULT_PG_URL = "postgresql://user:secret@localhost/lms"
+DEFAULT_PG_DSN = "postgresql://user:secret@localhost/lms"
 
 
 def main() -> None:
@@ -15,9 +15,9 @@ def main() -> None:
     alembic = CommandLine()
     alembic.parser.formatter_class = argparse.ArgumentDefaultsHelpFormatter
     alembic.parser.add_argument(
-        "--pg-url",
-        default=os.getenv("POSTGRES_URL", DEFAULT_PG_URL),
-        help="Database URL [env var: POSTGRES_URL]",
+        "--pg-dsn",
+        default=os.getenv("APP_PG_DSN", DEFAULT_PG_DSN),
+        help="Database URL [env var: APP_PG_DSN]",
     )
 
     options = alembic.parser.parse_args()

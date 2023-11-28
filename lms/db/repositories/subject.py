@@ -28,6 +28,11 @@ class SubjectRepository(Repository[Subject]):
         except EntityNotFoundError as e:
             raise SubjectNotFoundError from e
 
+    async def read_all(self) -> list[SubjectDto]:
+        query = select(Subject).order_by(Subject.id)
+        result = await self._session.scalars(query)
+        return [SubjectDto.from_orm(obj) for obj in result]
+
     async def find_by_product(self, product_id: int) -> SubjectDto:
         stmt = (
             select(Subject)

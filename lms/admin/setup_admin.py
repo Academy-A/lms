@@ -24,7 +24,6 @@ from lms.admin.views.models.subject import SubjectModelView
 from lms.admin.views.models.teacher import TeacherModelView
 from lms.admin.views.models.teacher_product import TeacherProductModelView
 from lms.admin.views.pages.home import HomeView
-from lms.config import Settings
 from lms.db.models import (
     Flow,
     FlowProduct,
@@ -44,12 +43,14 @@ from lms.db.models import (
 TEMPLATES_DIR = Path(__file__).parent.resolve() / "templates"
 
 
-def build_admin(app: FastAPI, settings: Settings, engine: AsyncEngine) -> None:
+def build_admin(
+    app: FastAPI, engine: AsyncEngine, project_name: str, secret_key: str
+) -> None:
     admin = Admin(
         engine=engine,
-        title=settings.PROJECT_NAME,
+        title=project_name,
         templates_dir=os.fspath(TEMPLATES_DIR),
-        middlewares=[Middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)],
+        middlewares=[Middleware(SessionMiddleware, secret_key=secret_key)],
         index_view=HomeView(
             label="Home",
             icon="fa fa-home",

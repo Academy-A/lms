@@ -1,2 +1,0 @@
-*/30 * * * * root /usr/local/bin/python /app/lms/cron/regular_notify.py >> /var/log/cron.log 2>&1
-*/30 * * * * root /usr/local/bin/python /app/lms/cron/subscription_notify.py >> /var/log/cron.log 2>&1

@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from lms.api.services import generate_token
+from lms.api.auth import generate_token
 from lms.config import Settings
 from lms.db.models import Base
 from lms.db.utils import make_alembic_config
