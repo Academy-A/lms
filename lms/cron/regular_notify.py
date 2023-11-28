@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 
 from lms.config import Settings
 from lms.controllers.homework_notification.regular import RegularNotification
-from lms.db.factory import create_engine, create_session_factory
 from lms.db.models import Subject
+from lms.db.utils import create_engine, create_session_factory
 
 log = logging.getLogger(__name__)
 

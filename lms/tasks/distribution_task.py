@@ -1,8 +1,13 @@
 import logging
 
+from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from lms.api.v1.product.schemas import DistributionTaskSchema
+from lms.api.v1.product.schemas import (
+    DistributionHomeworkSchema,
+    DistributionTaskSchema,
+)
+from lms.config import Settings
 from lms.controllers.homework_distribution.distribution import distribute_homeworks
 from lms.tasks.base import DatabaseTask
 from lms.tasks.config import celery
@@ -31,3 +36,37 @@ def make_distribution_task(
         )
     log.info("Task ended")
     return
+
+
+def main() -> None:
+    settings = Settings()
+    engine = create_engine(
+        url=settings.build_db_connection_uri(driver="psycopg2"),
+    )
+    with Session(engine) as session:
+        distribute_homeworks(
+            settings=settings,
+            session=session,
+            distribution_task=DistributionTaskSchema(
+                product_id=65,
+                name="матем",
+                homeworks=(
+                    DistributionHomeworkSchema(
+                        homework_id=46034,
+                        filters=tuple(),
+                    ),
+                    DistributionHomeworkSchema(
+                        homework_id=40342,
+                        filters=tuple(),
+                    ),
+                    DistributionHomeworkSchema(
+                        homework_id=33073,
+                        filters=tuple(),
+                    ),
+                ),
+            ),
+        )
+
+
+if __name__ == "__main__":
+    main()

@@ -53,8 +53,8 @@ async def test_successful_order(client: AsyncClient, token: str) -> None:
         "items": [
             {
                 "id": s.id,
-                "created_at": s.created_at.isoformat(timespec="seconds"),
-                "updated_at": s.updated_at.isoformat(timespec="seconds"),
+                "created_at": s.created_at.isoformat(),
+                "updated_at": s.updated_at.isoformat(),
                 "name": s.name,
                 "eng_name": s.eng_name,
                 "autopilot_url": s.autopilot_url,
