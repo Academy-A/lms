@@ -1,16 +1,12 @@
 from fastapi import APIRouter, Depends, Query
 from pydantic import PositiveInt
 
+from lms.api.auth import token_required
 from lms.api.deps import UnitOfWorkMarker
-from lms.api.services import token_required
-from lms.api.v1.product.schemas import (
-    DistributionTaskSchema,
-    ProductPageSchema,
-    ReadProductSchema,
-)
-from lms.api.v1.schemas import StatusResponseSchema
+from lms.api.v1.product.schemas import ProductPageSchema, ReadProductSchema
 from lms.db.uow import UnitOfWork
-from lms.tasks.config import celery
+
+# from lms.tasks.config import celery
 
 router = APIRouter(
     prefix="/products",
@@ -43,20 +39,20 @@ async def read_product_by_id(
     return ReadProductSchema.model_validate(product)
 
 
-@router.post("/distribute/")
-async def create_distribution(
-    distribution_data: DistributionTaskSchema,
-    uow: UnitOfWork = Depends(UnitOfWorkMarker),
-) -> StatusResponseSchema:
-    await uow.product.read_by_id(product_id=distribution_data.product_id)
-    celery.send_task(
-        "make_distribution_task",
-        kwargs={
-            "distribution_data_str": distribution_data.model_dump_json(),
-        },
-    )
-    return StatusResponseSchema(
-        ok=True,
-        status_code=201,
-        message="The distribution task has been created",
-    )
+# @router.post("/distribute/")
+# async def create_distribution(
+#     distribution_data: DistributionTaskSchema,
+#     uow: UnitOfWork = Depends(UnitOfWorkMarker),
+# ) -> StatusResponseSchema:
+#     await uow.product.read_by_id(product_id=distribution_data.product_id)
+#     celery.send_task(
+#         "make_distribution_task",
+#         kwargs={
+#             "distribution_data_str": distribution_data.model_dump_json(),
+#         },
+#     )
+#     return StatusResponseSchema(
+#         ok=True,
+#         status_code=201,
+#         message="The distribution task has been created",
+#     )

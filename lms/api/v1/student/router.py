@@ -1,8 +1,8 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, Path
 from pydantic import PositiveInt
 
+from lms.api.auth import token_required
 from lms.api.deps import UnitOfWorkMarker
-from lms.api.services import token_required
 from lms.api.v1.schemas import StatusResponseSchema
 from lms.api.v1.student.schemas import (
     ChangeTeacherSchema,

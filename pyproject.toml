@@ -20,9 +20,10 @@ greenlet = "^3.0.0"
 itsdangerous = "^2.1.2"
 starlette-admin = "^0.12.1"
 configargparse = "^1.7"
-aiomisc = "^17.3.41"
+aiomisc = {extras = ["asgi", "cron", "rich", "uvicorn", "uvloop"], version = "^17.3.41"}
 aiomisc-dependency = "^0.1.20"
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+google-api-service-helper = "^0.1.1"
 
 [tool.poetry.group.backend.dependencies]
 fastapi = "^0.101.1"
@@ -34,7 +35,6 @@ gunicorn = "^21.2.0"
 
 [tool.poetry.group.worker.dependencies]
 psycopg2-binary = "^2.9.9"
-google-api-service-helper = "^0.1.1"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.5.0"
@@ -82,6 +82,14 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "celery.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "configargparse.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "aiomisc_dependency.*"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
