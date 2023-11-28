@@ -47,6 +47,6 @@ async def test_successful_read(client: AsyncClient, token: str) -> None:
         "eng_name": subject.eng_name,
         "autopilot_url": subject.autopilot_url,
         "group_vk_url": subject.group_vk_url,
-        "created_at": subject.created_at.isoformat(timespec="seconds"),
-        "updated_at": subject.updated_at.isoformat(timespec="seconds"),
+        "created_at": subject.created_at.isoformat(),
+        "updated_at": subject.updated_at.isoformat(),
     }
