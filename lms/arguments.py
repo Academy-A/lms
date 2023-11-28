@@ -30,7 +30,7 @@ group.add_argument("--project-version", default="1.0.1")
 
 group = parser.add_argument_group("API options")
 group.add_argument("--api-address", default="127.0.0.1")
-group.add_argument("--api-port", type=int, default=8080)
+group.add_argument("--api-port", type=int, default=80)
 group.add_argument("--api-secret-key", required=True, type=str)
 
 group = parser.add_argument_group("PostgreSQL options")
