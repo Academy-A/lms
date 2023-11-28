@@ -19,6 +19,7 @@ if TYPE_CHECKING:
         Subject,
         Teacher,
         TeacherProduct,
+        VerifiedWorkFile,
     )
 
 
@@ -319,3 +320,24 @@ class DistributionTaskDto:
     product_id: int
     name: str
     groups: Sequence[HomeworkGroupDto]
+
+
+@dataclass(frozen=True)
+class VerifiedWorkFileData:
+    id: int
+    subject_id: int
+    student_id: int | None
+    file_id: str
+    name: str
+    url: str
+
+    @classmethod
+    def from_orm(cls, obj: VerifiedWorkFile) -> VerifiedWorkFileData:
+        return VerifiedWorkFileData(
+            id=obj.id,
+            subject_id=obj.subject_id,
+            student_id=obj.student_id,
+            file_id=obj.file_id,
+            name=obj.name,
+            url=obj.url,
+        )

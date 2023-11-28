@@ -1,6 +1,6 @@
 from typing import ClassVar
 
-from lms.controllers.homework_notification.base import BaseNotification
+from lms.cron.homework_notification.base import BaseNotification
 
 
 class SubscriptionNotification(BaseNotification):

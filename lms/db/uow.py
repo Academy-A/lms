@@ -3,9 +3,11 @@ from typing import Self
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from lms.db.repositories.file import FileRepository
 from lms.db.repositories.flow import FlowRepository
 from lms.db.repositories.offer import OfferRepository
 from lms.db.repositories.product import ProductRepository
+from lms.db.repositories.setting import SettingRepository
 from lms.db.repositories.soho import SohoRepository
 from lms.db.repositories.student import StudentRepository
 from lms.db.repositories.student_product import StudentProductRepository
@@ -21,9 +23,11 @@ class UnitOfWork:
 
     async def __aenter__(self) -> Self:
         self._session = self._sessionmaker()
+        self.file = FileRepository(session=self._session)
         self.flow = FlowRepository(session=self._session)
         self.offer = OfferRepository(session=self._session)
         self.product = ProductRepository(session=self._session)
+        self.setting = SettingRepository(session=self._session)
         self.soho = SohoRepository(session=self._session)
         self.student = StudentRepository(session=self._session)
         self.student_product = StudentProductRepository(session=self._session)

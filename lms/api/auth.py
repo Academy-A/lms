@@ -5,21 +5,21 @@ from fastapi import Depends, HTTPException
 from fastapi.security import APIKeyQuery
 from jose import JWTError, jwt
 
-from lms.api.deps import SettingsMarker
-from lms.config import Settings
+from lms.api.deps import DebugMarker, SecretKeyMarker
 
 SECURITY_ALGORITHM = "HS256"
 
 
 async def token_required(
     token: str = Depends(APIKeyQuery(name="token", auto_error=False)),
-    settings: Settings = Depends(SettingsMarker),
+    debug: bool = Depends(DebugMarker),
+    secret_key: str = Depends(SecretKeyMarker),
 ) -> None:
-    if settings.DEBUG:
+    if debug:
         return
     if not token:
         raise HTTPException(status_code=401, detail="Unauthorized")
-    if not check_token(token=token, secret_key=settings.SECRET_KEY):
+    if not check_token(token=token, secret_key=secret_key):
         raise HTTPException(status_code=403, detail="Token not recognized")
 
 

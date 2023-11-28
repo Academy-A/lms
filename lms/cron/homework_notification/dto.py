@@ -2,10 +2,10 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
-class FileDTO:
+class FileData:
     id: str
     name: str
-    url: str | None = None
+    url: str = ""
     vk_id: int | None = None
     student_id: int | None = None
     mimeType: str | None = None

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 
+from lms.api.auth import token_required
 from lms.api.deps import UnitOfWorkMarker
-from lms.api.services import token_required
 from lms.api.v1.subject.schema import ReadSubjectSchema, SubjectPageSchema
 from lms.db.uow import UnitOfWork
 
