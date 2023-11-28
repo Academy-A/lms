@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Literal, Self
 
-from pydantic import BaseModel
+from pydantic import BaseModel, PositiveInt
 
 from lms.dto import PaginationData
 
@@ -13,7 +13,7 @@ class MonitoringSchema(BaseModel):
 
 class StatusResponseSchema(BaseModel):
     ok: bool
-    status_code: int
+    status_code: PositiveInt
     message: str
 
 

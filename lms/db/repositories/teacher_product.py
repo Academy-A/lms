@@ -1,8 +1,10 @@
 from sqlalchemy import desc, select
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from lms.db.models import TeacherProduct, TeacherProductFlow
 from lms.db.repositories.base import Repository
+from lms.dto import TeacherProductDto
 from lms.enums import TeacherType
 from lms.exceptions import TeacherProductNotFoundError
 from lms.exceptions.base import EntityNotFoundError
@@ -12,11 +14,24 @@ class TeacherProductRepository(Repository[TeacherProduct]):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(model=TeacherProduct, session=session)
 
-    async def read_by_id(self, teacher_product_id: int) -> TeacherProduct:
+    async def read_by_id(self, teacher_product_id: int) -> TeacherProductDto:
         try:
-            return await self._read_by_id(teacher_product_id)
-        except EntityNotFoundError:
-            raise TeacherProductNotFoundError
+            obj = await self._read_by_id(teacher_product_id)
+            return TeacherProductDto.from_orm(obj)
+        except EntityNotFoundError as e:
+            raise TeacherProductNotFoundError from e
+
+    async def find_by_teacher_and_product(
+        self, teacher_id: int, product_id: int
+    ) -> TeacherProductDto:
+        stmt = select(TeacherProduct).filter_by(
+            teacher_id=teacher_id, product_id=product_id
+        )
+        try:
+            obj = (await self._session.scalars(stmt)).one()
+            return TeacherProductDto.from_orm(obj)
+        except NoResultFound as e:
+            raise TeacherProductNotFoundError from e
 
     async def get_for_enroll(
         self,

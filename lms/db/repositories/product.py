@@ -2,10 +2,10 @@ from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lms.db.models import Offer, Product, Subject
+from lms.db.models import Offer, Product
 from lms.db.repositories.base import Repository
-from lms.dto import PaginationData
-from lms.exceptions import ProductNotFoundError, SubjectNotFoundError
+from lms.dto import PaginationData, ProductDto
+from lms.exceptions import ProductNotFoundError
 from lms.exceptions.base import EntityNotFoundError
 
 
@@ -14,37 +14,29 @@ class ProductRepository(Repository[Product]):
         super().__init__(model=Product, session=session)
 
     async def paginate(self, page: int, page_size: int) -> PaginationData:
-        query = select(Product).order_by(Product.name)
+        query = select(Product).order_by(Product.id)
         return await self._paginate(
             query=query,
             page=page,
             page_size=page_size,
+            dto=ProductDto,
         )
 
-    async def read_by_id(self, product_id: int) -> Product:
+    async def read_by_id(self, product_id: int) -> ProductDto:
         try:
-            return await self._read_by_id(product_id)
+            obj = await self._read_by_id(product_id)
+            return ProductDto.from_orm(obj)
         except EntityNotFoundError as e:
             raise ProductNotFoundError from e
 
-    async def find_product_by_offer(self, offer_id: int) -> Product:
+    async def find_product_by_offer(self, offer_id: int) -> ProductDto:
         stmt = (
             select(Product)
             .join(Offer, Product.id == Offer.id)
             .where(Offer.id == offer_id)
         )
         try:
-            return (await self._session.scalars(stmt)).one()
+            obj = (await self._session.scalars(stmt)).one()
+            return ProductDto.from_orm(obj)
         except NoResultFound as e:
             raise ProductNotFoundError from e
-
-    async def find_subject_by_product(self, product_id: int) -> Subject:
-        stmt = (
-            select(Subject)
-            .join(Product, Subject.id == Product.subject_id)
-            .where(Product.id == product_id)
-        )
-        try:
-            return (await self._session.scalars(stmt)).one()
-        except NoResultFound as e:
-            raise SubjectNotFoundError from e

@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from typing import Any
 
 import pytest
@@ -5,6 +6,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tests.factories import (
+    OfferFactory,
     ProductFactory,
     SohoFactory,
     StudentProductFactory,
@@ -15,23 +17,23 @@ pytestmark = [pytest.mark.asyncio]
 
 
 async def test_unauthorized_user(client: AsyncClient) -> None:
-    response = await client.post(f"v1/students/soho/1/grade-teacher")
-    assert response.status_code == 401
+    response = await client.post("/v1/students/soho/1/grade-teacher/")
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
     assert response.json() == {
         "ok": False,
-        "status_code": 401,
+        "status_code": HTTPStatus.UNAUTHORIZED,
         "message": "Unauthorized",
     }
 
 
 async def test_invalid_token(client: AsyncClient) -> None:
     response = await client.post(
-        "v1/students/soho/1/grade-teacher", params={"token": "something"}
+        "/v1/students/soho/1/grade-teacher/", params={"token": "something"}
     )
-    assert response.status_code == 403
+    assert response.status_code == HTTPStatus.FORBIDDEN
     assert response.json() == {
         "ok": False,
-        "status_code": 403,
+        "status_code": HTTPStatus.FORBIDDEN,
         "message": "Token not recognized",
     }
 
@@ -135,47 +137,45 @@ async def test_validate_data(
     token: str,
 ) -> None:
     response = await client.post(
-        "v1/students/soho/1/grade-teacher",
+        "/v1/students/soho/1/grade-teacher/",
         params={"token": token},
         json=json_data,
     )
-    assert response.status_code == 422
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
     assert response.json() == answer
 
 
 async def test_soho_not_found(client: AsyncClient, token: str) -> None:
     response = await client.post(
-        "v1/students/soho/0/grade-teacher",
+        "v1/students/soho/0/grade-teacher/",
         params={"token": token},
         json={
             "product_id": 65,
             "grade": 5,
         },
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json() == {
         "ok": False,
-        "status_code": 404,
+        "status_code": HTTPStatus.NOT_FOUND,
         "message": "Soho not found",
     }
 
 
-async def test_product_not_found(
-    client: AsyncClient, token: str, session: AsyncSession
-) -> None:
+async def test_product_not_found(client: AsyncClient, token: str) -> None:
     soho = await SohoFactory.create_async()
     response = await client.post(
-        f"v1/students/soho/{soho.id}/grade-teacher",
+        f"v1/students/soho/{soho.id}/grade-teacher/",
         params={"token": token},
         json={
             "product_id": 65,
             "grade": 5,
         },
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json() == {
         "ok": False,
-        "status_code": 404,
+        "status_code": HTTPStatus.NOT_FOUND,
         "message": "Product not found",
     }
 
@@ -184,17 +184,17 @@ async def test_student_product_not_found(client: AsyncClient, token: str) -> Non
     soho = await SohoFactory.create_async()
     product = await ProductFactory.create_async()
     response = await client.post(
-        f"v1/students/soho/{soho.id}/grade-teacher",
+        f"/v1/students/soho/{soho.id}/grade-teacher/",
         params={"token": token},
         json={
             "product_id": product.id,
             "grade": 5,
         },
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json() == {
         "ok": False,
-        "status_code": 404,
+        "status_code": HTTPStatus.NOT_FOUND,
         "message": "StudentProduct not found",
     }
 
@@ -210,17 +210,17 @@ async def test_student_product_has_not_teacher_product(
     )
     soho = await SohoFactory.create_async(student=student_product.student)
     response = await client.post(
-        f"v1/students/soho/{soho.id}/grade-teacher",
+        f"/v1/students/soho/{soho.id}/grade-teacher/",
         params={"token": token},
         json={
             "product_id": student_product.product.id,
             "grade": 5,
         },
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response.json() == {
         "ok": False,
-        "status_code": 400,
+        "status_code": HTTPStatus.BAD_REQUEST,
         "message": "Student has not mentor or motivator on this product",
     }
 
@@ -232,25 +232,27 @@ async def test_successful(
         average_grade=5,
         grade_counter=2,
     )
+    offer = await OfferFactory.create_async(product=teacher_product.product)
     student_product = await StudentProductFactory.create_async(
         teacher_product=teacher_product,
         product=teacher_product.product,
+        offer=offer,
         teacher_grade=None,
         teacher_graded_at=None,
     )
     soho = await SohoFactory.create_async(student=student_product.student)
     response = await client.post(
-        f"v1/students/soho/{soho.id}/grade-teacher",
+        f"/v1/students/soho/{soho.id}/grade-teacher/",
         params={"token": token},
         json={
             "product_id": student_product.product.id,
             "grade": 2,
         },
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {
         "ok": True,
-        "status_code": 200,
+        "status_code": HTTPStatus.OK,
         "message": "Teacher was graded",
     }
     await session.refresh(teacher_product)

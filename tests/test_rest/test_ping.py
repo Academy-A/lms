@@ -1,10 +1,9 @@
-import pytest
-from httpx import AsyncClient
+from http import HTTPStatus
 
-pytestmark = [pytest.mark.asyncio]
+from httpx import AsyncClient
 
 
 async def test_ping_route(client: AsyncClient) -> None:
     response = await client.get("v1/monitoring/ping")
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {"status": "ok"}

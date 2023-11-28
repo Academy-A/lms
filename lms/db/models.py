@@ -228,7 +228,7 @@ class TeacherProduct(TimestampMixin, Base):
         nullable=False,
     )
     max_students: Mapped[int] = mapped_column(Integer, default=100, nullable=False)
-    average_grade: Mapped[int] = mapped_column(Float, default=5, nullable=False)
+    average_grade: Mapped[float] = mapped_column(Float, default=5, nullable=False)
     grade_counter: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     # fullness: Mapped[float] = column_property(
