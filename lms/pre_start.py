@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 from lms.config import Settings
-from lms.db.factory import create_async_engine
+from lms.db.utils import create_async_engine
 
 logger = logging.getLogger(__name__)
 

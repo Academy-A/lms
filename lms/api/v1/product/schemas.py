@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, PositiveInt
@@ -19,7 +20,7 @@ class DistributionHomeworkSchema(BaseModel):
 class DistributionTaskSchema(BaseModel):
     product_id: PositiveInt
     name: str
-    homeworks: list[DistributionHomeworkSchema]
+    homeworks: Sequence[DistributionHomeworkSchema]
 
 
 class ReadProductSchema(BaseModel):

@@ -33,7 +33,7 @@ def distribute_homeworks(
 
     product_dto = ProductDto.from_orm(product)
 
-    homeworks = get_homeworks(
+    homeworks, extras = get_homeworks(
         session=session,
         soho_api_token=settings.SOHO_API_TOKEN,
         distribution_task=distribution_task,
@@ -42,14 +42,19 @@ def distribute_homeworks(
     google_keys = GoogleKeys(**json.loads(get_setting(session, GOOGLE_KEYS_SETTING)))
     gs = GoogleSheets(google_keys=google_keys)
     gd = GoogleDrive(google_keys=google_keys)
-
+    main_hws = tuple(hw for hw in homeworks if hw.teacher_product_id is None)
+    premium_hws = tuple(hw for hw in homeworks if hw.teacher_product_id is not None)
     DistributionController(
         gs=gs,
         gd=gd,
-        product=product_dto,
+        product_name=product_dto.name,
+        check_spreadsheet_id=product.check_spreadsheet_id,
+        drive_folder_id=product.drive_folder_id,
         distribution_task=distribution_task,
         reviewers=reviewers,
-        homeworks=homeworks,
+        main_hws=main_hws,
+        premium_hws=premium_hws,
+        error_hws=extras,
     ).create_distribution()
 
 
@@ -67,8 +72,9 @@ def get_homeworks(
     session: Session,
     soho_api_token: str,
     distribution_task: DistributionTaskSchema,
-) -> list[HomeworkDto]:
+) -> tuple[list[HomeworkDto], list[HomeworkDto]]:
     homeworks: list[HomeworkDto] = []
+    not_found_homeworks: list[HomeworkDto] = []
     soho = SohoClient(auth_token=soho_api_token)
     for hw in distribution_task.homeworks:
         group_homeworks = soho.get_homeworks_for_reviews_sync(
@@ -83,7 +89,7 @@ def get_homeworks(
                         StudentProduct.flow_id == f.flow_id,
                     )
                 )
-        hw_filter = or_(False, *flow_filters)
+        hw_filter = or_(*flow_filters) if flow_filters else and_(True)
         query = (
             select(Student.vk_id, Student.first_name, Student.last_name, StudentProduct)
             .join(Student, Student.id == StudentProduct.student_id)
@@ -94,10 +100,9 @@ def get_homeworks(
                 hw_filter,
             )
         )
-        for vk_id, first_name, last_name, student_product in session.execute(
-            query
-        ).all():
-            for gh in group_homeworks:
+        data = session.execute(query).all()
+        for gh in group_homeworks:
+            for vk_id, first_name, last_name, student_product in data:
                 if gh.vk_id == vk_id:
                     teacher_product_id = (
                         student_product.teacher_product_id
@@ -113,7 +118,18 @@ def get_homeworks(
                             teacher_product_id=teacher_product_id,
                         )
                     )
-    return list(set(homeworks))
+                    break
+            else:
+                not_found_homeworks.append(
+                    HomeworkDto(
+                        student_name="anonymous",
+                        vk_student_id=gh.vk_id,
+                        soho_student_id=gh.client_id,
+                        submission_url=str(gh.chat_url),
+                        teacher_product_id=None,
+                    )
+                )
+    return homeworks, not_found_homeworks
 
 
 class DistributionController:
@@ -121,36 +137,48 @@ class DistributionController:
 
     INDEX_SHEET = 4
 
+    _extras: list[HomeworkDto]
+    _check_spreadsheet_id: str
+    _drive_folder_id: str
+    _product_name: str
+    _premium_queue: list[HomeworkDto]
+    _main_queue: list[HomeworkDto]
+    _error_queue: list[HomeworkDto]
+
     def __init__(
         self,
-        product: ProductDto,
+        product_name: str,
+        check_spreadsheet_id: str,
+        drive_folder_id: str,
         distribution_task: DistributionTaskSchema,
         reviewers: Sequence[ReviewerDto],
-        homeworks: Sequence[HomeworkDto],
+        premium_hws: Sequence[HomeworkDto],
+        main_hws: Sequence[HomeworkDto],
+        error_hws: Sequence[HomeworkDto],
         gs: GoogleSheets,
         gd: GoogleDrive,
     ) -> None:
-        self.product = product
+        self._product_name = product_name
+        self._check_spreadsheet_id = check_spreadsheet_id
+        self._drive_folder_id = drive_folder_id
         self.distribution_task = distribution_task
         self.reviewers = reviewers
         self.gs = gs
         self.gd = gd
         self.total_max = sum(r.optimal_max for r in reviewers)
         self.total_desired = sum(r.optimal_desired for r in reviewers)
-        self.premium_homeworks = [
-            h for h in homeworks if h.teacher_product_id is not None
-        ]
-        self.other_homeworks = [h for h in homeworks if h.teacher_product_id is None]
-        self.extras: list[HomeworkDto] = []
+        self._premium_queue = list(premium_hws)
+        self._main_queue = list(main_hws)
+        self._error_queue = list(error_hws)
 
     def create_distribution(self) -> None:
         self._distribute_premium_homeworks()
-        self._distribute_other_homeworks()
+        self._distribute_main_homeworks()
         self._create_folder_for_essays()
         self._write_data_in_new_sheet()
 
     def _distribute_premium_homeworks(self) -> None:
-        for hw in self.premium_homeworks:
+        for hw in self._premium_queue:
             for reviewer in self.reviewers:
                 if reviewer.teacher_product_id == hw.teacher_product_id and (
                     reviewer.can_add_prem
@@ -158,10 +186,10 @@ class DistributionController:
                     reviewer.premium.append(hw)
                     break
             else:
-                self.other_homeworks.append(hw)
+                self._main_queue.append(hw)
 
-    def _distribute_other_homeworks(self) -> None:
-        other_students_length = len(self.other_homeworks)
+    def _distribute_main_homeworks(self) -> None:
+        other_students_length = len(self._main_queue)
         self._calculate_percents()
         if (
             other_students_length < self.total_desired
@@ -175,11 +203,11 @@ class DistributionController:
 
         self._distribute_other_by_reviewer()
         total_actual = sum(r.actual for r in self.reviewers)
-        self.extras.extend(self.other_homeworks[total_actual:])
+        self._error_queue.extend(self._main_queue[total_actual:])
         log.info("End of distribution other homeworks")
 
     def _calculate_percents(self) -> None:
-        if len(self.other_homeworks) <= self.total_desired:
+        if len(self._main_queue) <= self.total_desired:
             for r in self.reviewers:
                 r.percent = r.optimal_desired / self.total_desired
         else:
@@ -230,10 +258,10 @@ class DistributionController:
             data.extend([column_identify, column_name, [], [], []])
         extras_identify: list[int | str] = ["Переполнение максимума"]
         extras_name: list[str | int] = [""]
-        for extra_student in self.extras:
-            extras_identify.append(student.soho_student_id)
+        for extra_student in self._error_queue:
+            extras_identify.append(extra_student.soho_student_id)
             extras_name.append(
-                f'=HYPERLINK("{extra_student.submission_url}";"{student.student_name}")'
+                f'=HYPERLINK("{extra_student.submission_url}";"{extra_student.student_name}")'
             )
         data.extend([[], extras_identify, extras_name, []])
         hw = "_".join(str(hw.homework_id) for hw in self.distribution_task.homeworks)
@@ -241,12 +269,12 @@ class DistributionController:
             "%d.%m.%Y %H:%M:%S"
         )
         self.gs.create_sheet(
-            spreadsheet_id=self.product.check_spreadsheet_id,
+            spreadsheet_id=self._check_spreadsheet_id,
             title=new_title,
             index=self.INDEX_SHEET,
         )
         self.gs.set_data(
-            spreadsheet_id=self.product.check_spreadsheet_id,
+            spreadsheet_id=self._check_spreadsheet_id,
             range_sheet=new_title,
             values=data,
             major_dimension="COLUMNS",
@@ -255,15 +283,11 @@ class DistributionController:
     def _create_folder_for_essays(self) -> None:
         [r.email for r in self.reviewers]
         hw = "_".join(str(hw.homework_id) for hw in self.distribution_task.homeworks)
-        title = f"{self.product.name}_({hw})_Проверенные"
+        title = f"{self._product_name}_({hw})_Проверенные"
         new_folder = self.gd.make_new_folder(
             new_folder_title=title,
-            parent_folder_id=self.product.drive_folder_id,
+            parent_folder_id=self._drive_folder_id,
         )
-        # self.gd.set_permissions_for_users_by_list(
-        #     folder_id=new_folder_id,
-        #     user_email_list=emails,
-        # )
         self.gd.set_permissions_for_anyone(folder_id=new_folder.id)
         self.new_folder_id = new_folder.id
         return
@@ -272,10 +296,10 @@ class DistributionController:
         log.info("Start calculate actual per reviewer")
         actual = 0
         for r in self.reviewers:
-            r.actual = int(r.percent * len(self.other_homeworks))
+            r.actual = int(r.percent * len(self._main_queue))
             actual += r.actual
         r_ind = 0
-        for _ in range(len(self.other_homeworks) - actual):
+        for _ in range(len(self._main_queue) - actual):
             while True:
                 if self.reviewers[r_ind].actual < self.reviewers[r_ind].optimal_desired:
                     self.reviewers[r_ind].actual += 1
@@ -294,7 +318,7 @@ class DistributionController:
 
     def _distribute_other_by_reviewer(self) -> None:
         total_actual = sum(r.actual for r in self.reviewers)
-        hws = self.other_homeworks[:total_actual]
+        hws = self._main_queue[:total_actual]
         random.shuffle(hws)
         count = 5
         while len(hws) and count > 0:
