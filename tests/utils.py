@@ -64,15 +64,15 @@ async def run_async_migrations(
             )
 
 
-async def prepare_new_database(settings: Settings) -> None:
+async def prepare_new_database(settings: Settings, new_database: str) -> None:
     """Using default postgres database for creating new test db"""
     connection_url = settings.build_db_connection_uri(database="postgres")
 
     engine = create_async_engine(connection_url)
     async with engine.begin() as conn:
-        if await _database_exists(conn, settings.POSTGRES_DB):
-            await _drop_database(conn, settings.POSTGRES_DB)
-        await _create_database(conn, settings.POSTGRES_DB)
+        if await _database_exists(conn, new_database):
+            await _drop_database(conn, new_database)
+        await _create_database(conn, new_database)
     await engine.dispose()
 
 

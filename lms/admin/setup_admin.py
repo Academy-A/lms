@@ -9,11 +9,37 @@ from starlette_admin import DropDown
 from starlette_admin.contrib.sqla import Admin
 from starlette_admin.views import Link
 
+from lms.admin.auth_provider import AuthenticationProvider
+from lms.admin.views.models.flow import FlowModelView
+from lms.admin.views.models.flow_product import FlowProductModelView
+from lms.admin.views.models.offer import OfferModelView
+from lms.admin.views.models.product import ProductModelView
+from lms.admin.views.models.product_group import ProductGroupModelView
+from lms.admin.views.models.reviewer import ReviewerModelView
+from lms.admin.views.models.setting import SettingModelView
 from lms.admin.views.models.soho import SohoModelView
 from lms.admin.views.models.student import StudentModelView
+from lms.admin.views.models.student_product import StudentProductModelView
+from lms.admin.views.models.subject import SubjectModelView
+from lms.admin.views.models.teacher import TeacherModelView
+from lms.admin.views.models.teacher_product import TeacherProductModelView
 from lms.admin.views.pages.home import HomeView
 from lms.config import Settings
-from lms.db.models import Soho, Student
+from lms.db.models import (
+    Flow,
+    FlowProduct,
+    Offer,
+    Product,
+    ProductGroup,
+    Reviewer,
+    Setting,
+    Soho,
+    Student,
+    StudentProduct,
+    Subject,
+    Teacher,
+    TeacherProduct,
+)
 
 TEMPLATES_DIR = Path(__file__).parent.resolve() / "templates"
 
@@ -30,33 +56,27 @@ def build_admin(app: FastAPI, settings: Settings, engine: AsyncEngine) -> None:
             methods=["GET"],
             add_to_menu=True,
         ),
+        auth_provider=AuthenticationProvider(),
     )
 
-    # add pages
-    # TODO login page
-    # TODO auth provider
-    # TODO distribution page
-    # TODO change teacher_product for student_produt with expulsion
-
-    # add models
-    # TODO student_product
-    # TODO teacher
-    # TODO reviewer
-    # TODO teacher_product
-    # TODO product
-    # TODO subject
-    # TODO
     admin.add_view(
         DropDown(
-            "Tables",
+            "Models",
             icon="fa fa-list",
             views=[
-                StudentModelView(model=Student, icon="fa fa-blog", label="Student"),
-                SohoModelView(
-                    model=Soho,
-                    icon="fa-fa-blog",
-                    label="Soho",
-                ),
+                FlowModelView(model=Flow),
+                FlowProductModelView(model=FlowProduct),
+                OfferModelView(model=Offer),
+                ProductGroupModelView(model=ProductGroup),
+                ProductModelView(model=Product),
+                ReviewerModelView(model=Reviewer),
+                SettingModelView(model=Setting),
+                SohoModelView(model=Soho),
+                StudentModelView(model=Student),
+                StudentProductModelView(model=StudentProduct),
+                SubjectModelView(model=Subject),
+                TeacherModelView(model=Teacher),
+                TeacherProductModelView(model=TeacherProduct),
             ],
         )
     )

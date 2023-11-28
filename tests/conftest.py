@@ -1,6 +1,7 @@
 import asyncio
 from collections.abc import AsyncGenerator
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 import pytest_asyncio
@@ -16,11 +17,20 @@ from sqlalchemy.ext.asyncio import (
 from lms.api.services import generate_token
 from lms.config import Settings
 from lms.db.models import Base
+from lms.db.utils import make_alembic_config
 from lms.setup_app import get_application
 from tests.factories import factories
 from tests.utils import clear_db, prepare_new_database, run_async_migrations
 
-PROJECT_PATH = Path(__file__).parent.parent.resolve()
+
+@pytest.fixture(scope="session")
+def project_path() -> Path:
+    return Path(__file__).parent.parent.resolve()
+
+
+@pytest.fixture(scope="session")
+def stairway_db() -> str:
+    return "stairway"
 
 
 @pytest.fixture(scope="session")
@@ -32,20 +42,28 @@ def event_loop():
 
 
 @pytest.fixture(scope="session")
-def settings():
+def settings() -> Settings:
     return Settings(POSTGRES_DB="test_lms_database")
 
 
 @pytest.fixture(scope="session")
 def alembic_config(settings: Settings) -> AlembicConfig:
-    alembic_cfg = AlembicConfig(PROJECT_PATH / "lms/alembic.ini")
-    alembic_cfg.set_main_option("sqlalchemy.url", settings.build_db_connection_uri())
-    return alembic_cfg
+    cmd_options = SimpleNamespace(
+        config="alembic.ini",
+        name="alembic",
+        pg_url=settings.build_db_connection_uri(),
+        raiseerr=False,
+        x=None,
+    )
+    return make_alembic_config(cmd_options)
 
 
 @pytest_asyncio.fixture(scope="session")
-async def async_engine(settings: Settings, alembic_config: AlembicConfig):
-    await prepare_new_database(settings=settings)
+async def async_engine(
+    settings: Settings, alembic_config: AlembicConfig, stairway_db: str
+):
+    await prepare_new_database(settings=settings, new_database=settings.POSTGRES_DB)
+    await prepare_new_database(settings=settings, new_database=stairway_db)
     await run_async_migrations(alembic_config, Base.metadata, "head")
     engine = create_async_engine(settings.build_db_connection_uri())
     yield engine

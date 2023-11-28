@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict
@@ -13,13 +14,13 @@ class DistributionFilterSchema(BaseModel):
 
 class DistributionHomeworkSchema(BaseModel):
     homework_id: int
-    filters: list[DistributionFilterSchema]
+    filters: Sequence[DistributionFilterSchema]
 
 
 class DistributionTaskSchema(BaseModel):
     product_id: int
     name: str
-    homeworks: list[DistributionHomeworkSchema]
+    homeworks: Sequence[DistributionHomeworkSchema]
 
 
 class ProductSchema(BaseModel):

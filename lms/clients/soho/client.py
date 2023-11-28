@@ -1,7 +1,9 @@
 import httpx
+from pydantic import ValidationError
 
 from lms.clients.soho.schemas import (
     ClientListSchema,
+    HomeworkSchema,
     HomeworksForReviewSchema,
     ProductListSchema,
 )
@@ -28,7 +30,13 @@ class SohoClient:
                 "homeworkId": homework_id,
             },
         )
-        return HomeworksForReviewSchema(**result.json())
+        homeworks = []
+        for hw in result.json()["homeworks"]:
+            try:
+                homeworks.append(HomeworkSchema(**hw))
+            except ValidationError:
+                pass
+        return HomeworksForReviewSchema(homeworks=homeworks)
 
     def get_client_list(self, offset: int = 0, limit: int = 100) -> ClientListSchema:
         result = httpx.post(

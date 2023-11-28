@@ -16,56 +16,5 @@ services:
     image: rabbitmq
     restart: unless-stopped
 
-  backend:
-    restart: unless-stopped
-    build:
-      context: .
-      dockerfile: ./docker/backend/backend.dockerfile
-    environment:
-      POSTGRES_HOST: ${POSTGRES_HOST}
-      POSTGRES_PORT: ${POSTGRES_PORT}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-
-      SOHO_API_TOKEN: ${SOHO_API_TOKEN}
-      SECRET_KEY: ${SECRET_KEY}
-
-    ports:
-      - 8000:80
-
-  worker:
-    restart: unless-stopped
-    build:
-      context: .
-      dockerfile: ./docker/backend/worker.dockerfile
-    depends_on:
-      - backend
-    environment:
-      POSTGRES_HOST: ${POSTGRES_HOST}
-      POSTGRES_PORT: ${POSTGRES_PORT}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-
-      SOHO_API_TOKEN: ${SOHO_API_TOKEN}
-      SECRET_KEY: ${SECRET_KEY}
-
-  cron:
-    restart: unless-stopped
-    build:
-      context: .
-      dockerfile: ./docker/cron/cron.dockerfile
-    environment:
-      POSTGRES_HOST: ${POSTGRES_HOST}
-      POSTGRES_PORT: ${POSTGRES_PORT}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-
-      SOHO_API_TOKEN: ${SOHO_API_TOKEN}
-      SECRET_KEY: ${SECRET_KEY}
-
-
 volumes:
   postgres_data:

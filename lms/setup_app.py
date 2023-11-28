@@ -21,8 +21,8 @@ from lms.api.v1.handler import (
     requset_validation_handler,
 )
 from lms.config import Settings
-from lms.db.factory import create_async_engine, create_async_session_factory
 from lms.db.uow import UnitOfWork
+from lms.db.utils import create_async_engine, create_async_session_factory
 from lms.exceptions.base import LMSError
 
 log = logging.getLogger(__name__)
