@@ -1,6 +1,6 @@
 from typing import Any
 
-from sqlalchemy import ScalarResult, insert, select
+from sqlalchemy import ScalarResult, func, insert, select
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -72,3 +72,12 @@ class StudentProductRepository(Repository[StudentProduct]):
         except NoResultFound as e:
             await self._session.rollback()
             raise StudentProductNotFoundError from e
+
+    async def calculate_active_students(self, teacher_product_id: int) -> int:
+        stmt = select(func.count()).select_from(
+            select(StudentProduct.id)
+            .filter_by(teacher_product_id=teacher_product_id)
+            .scalar_subquery()
+        )
+        res = await self._session.scalar(stmt)
+        return res if res is not None else 0

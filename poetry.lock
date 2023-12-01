@@ -171,6 +171,21 @@ aiomisc = ">=7.1"
 develop = ["coverage (>=4.5.3,<4.6.0)", "coveralls", "pylava", "pytest", "pytest-cov (>=2.5.1,<2.6.0)", "tox (>=2.4)"]
 
 [[package]]
+name = "aiomisc-pytest"
+version = "1.1.1"
+description = "pytest integration for aiomisc"
+optional = false
+python-versions = ">=3.7,<4.0"
+files = [
+    {file = "aiomisc_pytest-1.1.1-py3-none-any.whl", hash = "sha256:c07251f79c936c85c7589429f43c728cf1a34b80c0089b268f2cfa6186e77020"},
+    {file = "aiomisc_pytest-1.1.1.tar.gz", hash = "sha256:2c378c41b078c0576027de6bf7fbc537a7e69285d23eaf4d45738d5d0de56dd3"},
+]
+
+[package.dependencies]
+aiomisc = ">=17"
+pytest = ">=7.2.1,<8.0.0"
+
+[[package]]
 name = "aiosignal"
 version = "1.3.1"
 description = "aiosignal: a list of registered asynchronous callbacks"
@@ -230,13 +245,13 @@ files = [
 
 [[package]]
 name = "anyio"
-version = "4.0.0"
+version = "3.7.1"
 description = "High level compatibility layer for multiple asynchronous event loop implementations"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.7"
 files = [
-    {file = "anyio-4.0.0-py3-none-any.whl", hash = "sha256:cfdb2b588b9fc25ede96d8db56ed50848b0b649dca3dd1df0b11f683bb9e0b5f"},
-    {file = "anyio-4.0.0.tar.gz", hash = "sha256:f7ed51751b2c2add651e5747c891b47e26d2a21be5d32d9311dfe9692f3e5d7a"},
+    {file = "anyio-3.7.1-py3-none-any.whl", hash = "sha256:91dee416e570e92c64041bd18b900d1d6fa78dff7048769ce5ac5ddad004fbb5"},
+    {file = "anyio-3.7.1.tar.gz", hash = "sha256:44a3c9aba0f5defa43261a8b3efb97891f2bd7d804e0e1f56419befa1adfc780"},
 ]
 
 [package.dependencies]
@@ -244,9 +259,9 @@ idna = ">=2.8"
 sniffio = ">=1.1"
 
 [package.extras]
-doc = ["Sphinx (>=7)", "packaging", "sphinx-autodoc-typehints (>=1.2.0)"]
-test = ["anyio[trio]", "coverage[toml] (>=7)", "hypothesis (>=4.0)", "psutil (>=5.9)", "pytest (>=7.0)", "pytest-mock (>=3.6.1)", "trustme", "uvloop (>=0.17)"]
-trio = ["trio (>=0.22)"]
+doc = ["Sphinx", "packaging", "sphinx-autodoc-typehints (>=1.2.0)", "sphinx-rtd-theme (>=1.2.2)", "sphinxcontrib-jquery"]
+test = ["anyio[trio]", "coverage[toml] (>=4.5)", "hypothesis (>=4.0)", "mock (>=4)", "psutil (>=5.9)", "pytest (>=7.0)", "pytest-mock (>=3.6.1)", "trustme", "uvloop (>=0.17)"]
+trio = ["trio (<0.22)"]
 
 [[package]]
 name = "asgiref"
@@ -892,19 +907,20 @@ python-dateutil = ">=2.4"
 
 [[package]]
 name = "fastapi"
-version = "0.101.1"
+version = "0.104.1"
 description = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "fastapi-0.101.1-py3-none-any.whl", hash = "sha256:aef5f8676eb1b8389952e1fe734abe20f04b71f6936afcc53b320ba79b686a4b"},
-    {file = "fastapi-0.101.1.tar.gz", hash = "sha256:7b32000d14ca9992f7461117b81e4ef9ff0c07936af641b4fe40e67d5f9d63cb"},
+    {file = "fastapi-0.104.1-py3-none-any.whl", hash = "sha256:752dc31160cdbd0436bb93bad51560b57e525cbb1d4bbf6f4904ceee75548241"},
+    {file = "fastapi-0.104.1.tar.gz", hash = "sha256:e5e4540a7c5e1dcfbbcf5b903c234feddcdcd881f191977a1c5dfd917487e7ae"},
 ]
 
 [package.dependencies]
+anyio = ">=3.7.1,<4.0.0"
 pydantic = ">=1.7.4,<1.8 || >1.8,<1.8.1 || >1.8.1,<2.0.0 || >2.0.0,<2.0.1 || >2.0.1,<2.1.0 || >2.1.0,<3.0.0"
 starlette = ">=0.27.0,<0.28.0"
-typing-extensions = ">=4.5.0"
+typing-extensions = ">=4.8.0"
 
 [package.extras]
 all = ["email-validator (>=2.0.0)", "httpx (>=0.23.0)", "itsdangerous (>=1.1.0)", "jinja2 (>=2.11.2)", "orjson (>=3.2.1)", "pydantic-extra-types (>=2.0.0)", "pydantic-settings (>=2.0.0)", "python-multipart (>=0.0.5)", "pyyaml (>=5.3.1)", "ujson (>=4.0.1,!=4.0.2,!=4.1.0,!=4.2.0,!=4.3.0,!=5.0.0,!=5.1.0)", "uvicorn[standard] (>=0.12.0)"]
@@ -2723,13 +2739,13 @@ full = ["httpx (>=0.22.0)", "itsdangerous", "jinja2", "python-multipart", "pyyam
 
 [[package]]
 name = "starlette-admin"
-version = "0.12.1"
+version = "0.12.2"
 description = "Fast, beautiful and extensible administrative interface framework for Starlette/FastApi applications"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "starlette_admin-0.12.1-py3-none-any.whl", hash = "sha256:819bf1a16bc1cb6c92bf81aae0edecfa340badbf275a1437888deebc52add2a6"},
-    {file = "starlette_admin-0.12.1.tar.gz", hash = "sha256:916bf39c244fb7bfbdcb62e62f5262b6ad2c2c5be2678c57f26337416929d66f"},
+    {file = "starlette_admin-0.12.2-py3-none-any.whl", hash = "sha256:25bf5ddd2af8d2f6b3bec3e5c16c883e810274ce35eee9cc27c6242bea7a6a34"},
+    {file = "starlette_admin-0.12.2.tar.gz", hash = "sha256:b8da375ff5e2ce0f6e1407977b23f4c147e1cb69b2b4abe07f96714e4c59b7f0"},
 ]
 
 [package.dependencies]
@@ -3054,4 +3070,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "ac8c3b500719d6269faa32ccbb5c360768f39d705ea021fa2bd012f41ed44304"
+content-hash = "fc18b3063f8fca381d5e43568aaa6ce7d0eb5b05c40a222ff99d9170cdcf5310"

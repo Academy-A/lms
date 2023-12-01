@@ -1,13 +1,13 @@
 from datetime import date
 from http import HTTPStatus
 
-from httpx import AsyncClient
+from aiohttp.test_utils import TestClient
 
 from tests.factories import ProductFactory
 
 
-async def test_unauthorized_user(client: AsyncClient) -> None:
-    response = await client.get("/v1/products/1/")
+async def test_unauthorized_user(http_client: TestClient) -> None:
+    response = await http_client.get("/v1/products/1/")
     assert response.status_code == HTTPStatus.UNAUTHORIZED
     assert response.json() == {
         "ok": False,
@@ -16,7 +16,7 @@ async def test_unauthorized_user(client: AsyncClient) -> None:
     }
 
 
-async def test_invalid_token(client: AsyncClient) -> None:
+async def test_invalid_token(http_client: TestClient) -> None:
     response = await client.get("/v1/products/1/", params={"token": "something"})
     assert response.status_code == HTTPStatus.FORBIDDEN
     assert response.json() == {
@@ -26,7 +26,7 @@ async def test_invalid_token(client: AsyncClient) -> None:
     }
 
 
-async def test_subject_not_found(client: AsyncClient, token: str) -> None:
+async def test_subject_not_found(http_client: TestClient, token: str) -> None:
     response = await client.get("/v1/products/0/", params={"token": token})
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json() == {
@@ -36,7 +36,7 @@ async def test_subject_not_found(client: AsyncClient, token: str) -> None:
     }
 
 
-async def test_successful_read(client: AsyncClient, token: str) -> None:
+async def test_successful_read(http_client: TestClient, token: str) -> None:
     product = await ProductFactory.create_async(
         start_date=date.today(), end_date=date.today()
     )

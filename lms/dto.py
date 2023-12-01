@@ -4,7 +4,7 @@ import math
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from lms.enums import TeacherType
 
@@ -19,6 +19,7 @@ if TYPE_CHECKING:
         Subject,
         Teacher,
         TeacherProduct,
+        User,
         VerifiedWorkFile,
     )
 
@@ -340,4 +341,29 @@ class VerifiedWorkFileData:
             file_id=obj.file_id,
             name=obj.name,
             url=obj.url,
+        )
+
+
+class TeacherDashboardData(NamedTuple):
+    teacher_product_id: int
+    name: str
+    vk_id: int
+    is_active: bool
+    type: TeacherType
+    max_students_count: int
+    filled_students_count: int
+    average_grade: int
+    flows: str
+
+
+@dataclass(frozen=True)
+class UserData:
+    username: str
+    password: str
+
+    @classmethod
+    def from_orm(cls, obj: User) -> UserData:
+        return cls(
+            username=obj.username,
+            password=obj.password,
         )

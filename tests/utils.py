@@ -11,8 +11,6 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from lms.config import Settings
-
 TABLES_FOR_TRUNCATE = (
     "flow",
     "flow_product",
@@ -64,11 +62,9 @@ async def run_async_migrations(
             )
 
 
-async def prepare_new_database(settings: Settings, new_database: str) -> None:
+async def prepare_new_database(base_pg_dsn: str, new_database: str) -> None:
     """Using default postgres database for creating new test db"""
-    connection_url = settings.build_db_connection_uri(database="postgres")
-
-    engine = create_async_engine(connection_url)
+    engine = create_async_engine(base_pg_dsn)
     async with engine.begin() as conn:
         if await _database_exists(conn, new_database):
             await _drop_database(conn, new_database)
