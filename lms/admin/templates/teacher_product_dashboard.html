@@ -1,0 +1,52 @@
+{% extends "index.html" %}
+{% block header %}<h1>Статистика преподавателей по продуктам</h1>{% endblock %}
+
+{% block content %}
+    {% for row in dashboard %}
+    {% with
+        product = row["product"],
+        mentors = row["teachers"]["MENTOR"],
+        curators = row["teachers"]["CURATOR"]
+    %}
+    <div class="card p-2 m-2">
+        <div class="row">
+            <h2 class="link-blue"><a href="/admin/product/edit/{{product.id}}">{{ product.name }}</a></h2>
+        </div>
+        {% for teacher_type in row["teachers"]%}
+            <h3>{{ teacher_type }}</h3>
+            <table class="table">
+                <tr>
+                    <th>ФИО</th>
+                    <th>ВК</th>
+                    <th>Выдается?</th>
+                    <th>Занято / Всего</th>
+                    <th>Средняя оценка</th>
+                    <th>Потоки</th>
+                </tr>
+                {% for teacher in row["teachers"][teacher_type]%}
+                <tr>
+                    <td><a href="/admin/teacher_product/edit/{{teacher.teacher_product_id}}">{{ teacher.name }}</a></td>
+                    <td><a href="https://vk.com/id{{ teacher.vk_id }}">{{ teacher.vk_id }}</a></td>
+                    <td>
+                        {% if teacher.is_active%}
+                        <span class="text-center text-success me-1">
+                            <i class="fa-solid fa-check-circle fa-lg"></i>
+                        </span>
+                        {% else %}
+                        <span class="text-center text-danger me-1">
+                            <i class="fa-solid fa-times-circle fa-lg"></i>
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td>{{ teacher.filled_students_count }} / {{teacher.max_students_count }}</td>
+                    <td>{{ "%.2f"|format(teacher.average_grade) }}</td>
+                    <td>{{ teacher.flows }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% endfor %}
+
+    </div>
+    {%endwith%}
+    {% endfor %}
+{% endblock%}

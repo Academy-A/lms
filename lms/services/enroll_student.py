@@ -5,6 +5,7 @@ from dataclasses import asdict
 from fastapi import BackgroundTasks
 
 from lms.clients.autopilot import send_teacher_to_autopilot
+from lms.clients.telegram import TelegramClient
 from lms.db.models import Offer, StudentProduct
 from lms.db.uow import UnitOfWork
 from lms.dto import NewStudentData, StudentProductData
@@ -14,6 +15,7 @@ log = logging.getLogger(__name__)
 
 async def enroll_student(
     uow: UnitOfWork,
+    telegram_client: TelegramClient,
     background_tasks: BackgroundTasks,
     new_student: NewStudentData,
     offer_ids: Sequence[int],
@@ -40,6 +42,7 @@ async def enroll_student(
     if old_student_product is not None:
         return await enroll_student_again_by_offer(
             uow=uow,
+            telegram_client=telegram_client,
             background_tasks=background_tasks,
             student_product=old_student_product,
             new_offer=offer,
@@ -65,6 +68,20 @@ async def enroll_student(
             teacher_vk_id=teacher.vk_id,
             teacher_type=student_product.teacher_type,
         )
+        teacher_product = await uow.teacher_product.read_by_id(
+            student_product.teacher_product_id
+        )
+        if (
+            await uow.student_product.calculate_active_students(teacher_product.id)
+            > teacher_product.max_students
+        ):
+            background_tasks.add_task(
+                telegram_client.send_teacher_overflow_alert,
+                max_students=teacher_product.max_students,
+                name=teacher.name,
+                vk_id=teacher.vk_id,
+                product_id=teacher_product.product_id,
+            )
     return student_product
 
 
@@ -101,6 +118,7 @@ async def enroll_student_by_offer_id(
 
 async def enroll_student_again_by_offer(
     uow: UnitOfWork,
+    telegram_client: TelegramClient,
     background_tasks: BackgroundTasks,
     student_product: StudentProductData,
     new_offer: Offer,
@@ -153,6 +171,17 @@ async def enroll_student_again_by_offer(
             teacher_vk_id=teacher.vk_id,
             teacher_type=student_product.teacher_type,  # type:ignore[arg-type]
         )
+        if (
+            await uow.student_product.calculate_active_students(teacher_product.id)
+            > teacher_product.max_students
+        ):
+            background_tasks.add_task(
+                telegram_client.send_teacher_overflow_alert,
+                max_students=teacher_product.max_students,
+                name=teacher.name,
+                vk_id=teacher.vk_id,
+                product_id=teacher_product.product_id,
+            )
     student_product.expulsion_at = None
     student_product.offer_id = new_offer.id
 

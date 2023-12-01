@@ -12,3 +12,7 @@ class UnitOfWorkMarker:
 
 class SecretKeyMarker:
     pass
+
+
+class TelegramClientMarker:
+    pass

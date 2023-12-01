@@ -41,3 +41,8 @@ group.add_argument("--scheduler", default="0/30 * * * *")
 
 group = parser.add_argument_group("SOHO options")
 group.add_argument("--soho-api-token", type=str, required=True)
+
+group = parser.add_argument_group("Telegram options")
+group.add_argument("--telegram-bot-token", type=str, required=True)
+group.add_argument("--telegram-chat-id", type=int, required=True)
+group.add_argument("--telegram-parse-mode", type=str, default="markdown")

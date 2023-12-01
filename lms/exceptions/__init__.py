@@ -15,7 +15,7 @@ from lms.exceptions.teacher import (
     TeacherNotFoundError,
     TeacherProductNotFoundError,
 )
-from lms.exceptions.user import UserNotFoundError
+from lms.exceptions.user import UserAlreadyExistsError, UserNotFoundError
 
 __all__ = [
     "EntityNotFoundError",
@@ -33,5 +33,6 @@ __all__ = [
     "TeacherAssignmentNotFoundError",
     "TeacherNotFoundError",
     "TeacherProductNotFoundError",
+    "UserAlreadyExistsError",
     "UserNotFoundError",
 ]
