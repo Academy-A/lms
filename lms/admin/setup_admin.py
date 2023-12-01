@@ -24,6 +24,7 @@ from lms.admin.views.models.subject import SubjectModelView
 from lms.admin.views.models.teacher import TeacherModelView
 from lms.admin.views.models.teacher_product import TeacherProductModelView
 from lms.admin.views.pages.home import HomeView
+from lms.admin.views.pages.teacher_product_dashboard import TeacherProductDashboardView
 from lms.db.models import (
     Flow,
     FlowProduct,
@@ -44,7 +45,7 @@ TEMPLATES_DIR = Path(__file__).parent.resolve() / "templates"
 
 
 def build_admin(
-    app: FastAPI, engine: AsyncEngine, project_name: str, secret_key: str
+    app: FastAPI, engine: AsyncEngine, project_name: str, secret_key: str, debug: bool
 ) -> None:
     admin = Admin(
         engine=engine,
@@ -53,17 +54,34 @@ def build_admin(
         middlewares=[Middleware(SessionMiddleware, secret_key=secret_key)],
         index_view=HomeView(
             label="Home",
+            template_path="./home.html",
             icon="fa fa-home",
             methods=["GET"],
             add_to_menu=True,
         ),
-        auth_provider=AuthenticationProvider(),
+        auth_provider=AuthenticationProvider() if not debug else None,
+    )
+
+    admin.add_view(
+        DropDown(
+            "Dashboards and etc",
+            icon="fa fa-list",
+            always_open=False,
+            views=[
+                TeacherProductDashboardView(
+                    label="Teacher Dashboard",
+                    template_path="./teacher_product_dashboard.html",
+                    path="/dashboard/teachers",
+                ),
+            ],
+        )
     )
 
     admin.add_view(
         DropDown(
             "Models",
             icon="fa fa-list",
+            always_open=False,
             views=[
                 FlowModelView(model=Flow),
                 FlowProductModelView(model=FlowProduct),

@@ -18,15 +18,15 @@ celery = {extras = ["msgpack"], version = "^5.3.4"}
 orjson = "^3.9.9"
 greenlet = "^3.0.0"
 itsdangerous = "^2.1.2"
-starlette-admin = "^0.12.1"
 configargparse = "^1.7"
-aiomisc = {extras = ["asgi", "cron", "rich", "uvicorn", "uvloop"], version = "^17.3.41"}
 aiomisc-dependency = "^0.1.20"
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 google-api-service-helper = "^0.1.1"
+starlette-admin = "^0.12.2"
+aiomisc = {extras = ["asgi", "cron", "rich", "uvicorn", "uvloop"], version = "^17.3.41"}
 
 [tool.poetry.group.backend.dependencies]
-fastapi = "^0.101.1"
+fastapi = "0.104.1"
 alembic = "^1.12.0"
 uvicorn = "^0.23.2"
 asyncpg = "^0.28.0"
@@ -51,6 +51,7 @@ bandit = "^1.7.5"
 freezegun = "^1.2.2"
 pytest-subtests = "^0.11.0"
 types-passlib = "^1.7.7.13"
+aiomisc-pytest = "^1.1.1"
 
 [build-system]
 requires = ["poetry-core"]

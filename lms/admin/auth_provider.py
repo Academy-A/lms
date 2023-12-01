@@ -32,8 +32,11 @@ class AuthenticationProvider(AuthProvider):
 
     async def check_user(self, request: Request, username: str, password: str) -> None:
         user = await UserRepository(request.state.session).get_by_username(username)
-        if verify_password(password, user.password):
-            return
+        try:
+            if verify_password(password, user.password):
+                return
+        except Exception:
+            pass
         raise LoginFailed("Invalid username or password")
 
     async def is_authenticated(self, request: Request) -> bool:
@@ -41,7 +44,7 @@ class AuthenticationProvider(AuthProvider):
         if not username:
             return False
         try:
-            user = UserRepository(request.state.session).get_by_username(username)
+            user = await UserRepository(request.state.session).get_by_username(username)
         except UserNotFoundError:
             return False
         request.state.user = user

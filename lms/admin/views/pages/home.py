@@ -9,6 +9,7 @@ class HomeView(CustomView):
         return super().is_accessible(request)
 
     async def render(self, request: Request, templates: Jinja2Templates) -> Response:
+        print(self.template_path)
         return templates.TemplateResponse(
-            "home.html", {"request": request, "some-info": "Very important"}
+            self.template_path, {"request": request, "some-info": "Very important"}
         )

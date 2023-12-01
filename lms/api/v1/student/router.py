@@ -2,7 +2,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Path
 from pydantic import PositiveInt
 
 from lms.api.auth import token_required
-from lms.api.deps import UnitOfWorkMarker
+from lms.api.deps import TelegramClientMarker, UnitOfWorkMarker
 from lms.api.v1.schemas import StatusResponseSchema
 from lms.api.v1.student.schemas import (
     ChangeTeacherSchema,
@@ -14,6 +14,7 @@ from lms.api.v1.student.schemas import (
     ReadStudentSchema,
 )
 from lms.api.v1.student.utils import parse_soho_flow_id
+from lms.clients.telegram import TelegramClient
 from lms.db.uow import UnitOfWork
 from lms.dto import NewStudentData
 from lms.services.change_teacher_product import change_teacher_for_student
@@ -34,11 +35,13 @@ async def enroll_student_route(
     enrollment: EnrollStudentSchema,
     background_tasks: BackgroundTasks,
     uow: UnitOfWork = Depends(UnitOfWorkMarker),
+    telegram_client: TelegramClient = Depends(TelegramClientMarker),
 ) -> ReadStudentProductSchema:
     _, soho_flow_id = parse_soho_flow_id(enrollment.student.raw_soho_flow_id)
     async with uow:
         student_product = await enroll_student(
             uow=uow,
+            telegram_client=telegram_client,
             background_tasks=background_tasks,
             new_student=NewStudentData(
                 vk_id=enrollment.student.vk_id,
