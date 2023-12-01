@@ -25,7 +25,7 @@ def main() -> None:
     services = [
         LMSCronService(scheduler=args.scheduler),
         REST(
-            address=args.api_address,
+            host=args.api_address,
             port=args.api_port,
             debug=args.debug,
             project_name=args.project_name,
