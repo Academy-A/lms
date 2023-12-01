@@ -74,10 +74,8 @@ class StudentProductRepository(Repository[StudentProduct]):
             raise StudentProductNotFoundError from e
 
     async def calculate_active_students(self, teacher_product_id: int) -> int:
-        stmt = select(func.count()).select_from(
-            select(StudentProduct.id)
-            .filter_by(teacher_product_id=teacher_product_id)
-            .scalar_subquery()
+        stmt = select(func.count(StudentProduct.id)).filter(
+            StudentProduct.teacher_product_id == teacher_product_id,
         )
         res = await self._session.scalar(stmt)
         return res if res is not None else 0
