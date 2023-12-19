@@ -9,6 +9,8 @@ class SettingStorage:
 
     async def get(self, key: str, default: str | None = None) -> str:
         value = await self._uow.setting.get(key)
-        if value is None and default is None:
-            raise KeyError(f"Key {key} not found in SettingStorage")
-        return value or default  # type: ignore[return-value]
+        if value is None:
+            if default is None:
+                raise KeyError(f"Key {key} not found in SettingStorage")
+            return default
+        return value
