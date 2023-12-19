@@ -5,7 +5,7 @@ from lms.db.models import (
     Offer,
     Product,
     ProductGroup,
-    Soho,
+    SohoAccount,
     Student,
     StudentProduct,
     Subject,
@@ -14,16 +14,6 @@ from lms.db.models import (
     TeacherProduct,
 )
 from lms.enums import TeacherType
-
-__all__ = [
-    "SubjectFactory",
-    "ProductGroupFactory",
-    "ProductFactory",
-    "StudentFactory",
-    "SohoFactory",
-    "OfferFactory",
-    "factories",
-]
 
 
 class SubjectFactory(SQLAlchemyFactory[Subject]):
@@ -45,6 +35,7 @@ class ProductFactory(SQLAlchemyFactory[Product]):
 
     subject = SubjectFactory
     product_group = ProductGroupFactory
+    reviewers = []
 
 
 class StudentFactory(SQLAlchemyFactory[Student]):
@@ -53,8 +44,8 @@ class StudentFactory(SQLAlchemyFactory[Student]):
     __set_foreign_keys__ = False
 
 
-class SohoFactory(SQLAlchemyFactory[Soho]):
-    __model__ = Soho
+class SohoAccountFactory(SQLAlchemyFactory[SohoAccount]):
+    __model__ = SohoAccount
     __set_relationships__ = True
     __set_foreign_keys__ = False
 
@@ -114,7 +105,7 @@ factories: list[type[SQLAlchemyFactory]] = [
     OfferFactory,
     ProductFactory,
     ProductGroupFactory,
-    SohoFactory,
+    SohoAccountFactory,
     StudentFactory,
     StudentProductFactory,
     SubjectFactory,

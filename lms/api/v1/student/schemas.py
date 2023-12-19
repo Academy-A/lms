@@ -1,10 +1,34 @@
-from pydantic import BaseModel, ConfigDict, Field, PositiveInt
+from typing import Annotated, Any
+
+from pydantic import BaseModel, ConfigDict, Field, PlainValidator, PositiveInt
+from pydantic.dataclasses import dataclass
+
+
+@dataclass
+class OfferFlow:
+    offer_id: PositiveInt
+    flow_id: PositiveInt
+
+
+def parse_offer_flow(v: Any) -> OfferFlow:
+    if isinstance(v, OfferFlow):
+        return v
+    str_offer_ids, str_flow_ids = v.split(":")
+    flow_id = next(map(int, str_flow_ids.split(",")))
+    offer_id = next(map(int, str_offer_ids.split(",")))
+    return OfferFlow(offer_id=offer_id, flow_id=flow_id)
+
+
+OfferFlowType = Annotated[
+    str | OfferFlow,
+    PlainValidator(lambda v: parse_offer_flow(v)),
+]
 
 
 class CreateStudentSchema(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
-    raw_soho_flow_id: str
+    raw_soho_flow_id: OfferFlowType
     vk_id: PositiveInt
     soho_id: PositiveInt
     email: str

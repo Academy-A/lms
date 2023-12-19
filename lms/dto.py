@@ -13,7 +13,7 @@ if TYPE_CHECKING:
         Flow,
         Product,
         Reviewer,
-        Soho,
+        SohoAccount,
         Student,
         StudentProduct,
         Subject,
@@ -74,7 +74,7 @@ class SohoData:
     student_id: int
 
     @classmethod
-    def from_orm(cls, model: Soho) -> SohoData:
+    def from_orm(cls, model: SohoAccount) -> SohoData:
         return SohoData(
             id=model.id,
             email=model.email,
@@ -195,6 +195,10 @@ class TeacherDto:
     first_name: str
     last_name: str
 
+    @property
+    def name(self) -> str:
+        return f"{self.first_name} {self.last_name}"
+
     @classmethod
     def from_orm(cls, obj: Teacher) -> TeacherDto:
         return cls(
@@ -247,8 +251,8 @@ class TeacherProductDto:
 @dataclass(frozen=True, slots=True)
 class HomeworkDto:
     student_name: str
-    vk_student_id: int
-    soho_student_id: int
+    student_vk_id: int
+    student_soho_id: int
     submission_url: str
     teacher_product_id: int | None
 
@@ -259,7 +263,6 @@ class ReviewerDto:
     product_id: int
     first_name: str
     last_name: str
-    teacher_product_id: int | None
     email: str
     desired: int
     max_: int
@@ -267,8 +270,7 @@ class ReviewerDto:
     is_active: bool
 
     recheck: bool = False
-    premium: list[HomeworkDto] = field(default_factory=list)
-    other: list[HomeworkDto] = field(default_factory=list)
+    homeworks: list[HomeworkDto] = field(default_factory=list)
     actual: int = 0
     percent: float = 0.0
 
@@ -279,7 +281,6 @@ class ReviewerDto:
             first_name=obj.first_name,
             last_name=obj.last_name,
             product_id=obj.product_id,
-            teacher_product_id=obj.teacher_product_id,
             email=obj.email,
             desired=obj.desired,
             max_=obj.max_,
@@ -297,11 +298,11 @@ class ReviewerDto:
 
     @property
     def can_add_prem(self) -> bool:
-        return self.abs_max > len(self.premium)
+        return self.abs_max > len(self.homeworks)
 
     @property
     def can_add_other(self) -> bool:
-        return self.abs_max > len(self.premium) + len(self.other)
+        return self.abs_max > len(self.homeworks)
 
 
 @dataclass(frozen=True, slots=True)

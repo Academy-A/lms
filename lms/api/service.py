@@ -1,16 +1,19 @@
 import logging
 
 from aiomisc.service.uvicorn import UvicornApplication, UvicornService
-from fastapi import FastAPI, HTTPException
+from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
-from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from starlette.middleware.cors import CORSMiddleware
 
 from lms.admin.setup_admin import build_admin
 from lms.api.deps import (
+    AutopilotMarker,
     DebugMarker,
+    EnrollerMarker,
     SecretKeyMarker,
-    TelegramClientMarker,
+    SohoMarker,
+    TelegramMarker,
     UnitOfWorkMarker,
 )
 from lms.api.router import api_router
@@ -19,9 +22,12 @@ from lms.api.v1.handler import (
     lms_exception_handler,
     requset_validation_handler,
 )
-from lms.clients.telegram import TelegramClient
+from lms.clients.autopilot import Autopilot
+from lms.clients.soho import Soho
+from lms.clients.telegram import Telegram
 from lms.db.uow import UnitOfWork
 from lms.exceptions.base import LMSError
+from lms.logic.enroll_student import Enroller
 
 log = logging.getLogger(__name__)
 
@@ -37,13 +43,17 @@ class REST(UvicornService):
 
     __dependencies__ = (
         "engine",
-        "telegram_client",
-        "uow",
+        "autopilot",
+        "soho",
+        "telegram",
+        "session_factory",
     )
 
     engine: AsyncEngine
-    telegram_client: TelegramClient
-    uow: UnitOfWork
+    session_factory: async_sessionmaker[AsyncSession]
+    autopilot: Autopilot
+    soho: Soho
+    telegram: Telegram
 
     debug: bool
     project_name: str
@@ -72,12 +82,23 @@ class REST(UvicornService):
         app.exception_handler(RequestValidationError)(requset_validation_handler)
         app.exception_handler(LMSError)(lms_exception_handler)
 
+        def get_enroller(background_tasks: BackgroundTasks) -> Enroller:
+            return Enroller(
+                uow=UnitOfWork(self.session_factory),
+                autopilot=self.autopilot,
+                telegram=self.telegram,
+                background_tasks=background_tasks,
+            )
+
         app.dependency_overrides.update(
             {
-                UnitOfWorkMarker: lambda: self.uow,
+                UnitOfWorkMarker: lambda: UnitOfWork(self.session_factory),
                 SecretKeyMarker: lambda: self.secret_key,
                 DebugMarker: lambda: self.debug,
-                TelegramClientMarker: lambda: self.telegram_client,
+                AutopilotMarker: lambda: self.autopilot,
+                SohoMarker: lambda: self.soho,
+                TelegramMarker: lambda: self.telegram,
+                EnrollerMarker: get_enroller,
             }
         )
         build_admin(

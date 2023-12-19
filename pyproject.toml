@@ -33,9 +33,6 @@ asyncpg = "^0.28.0"
 python-jose = "^3.3.0"
 gunicorn = "^21.2.0"
 
-[tool.poetry.group.worker.dependencies]
-psycopg2-binary = "^2.9.9"
-
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.5.0"
 mypy = "^1.6.0"
@@ -52,6 +49,7 @@ freezegun = "^1.2.2"
 pytest-subtests = "^0.11.0"
 types-passlib = "^1.7.7.13"
 aiomisc-pytest = "^1.1.1"
+ruff = "^0.1.8"
 
 [build-system]
 requires = ["poetry-core"]
@@ -102,3 +100,44 @@ testpaths = [
     "tests",
 ]
 asyncio_mode = "auto"
+
+[tool.ruff]
+exclude = [
+    ".git",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".venv",
+]
+
+line-length = 88
+indent-width = 4
+
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "BLE",
+    "C90",
+    "E",
+    "F",
+    "G",
+    "I",
+    "ICN",
+    "ISC",
+    "PLE",
+    "Q",
+    "RUF006",
+    "RUF100",
+    "T10",
+    "T20",
+    "TID",
+    "UP",
+    "W",
+]
+ignore = ["ISC001"]
+fixable = ["ALL"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
