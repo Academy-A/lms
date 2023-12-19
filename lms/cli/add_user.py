@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 import logging
 from typing import Annotated
@@ -10,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from lms.db.repositories.user import UserRepository
 from lms.db.utils import create_async_engine
 from lms.exceptions import UserAlreadyExistsError
-from lms.services.utils import get_password_hash
+from lms.logic.utils import get_password_hash
 
 log = logging.getLogger(__name__)
 
@@ -22,7 +23,12 @@ class CreateUserSchema(BaseModel):
 
 
 def get_parser() -> ArgParser:
-    parser = ArgParser()
+    parser = ArgParser(
+        allow_abbrev=False,
+        auto_env_var_prefix="APP_",
+        description="Project LMS",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
     parser.add_argument("--pg-dsn", required=True, type=str)
     parser.add_argument(
         "--username",

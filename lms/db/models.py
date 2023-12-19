@@ -47,7 +47,8 @@ class Student(TimestampMixin, Base):
         return f"<div><span>{escape(self.name)} {self.vk_id}</span></div>"
 
 
-class Soho(TimestampMixin, Base):
+class SohoAccount(TimestampMixin, Base):
+    __tablename__ = "soho"  # type: ignore[assignment]
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     email: Mapped[str] = mapped_column(String(128), nullable=False)
     student_id: Mapped[int] = mapped_column(
@@ -217,7 +218,7 @@ class TeacherProduct(TimestampMixin, Base):
         index=True,
         nullable=False,
     )
-    type: Mapped[TeacherType] = mapped_column(  # noqa: A003
+    type: Mapped[TeacherType] = mapped_column(
         ChoiceType(TeacherType, impl=String(16)),
         default=TeacherType.MENTOR,
         nullable=False,
@@ -272,7 +273,7 @@ class TeacherProduct(TimestampMixin, Base):
     #         *[
     #             (
     #                 total_students.expression > 0,  # type: ignore[attr-defined]
-    #                 (total_students.expression - removal_students.expression)  # type: ignore[attr-defined]
+    #                 (total_students.expression - removal_students.expression)
     #                 / total_students.expression,  # type: ignore[attr-defined]
     #             ),
     #         ],
@@ -285,10 +286,10 @@ class TeacherProduct(TimestampMixin, Base):
     #         *[
     #             (
     #                 average_grade == 0,
-    #                 5 * (1 - fullness.expression) * removability.expression,  # type: ignore[attr-defined]
+    #                 5 * (1 - fullness.expression) * removability.expression,
     #             ),
     #         ],
-    #         else_=average_grade * (1 - fullness.expression) * removability.expression,  # type: ignore[attr-defined]
+    #         else_=average_grade * (1 - fullness.expression) * removability.expression,
     #     ),
     # )
 

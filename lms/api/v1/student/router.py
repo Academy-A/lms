@@ -1,8 +1,10 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, Path
+from http import HTTPStatus
+
+from fastapi import APIRouter, Depends, Path
 from pydantic import PositiveInt
 
 from lms.api.auth import token_required
-from lms.api.deps import TelegramClientMarker, UnitOfWorkMarker
+from lms.api.deps import EnrollerMarker, UnitOfWorkMarker
 from lms.api.v1.schemas import StatusResponseSchema
 from lms.api.v1.student.schemas import (
     ChangeTeacherSchema,
@@ -13,15 +15,12 @@ from lms.api.v1.student.schemas import (
     ReadStudentProductSchema,
     ReadStudentSchema,
 )
-from lms.api.v1.student.utils import parse_soho_flow_id
-from lms.clients.telegram import TelegramClient
 from lms.db.uow import UnitOfWork
 from lms.dto import NewStudentData
-from lms.services.change_teacher_product import change_teacher_for_student
-from lms.services.change_vk_id import change_student_vk_id_by_soho_id
-from lms.services.enroll_student import enroll_student
-from lms.services.expulse_student import expulse_student_by_offer_id
-from lms.services.grade_teacher import grade_teacher
+from lms.logic.change_vk_id import change_student_vk_id_by_soho_id
+from lms.logic.enroll_student import Enroller
+from lms.logic.expulse_student import expulse_student_by_offer_id
+from lms.logic.grade_teacher import grade_teacher
 
 router = APIRouter(
     prefix="/students",
@@ -33,27 +32,21 @@ router = APIRouter(
 @router.post("/")
 async def enroll_student_route(
     enrollment: EnrollStudentSchema,
-    background_tasks: BackgroundTasks,
-    uow: UnitOfWork = Depends(UnitOfWorkMarker),
-    telegram_client: TelegramClient = Depends(TelegramClientMarker),
+    enroller: Enroller = Depends(EnrollerMarker),
 ) -> ReadStudentProductSchema:
-    _, soho_flow_id = parse_soho_flow_id(enrollment.student.raw_soho_flow_id)
-    async with uow:
-        student_product = await enroll_student(
-            uow=uow,
-            telegram_client=telegram_client,
-            background_tasks=background_tasks,
+    async with enroller.uow:
+        student_product = await enroller.enroll_student(
             new_student=NewStudentData(
                 vk_id=enrollment.student.vk_id,
                 soho_id=enrollment.student.soho_id,
                 email=enrollment.student.email,
                 first_name=enrollment.student.first_name,
                 last_name=enrollment.student.last_name,
-                flow_id=soho_flow_id,
+                flow_id=enrollment.student.raw_soho_flow_id.flow_id,  # type: ignore[union-attr]
             ),
             offer_ids=enrollment.offer_ids,
         )
-        await uow.commit()
+        await enroller.uow.commit()
     return ReadStudentProductSchema.model_validate(student_product)
 
 
@@ -71,7 +64,7 @@ async def expulsion_student_route(
         await uow.commit()
     return StatusResponseSchema(
         ok=True,
-        status_code=200,
+        status_code=HTTPStatus.OK,
         message="Student was expulsed from product",
     )
 
@@ -79,21 +72,18 @@ async def expulsion_student_route(
 @router.post("/change-teacher/")
 async def change_teacher_product(
     change_teacher_data: ChangeTeacherSchema,
-    background_tasks: BackgroundTasks,
-    uow: UnitOfWork = Depends(UnitOfWorkMarker),
+    enroller: Enroller = Depends(EnrollerMarker),
 ) -> StatusResponseSchema:
-    async with uow:
-        await change_teacher_for_student(
-            uow=uow,
-            background_tasks=background_tasks,
+    async with enroller.uow:
+        await enroller.change_teacher_for_student(
             product_id=change_teacher_data.product_id,
             student_vk_id=change_teacher_data.student_vk_id,
             teacher_vk_id=change_teacher_data.teacher_vk_id,
         )
-        await uow.commit()
+        await enroller.uow.commit()
     return StatusResponseSchema(
         ok=True,
-        status_code=200,
+        status_code=HTTPStatus.OK,
         message="Teacher was changed for student",
     )
 
@@ -102,8 +92,8 @@ async def change_teacher_product(
     "/{student_id}/",
     response_model=ReadStudentSchema,
     responses={
-        403: {"model": StatusResponseSchema},
-        404: {"model": StatusResponseSchema},
+        HTTPStatus.FORBIDDEN: {"model": StatusResponseSchema},
+        HTTPStatus.NOT_FOUND: {"model": StatusResponseSchema},
     },
 )
 async def read_student_by_id_route(
@@ -147,6 +137,6 @@ async def grade_teacher_route(
         await uow.commit()
     return StatusResponseSchema(
         ok=True,
-        status_code=200,
+        status_code=HTTPStatus.OK,
         message="Teacher was graded",
     )

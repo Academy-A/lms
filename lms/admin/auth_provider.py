@@ -5,7 +5,7 @@ from starlette_admin.exceptions import FormValidationError, LoginFailed
 
 from lms.db.repositories.user import UserRepository
 from lms.exceptions import UserNotFoundError
-from lms.services.utils import verify_password
+from lms.logic.utils import verify_password
 
 
 class AuthenticationProvider(AuthProvider):
@@ -35,7 +35,7 @@ class AuthenticationProvider(AuthProvider):
         try:
             if verify_password(password, user.password):
                 return
-        except Exception:
+        except Exception:  # noqa: BLE001
             pass
         raise LoginFailed("Invalid username or password")
 

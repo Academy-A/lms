@@ -5,7 +5,7 @@ from sqlalchemy import ScalarResult, insert
 from sqlalchemy.exc import DBAPIError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lms.db.models import Soho
+from lms.db.models import SohoAccount
 from lms.db.repositories.base import Repository
 from lms.dto import SohoData
 from lms.exceptions import LMSError, SohoNotFoundError
@@ -14,9 +14,9 @@ from lms.exceptions.base import EntityNotFoundError
 log = logging.getLogger(__name__)
 
 
-class SohoRepository(Repository[Soho]):
+class SohoRepository(Repository[SohoAccount]):
     def __init__(self, session: AsyncSession) -> None:
-        super().__init__(model=Soho, session=session)
+        super().__init__(model=SohoAccount, session=session)
 
     async def read_by_id(self, soho_id: int) -> SohoData:
         try:
@@ -27,16 +27,16 @@ class SohoRepository(Repository[Soho]):
 
     async def create(self, soho_id: int, email: str, student_id: int) -> SohoData:
         query = (
-            insert(Soho)
+            insert(SohoAccount)
             .values(
                 id=soho_id,
                 email=email,
                 student_id=student_id,
             )
-            .returning(Soho)
+            .returning(SohoAccount)
         )
         try:
-            result: ScalarResult[Soho] = await self._session.scalars(query)
+            result: ScalarResult[SohoAccount] = await self._session.scalars(query)
             await self._session.flush()
         except IntegrityError as e:
             await self._session.rollback()
