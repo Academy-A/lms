@@ -1,6 +1,13 @@
 from typing import Annotated, Any
 
-from pydantic import BaseModel, ConfigDict, Field, PlainValidator, PositiveInt
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    PlainValidator,
+    PositiveInt,
+    WithJsonSchema,
+)
 from pydantic.dataclasses import dataclass
 
 
@@ -20,8 +27,10 @@ def parse_offer_flow(v: Any) -> OfferFlow:
 
 
 OfferFlowType = Annotated[
-    str | OfferFlow,
+    OfferFlow | str,
     PlainValidator(lambda v: parse_offer_flow(v)),
+    WithJsonSchema({"type": "string"}, mode="serialization"),
+    WithJsonSchema({"type": "string"}, mode="validation"),
 ]
 
 
