@@ -8,7 +8,7 @@ from lms.dto import PaginationData
 
 
 class MonitoringSchema(BaseModel):
-    status: Literal["ok"]
+    db_status: Literal["ok", "internal_error"]
 
 
 class StatusResponseSchema(BaseModel):

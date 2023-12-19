@@ -78,8 +78,8 @@ class OfferModelView(BaseModelView):
             name="teacher_type",
             label="Teacher Type",
             choices=tuple(
-                (v, l)
-                for v, l in zip(
+                (v, t)
+                for v, t in zip(
                     (None, TeacherType.CURATOR, TeacherType.MENTOR),
                     ("Empty", "Curator", "Mentor"),
                 )
