@@ -4,11 +4,10 @@ import logging
 import re
 from typing import ClassVar
 
-import aiohttp
 from google_api_service_helper import GoogleDrive
 from google_api_service_helper.drive.schemas import FileResponse
-from pyparsing import Any
 
+from lms.clients.autopilot import Autopilot
 from lms.cron.homework_notification.dto import FileData
 from lms.cron.homework_notification.utils import get_google_folder_files_recursively
 from lms.db.uow import UnitOfWork
@@ -27,18 +26,21 @@ class BaseNotification(abc.ABC):
     _google_drive: GoogleDrive
     _folder_ids: list[str]
     _subject_id: int
+    _autopilot: Autopilot
 
     def __init__(
         self,
         uow: UnitOfWork,
         subject_id: int,
         autopilot_url: str,
+        autopilot: Autopilot,
         regexp: str,
         folder_ids: list[str],
         google_drive: GoogleDrive,
     ) -> None:
         self.uow = uow
         self._subject_id = subject_id
+        self._autopilot = autopilot
         self._autopilot_url = autopilot_url
         self._google_drive = google_drive
         self._folder_ids = folder_ids
@@ -52,7 +54,7 @@ class BaseNotification(abc.ABC):
         await self.get_new_files()
         await self.parse_file_names()
         await self.filter_parsed_files()
-        # await self.send_new_files_data()
+        await self.send_new_files_data()
         await self.save_new_files()
 
     async def get_new_files(self) -> None:
@@ -122,20 +124,12 @@ class BaseNotification(abc.ABC):
         await self.uow.commit()
 
     async def send_new_files_data(self) -> None:
-        async with aiohttp.ClientSession(trust_env=True) as session:
-            for file in self._filtered_files:
-                log.info("send file %s", file)
-                await session.get(
-                    self._autopilot_url,
-                    params=self._get_send_params(file),
-                )
-                await asyncio.sleep(NOTIFICATION_TIME_PAUSE_SECONDS)
-
-    @staticmethod
-    def _get_send_params(file: FileData) -> dict[str, Any]:
-        return {
-            "avtp": 1,
-            "sid": file.vk_id,
-            "soch": file.url,
-            "title": file.essay_number,
-        }
+        for file in self._filtered_files:
+            log.info("send file %s", file)
+            await self._autopilot.send_homework(
+                target_path=self._autopilot_url,
+                student_vk_id=file.vk_id,
+                file_url=file.url,
+                title=file.essay_number,
+            )
+            await asyncio.sleep(NOTIFICATION_TIME_PAUSE_SECONDS)

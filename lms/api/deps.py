@@ -14,5 +14,17 @@ class SecretKeyMarker:
     pass
 
 
-class TelegramClientMarker:
+class AutopilotMarker:
+    pass
+
+
+class SohoMarker:
+    pass
+
+
+class TelegramMarker:
+    pass
+
+
+class EnrollerMarker:
     pass

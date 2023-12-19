@@ -1,15 +1,29 @@
-from typing import Any
+from collections.abc import Sequence
+from typing import Any, NamedTuple
 
 from sqlalchemy import ScalarResult, func, insert, select
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lms.db.models import StudentProduct
+from lms.db.models import Product, Student, StudentProduct
 from lms.db.repositories.base import Repository
 from lms.dto import StudentProductData
 from lms.enums import TeacherType
 from lms.exceptions import StudentProductNotFoundError
 from lms.exceptions.base import EntityNotFoundError
+
+
+class StudentDistributeData(NamedTuple):
+    vk_id: int
+    first_name: str
+    last_name: str
+    teacher_product_id: int | None
+    teacher_type: TeacherType | None
+    is_expulsion: bool
+
+    @property
+    def name(self) -> str:
+        return f"{self.first_name} {self.last_name}"
 
 
 class StudentProductRepository(Repository[StudentProduct]):
@@ -79,3 +93,28 @@ class StudentProductRepository(Repository[StudentProduct]):
         )
         res = await self._session.scalar(stmt)
         return res if res is not None else 0
+
+    async def distribute_data(
+        self,
+        subject_id: int,
+        vk_ids: Sequence[int],
+    ) -> Sequence[StudentDistributeData]:
+        query = (
+            select(
+                Student.vk_id,
+                Student.first_name,
+                Student.last_name,
+                StudentProduct.teacher_product_id,
+                StudentProduct.teacher_type,
+                StudentProduct.expulsion_at.isnot(None),
+            )
+            .join(Student, Student.id == StudentProduct.student_id)
+            .join(Product, Product.id == StudentProduct.product_id)
+            .where(
+                Product.subject_id == subject_id,
+                Student.vk_id.in_(vk_ids),
+            )
+        )
+        return [
+            StudentDistributeData(*res) for res in await self._session.execute(query)
+        ]

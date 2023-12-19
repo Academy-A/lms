@@ -1,34 +1,34 @@
 from http import HTTPStatus
 
-from httpx import AsyncClient
+from aiohttp.test_utils import TestClient
 
-from tests.factories import SubjectFactory
+from tests.plugins.factories import SubjectFactory
 
 
-async def test_unauthorized_user(client: AsyncClient) -> None:
-    response = await client.get("/v1/subjects/")
-    assert response.status_code == HTTPStatus.UNAUTHORIZED
-    assert response.json() == {
+async def test_unauthorized_user(api_client: TestClient) -> None:
+    response = await api_client.get("/v1/subjects/")
+    assert response.status == HTTPStatus.UNAUTHORIZED
+    assert await response.json() == {
         "ok": False,
         "status_code": HTTPStatus.UNAUTHORIZED,
         "message": "Unauthorized",
     }
 
 
-async def test_invalid_token(client: AsyncClient) -> None:
-    response = await client.get("/v1/subjects/", params={"token": "invalid-token"})
-    assert response.status_code == HTTPStatus.FORBIDDEN
-    assert response.json() == {
+async def test_invalid_token(api_client: TestClient) -> None:
+    response = await api_client.get("/v1/subjects/", params={"token": "invalid-token"})
+    assert response.status == HTTPStatus.FORBIDDEN
+    assert await response.json() == {
         "ok": False,
         "status_code": HTTPStatus.FORBIDDEN,
         "message": "Token not recognized",
     }
 
 
-async def test_successful_empty_list(client: AsyncClient, token: str) -> None:
-    response = await client.get("/v1/subjects/", params={"token": token})
-    assert response.status_code == HTTPStatus.OK
-    assert response.json() == {
+async def test_successful_empty_list(api_client: TestClient, token: str) -> None:
+    response = await api_client.get("/v1/subjects/", params={"token": token})
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == {
         "meta": {
             "page": 1,
             "pages": 1,
@@ -39,11 +39,11 @@ async def test_successful_empty_list(client: AsyncClient, token: str) -> None:
     }
 
 
-async def test_successful_order(client: AsyncClient, token: str) -> None:
+async def test_successful_order(api_client: TestClient, token: str) -> None:
     subjects = await SubjectFactory.create_batch_async(size=5)
-    response = await client.get("/v1/subjects/", params={"token": token})
-    assert response.status_code == HTTPStatus.OK
-    assert response.json() == {
+    response = await api_client.get("/v1/subjects/", params={"token": token})
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == {
         "meta": {
             "page": 1,
             "pages": 1,
