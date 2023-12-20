@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from yarl import URL
 
 from lms.clients.base.client import BaseHttpClient
-from lms.clients.base.handlers import parse_model
+from lms.clients.base.handlers import text_parser
 from lms.clients.base.root_handler import ResponseHandlersType
 from lms.clients.base.timeout import TimeoutType
 from lms.enums import TeacherType
@@ -32,13 +32,13 @@ class Autopilot(BaseHttpClient):
 
     SEND_TEACHER_HANDLERS: ResponseHandlersType = MappingProxyType(
         {
-            HTTPStatus.OK: parse_model(AutopilotResponseSchema),
+            HTTPStatus.OK: text_parser(parser=lambda x: x),
         }
     )
 
     SEND_HOMEWORK_HANDLERS: ResponseHandlersType = MappingProxyType(
         {
-            HTTPStatus.OK: parse_model(AutopilotResponseSchema),
+            HTTPStatus.OK: text_parser(parser=lambda x: x),
         }
     )
 
