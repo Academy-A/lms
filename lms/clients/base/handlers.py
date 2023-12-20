@@ -32,6 +32,17 @@ def json_parser(parser: Callable, loads: Callable = orjson.loads) -> Callable:
     return _parse
 
 
+def text_parser(parser: Callable) -> Callable:
+    async def _parse(resp: ClientResponse) -> Any:
+        resp_data = await resp.text()
+        if iscoroutinefunction(parser):
+            return await parser(resp_data)
+        else:
+            return parser(resp_data)
+
+    return _parse
+
+
 def parse_model(model: type[BaseModel]) -> Callable:
     def parser(data: Mapping[str, Any]) -> BaseModel:
         return model(**data)
