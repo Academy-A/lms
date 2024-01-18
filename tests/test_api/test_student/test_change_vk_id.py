@@ -3,6 +3,7 @@ from typing import Any
 
 import pytest
 from aiohttp.test_utils import TestClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from tests.plugins.factories import SohoAccountFactory, StudentFactory
 
@@ -128,20 +129,27 @@ async def test_vk_id_already_used(api_client: TestClient, token: str) -> None:
     }
 
 
-async def test_successful(api_client: TestClient, token: str) -> None:
+async def test_successful(
+    api_client: TestClient,
+    token: str,
+    session: AsyncSession,
+) -> None:
     soho = await SohoAccountFactory.create_async()
-
+    new_vk_id = soho.student.vk_id + 1
     response = await api_client.post(
         f"/v1/students/soho/{soho.id}/change-vk-id/",
         params={"token": token},
         json={
-            "vk_id": soho.student.vk_id + 1,
+            "vk_id": new_vk_id,
         },
     )
+    await session.refresh(soho.student)
     assert response.status == HTTPStatus.OK
     assert await response.json() == {
+        "created_at": soho.student.created_at.isoformat(),
+        "updated_at": soho.student.updated_at.isoformat(),
         "id": soho.student.id,
         "first_name": soho.student.first_name,
         "last_name": soho.student.last_name,
-        "vk_id": soho.student.vk_id + 1,
+        "vk_id": new_vk_id,
     }

@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Callable
 
 from aiomisc.service.uvicorn import UvicornApplication, UvicornService
 from fastapi import BackgroundTasks, FastAPI, HTTPException
@@ -10,6 +11,7 @@ from lms.admin.setup_admin import build_admin
 from lms.api.deps import (
     AutopilotMarker,
     DebugMarker,
+    DistributorMarker,
     EnrollerMarker,
     SecretKeyMarker,
     SohoMarker,
@@ -47,6 +49,7 @@ class REST(UvicornService):
         "soho",
         "telegram",
         "session_factory",
+        "get_distributor",
     )
 
     engine: AsyncEngine
@@ -54,6 +57,7 @@ class REST(UvicornService):
     autopilot: Autopilot
     soho: Soho
     telegram: Telegram
+    get_distributor: Callable
 
     debug: bool
     project_name: str
@@ -99,6 +103,7 @@ class REST(UvicornService):
                 SohoMarker: lambda: self.soho,
                 TelegramMarker: lambda: self.telegram,
                 EnrollerMarker: get_enroller,
+                DistributorMarker: self.get_distributor,
             }
         )
         build_admin(

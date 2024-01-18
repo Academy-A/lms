@@ -5,7 +5,7 @@ from pydantic import BaseModel, PositiveInt, field_validator, model_validator
 from starlette_admin.fields import DateTimeField, EnumField, HasOne, IntegerField
 
 from lms.admin.views.models.base import BaseModelView
-from lms.enums import TeacherType
+from lms.generals.enums import TeacherType
 
 
 class StudentProductModel(BaseModel):

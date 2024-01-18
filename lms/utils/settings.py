@@ -1,4 +1,5 @@
 from lms.db.uow import UnitOfWork
+from lms.generals.models.setting import Setting
 
 
 class SettingStorage:
@@ -14,3 +15,6 @@ class SettingStorage:
                 raise KeyError(f"Key {key} not found in SettingStorage")
             return default
         return value
+
+    async def update(self, key: str, value: str) -> Setting:
+        return await self._uow.setting.update(key=key, value=value)

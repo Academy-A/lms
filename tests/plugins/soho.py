@@ -9,12 +9,12 @@ from tests.utils.srvmocker.service import start_service
 
 
 @pytest.fixture
-def soho_auth_token() -> str:
-    return "very_secret_token"
+def soho_api_token() -> str:
+    return "soho_api_token"
 
 
 @pytest.fixture
-async def soho_service(localhost, soho_auth_token: str):
+async def soho_service(localhost: str):
     routes = [
         MockRoute("POST", "/api/v1/learning/homework/for_review_list", "homeworks"),
         MockRoute("POST", "/api/v1/client/find_clients", "client_list"),
@@ -35,11 +35,11 @@ def soho_url(soho_service: MockService) -> URL:
 @pytest.fixture
 async def soho(
     soho_url: URL,
-    soho_auth_token: str,
+    soho_api_token: str,
 ):
     async with create_web_session() as session:
         yield Soho(
             url=soho_url,
             session=session,
-            auth_token=soho_auth_token,
+            auth_token=soho_api_token,
         )

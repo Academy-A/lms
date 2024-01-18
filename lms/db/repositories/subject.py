@@ -2,45 +2,47 @@ from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lms.db.models import Product, Subject
-from lms.db.repositories.base import Repository
-from lms.dto import PaginationData, SubjectDto
+from lms.db.models import Product as ProductDb
+from lms.db.models import Subject as SubjectDb
+from lms.db.repositories.base import PaginateMixin, Repository
 from lms.exceptions import EntityNotFoundError, SubjectNotFoundError
+from lms.generals.models.pagination import Pagination
+from lms.generals.models.subject import Subject
 
 
-class SubjectRepository(Repository[Subject]):
+class SubjectRepository(PaginateMixin, Repository[SubjectDb]):
     def __init__(self, session: AsyncSession) -> None:
-        super().__init__(model=Subject, session=session)
+        super().__init__(model=SubjectDb, session=session)
 
-    async def paginate(self, page: int, page_size: int) -> PaginationData:
-        query = select(Subject).order_by(Subject.id)
+    async def paginate(self, page: int, page_size: int) -> Pagination[Subject]:
+        query = select(SubjectDb).order_by(SubjectDb.id)
         return await self._paginate(
             query=query,
             page=page,
             page_size=page_size,
-            dto=SubjectDto,
+            model_type=Subject,
         )
 
-    async def read_by_id(self, subject_id: int) -> SubjectDto:
+    async def read_by_id(self, subject_id: int) -> Subject:
         try:
             obj = await self._read_by_id(subject_id)
-            return SubjectDto.from_orm(obj)
         except EntityNotFoundError as e:
             raise SubjectNotFoundError from e
+        return Subject.model_validate(obj)
 
-    async def read_all(self) -> list[SubjectDto]:
-        query = select(Subject).order_by(Subject.id)
+    async def read_all(self) -> list[Subject]:
+        query = select(SubjectDb).order_by(SubjectDb.id)
         result = await self._session.scalars(query)
-        return [SubjectDto.from_orm(obj) for obj in result]
+        return [Subject.model_validate(obj) for obj in result]
 
-    async def find_by_product(self, product_id: int) -> SubjectDto:
+    async def find_by_product(self, product_id: int) -> Subject:
         stmt = (
-            select(Subject)
-            .join(Product, Subject.id == Product.subject_id)
-            .where(Product.id == product_id)
+            select(SubjectDb)
+            .join(ProductDb, SubjectDb.id == ProductDb.subject_id)
+            .where(ProductDb.id == product_id)
         )
         try:
             obj = (await self._session.scalars(stmt)).one()
-            return SubjectDto.from_orm(obj)
         except NoResultFound as e:
             raise SubjectNotFoundError from e
+        return Subject.model_validate(obj)

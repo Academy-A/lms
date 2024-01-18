@@ -1,15 +1,19 @@
+import abc
+import math
 from abc import ABC
-from typing import Any, Generic, NoReturn, TypeVar
+from typing import Any, Generic, NoReturn, TypeAlias, TypeVar
 
+from pydantic import BaseModel
 from sqlalchemy import ScalarResult, Select, func, select, update
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from lms.db.base import Base
-from lms.dto import PaginationData
 from lms.exceptions import EntityNotFoundError
+from lms.generals.models.pagination import ItemType, MetaPageData, Pagination
 
 Model = TypeVar("Model", bound=Base)
+SchemaType: TypeAlias = type[BaseModel]
 
 
 class Repository(ABC, Generic[Model]):
@@ -35,22 +39,34 @@ class Repository(ABC, Generic[Model]):
         await self._session.refresh(obj)
         return obj
 
-    async def _paginate(
-        self, query: Select, page: int, page_size: int, dto: Any
-    ) -> PaginationData:
-        result: ScalarResult[Model] = await self._session.scalars(
-            query.limit(page_size).offset((page - 1) * page_size)
-        )
-        total: int = await self._session.scalar(
-            select(func.count()).select_from(query.subquery())
-        )  # type: ignore
-
-        return PaginationData(
-            items=[dto.from_orm(obj) for obj in result.all()],
-            total=total,
-            page=page,
-            page_size=page_size,
-        )
-
     def _raise_error(self, e: DBAPIError) -> NoReturn:
         raise NotImplementedError
+
+
+class PaginateMixin(abc.ABC):
+    _session: AsyncSession
+
+    async def _paginate(
+        self,
+        query: Select,
+        page: int,
+        page_size: int,
+        model_type: SchemaType,
+    ) -> Pagination[ItemType]:
+        result: ScalarResult = await self._session.scalars(
+            query.limit(page_size).offset((page - 1) * page_size)
+        )
+        total: int = (
+            await self._session.execute(
+                select(func.count()).select_from(query.subquery())
+            )
+        ).scalar_one()
+        return Pagination[model_type](  # type: ignore[valid-type]
+            items=result.all(),
+            meta=MetaPageData(
+                page=page,
+                pages=int(math.ceil(total / page_size)) or 1,
+                total=total,
+                page_size=page_size,
+            ),
+        )

@@ -59,6 +59,8 @@ async def test_successful_order(api_client: TestClient, token: str) -> None:
                 "eng_name": s.eng_name,
                 "autopilot_url": s.autopilot_url,
                 "group_vk_url": s.group_vk_url,
+                "drive_folder_id": s.drive_folder_id,
+                "check_spreadsheet_id": s.check_spreadsheet_id,
             }
             for s in sorted(subjects, key=lambda s: s.id)
         ],

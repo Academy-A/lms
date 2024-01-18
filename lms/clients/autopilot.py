@@ -11,7 +11,7 @@ from lms.clients.base.client import BaseHttpClient
 from lms.clients.base.handlers import text_parser
 from lms.clients.base.root_handler import ResponseHandlersType
 from lms.clients.base.timeout import TimeoutType
-from lms.enums import TeacherType
+from lms.generals.enums import TeacherType
 
 log = logging.getLogger(__name__)
 

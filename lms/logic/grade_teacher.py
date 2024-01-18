@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from lms.db.models import StudentProduct
 from lms.db.uow import UnitOfWork
 from lms.exceptions import StudentProductHasNotTeacherError, StudentProductNotFoundError
 
@@ -22,7 +21,7 @@ async def grade_teacher(
         teacher_product_id=student_product.teacher_product_id, grade=grade
     )
     await uow.student_product.update(
-        StudentProduct.id == student_product.id,
+        student_product_id=student_product.id,
         teacher_grade=grade,
         teacher_graded_at=datetime.now(),
     )

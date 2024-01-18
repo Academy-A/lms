@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from lms.db.models import StudentProduct
 from lms.db.uow import UnitOfWork
 from lms.exceptions import (
     StudentNotFoundError,
@@ -26,7 +25,7 @@ async def expulse_student_by_offer_id(
         raise StudentProductAlreadyExpulsedError
     now = datetime.now()
     await uow.student_product.update(
-        StudentProduct.id == student_product.id,
+        student_product_id=student_product.id,
         expulsion_at=now,
         teacher_type=None,
         teacher_product_id=None,
