@@ -1,20 +1,21 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lms.db.models import Flow, FlowProduct
+from lms.db.models import Flow as FlowDb
+from lms.db.models import FlowProduct as FlowProductDb
 from lms.db.repositories.base import Repository
-from lms.dto import FlowData
+from lms.generals.models.flow import Flow
 
 
-class FlowRepository(Repository[Flow]):
+class FlowRepository(Repository[FlowDb]):
     def __init__(self, session: AsyncSession) -> None:
-        super().__init__(model=Flow, session=session)
+        super().__init__(model=FlowDb, session=session)
 
-    async def get_by_soho_id(self, soho_flow_id: int) -> FlowData | None:
+    async def get_by_soho_id(self, soho_flow_id: int) -> Flow | None:
         query = (
-            select(Flow)
-            .join(FlowProduct, Flow.id == FlowProduct.flow_id)
-            .where(FlowProduct.soho_id == soho_flow_id)
+            select(FlowDb)
+            .join(FlowProductDb, FlowDb.id == FlowProductDb.flow_id)
+            .where(FlowProductDb.soho_id == soho_flow_id)
         )
         obj = (await self._session.scalars(query)).first()
-        return FlowData.from_orm(obj) if obj else None
+        return Flow.model_validate(obj) if obj else None

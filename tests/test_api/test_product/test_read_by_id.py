@@ -54,6 +54,4 @@ async def test_successful_read(api_client: TestClient, token: str) -> None:
         "name": product.name,
         "start_date": product.start_date.isoformat(),
         "end_date": product.end_date.isoformat(),
-        "drive_folder_id": product.drive_folder_id,
-        "check_spreadsheet_id": product.check_spreadsheet_id,
     }

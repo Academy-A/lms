@@ -51,4 +51,6 @@ async def test_successful_read(api_client: TestClient, token: str) -> None:
         "group_vk_url": subject.group_vk_url,
         "created_at": subject.created_at.isoformat(),
         "updated_at": subject.updated_at.isoformat(),
+        "drive_folder_id": subject.drive_folder_id,
+        "check_spreadsheet_id": subject.check_spreadsheet_id,
     }

@@ -62,16 +62,6 @@ class ReadStudentSchema(BaseModel):
     vk_id: PositiveInt
 
 
-class ReadStudentProductSchema(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    student_id: PositiveInt
-    product_id: PositiveInt
-    teacher_product_id: PositiveInt | None
-    offer_id: PositiveInt | None
-    cohort: int
-
-
 class ChangeVKIDSchema(BaseModel):
     vk_id: PositiveInt
 

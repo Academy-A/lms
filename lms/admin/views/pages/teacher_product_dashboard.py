@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.templating import Jinja2Templates
@@ -5,16 +7,14 @@ from starlette_admin import CustomView
 
 from lms.db.repositories.product import ProductRepository
 from lms.db.repositories.teacher_product import TeacherProductRepository
-from lms.dto import TeacherDashboardData
-from lms.enums import TeacherType
-
-PRODUCT_IDS = [65, 66, 67, 68]
+from lms.generals.enums import TeacherType
+from lms.generals.models.teacher_dashboard import TeacherDashboardRow
 
 
 def parse_teacher_dashboard_data(
-    teacher_data: list[TeacherDashboardData],
-) -> dict[str, list[TeacherDashboardData]]:
-    data: dict[str, list[TeacherDashboardData]] = {}
+    teacher_data: list[TeacherDashboardRow],
+) -> dict[str, list[TeacherDashboardRow]]:
+    data: dict[str, list[TeacherDashboardRow]] = {}
     for t in TeacherType:
         data[t] = list()
     for td in teacher_data:
@@ -24,12 +24,28 @@ def parse_teacher_dashboard_data(
 
 
 class TeacherProductDashboardView(CustomView):
+    _product_ids: Sequence[int]
+
+    def __init__(
+        self,
+        label: str,
+        product_ids: Sequence[int],
+        icon: str | None = None,
+        path: str = "/",
+        template_path: str = "index.html",
+        name: str | None = None,
+        methods: list[str] | None = None,
+        add_to_menu: bool = True,
+    ):
+        super().__init__(label, icon, path, template_path, name, methods, add_to_menu)
+        self._product_ids = product_ids
+
     async def render(self, request: Request, templates: Jinja2Templates) -> Response:
         tpr = TeacherProductRepository(request.state.session)
         pr = ProductRepository(request.state.session)
         dashboard = []
 
-        for product_id in PRODUCT_IDS:
+        for product_id in self._product_ids:
             raw_data = await tpr.get_dashboard_data(product_id=product_id)
             teacher_data = parse_teacher_dashboard_data(raw_data)
             product = await pr.read_by_id(product_id=product_id)

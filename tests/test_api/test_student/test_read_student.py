@@ -48,6 +48,8 @@ async def test_successful_read(api_client: TestClient, token: str) -> None:
     )
     assert response.status == HTTPStatus.OK
     assert await response.json() == {
+        "created_at": student.created_at.isoformat(),
+        "updated_at": student.updated_at.isoformat(),
         "id": student.id,
         "first_name": student.first_name,
         "last_name": student.last_name,

@@ -12,13 +12,14 @@ from sqlalchemy.ext.asyncio import create_async_engine as sa_create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 import lms
+from lms.utils.http import dumps
 
 PROJECT_PATH = Path(lms.__file__).parent.parent.resolve()
 
 
 def create_async_engine(connection_uri: str, **engine_kwargs: Any) -> AsyncEngine:
     if engine_kwargs.get("json_serializer") is None:
-        engine_kwargs["json_serializer"] = orjson.dumps
+        engine_kwargs["json_serializer"] = dumps
     if engine_kwargs.get("json_deserializer") is None:
         engine_kwargs["json_deserializer"] = orjson.loads
     return sa_create_async_engine(url=connection_uri, **engine_kwargs)

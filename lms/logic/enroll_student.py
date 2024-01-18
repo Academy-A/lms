@@ -7,14 +7,15 @@ from fastapi import BackgroundTasks
 
 from lms.clients.autopilot import Autopilot
 from lms.clients.telegram import Telegram
-from lms.db.models import Offer, StudentProduct
 from lms.db.uow import UnitOfWork
-from lms.dto import NewStudentData, StudentProductData
 from lms.exceptions import (
     StudentNotFoundError,
     StudentProductNotFoundError,
     TeacherAssignmentNotFoundError,
 )
+from lms.generals.models.offer import Offer
+from lms.generals.models.student import NewStudent
+from lms.generals.models.student_product import StudentProduct
 
 log = logging.getLogger(__name__)
 
@@ -28,9 +29,9 @@ class Enroller:
 
     async def enroll_student(
         self,
-        new_student: NewStudentData,
+        new_student: NewStudent,
         offer_ids: Sequence[int],
-    ) -> StudentProductData:
+    ) -> StudentProduct:
         log.info("Enroll student with data %s", asdict(new_student))
         student = await self.uow.student.read_by_vk_id(vk_id=new_student.vk_id)
         if student is None:
@@ -100,7 +101,7 @@ class Enroller:
         student_id: int,
         offer_id: int,
         flow_id: int | None = None,
-    ) -> StudentProductData:
+    ) -> StudentProduct:
         offer = await self.uow.offer.read_by_id(offer_id=offer_id)
         teacher_product = None
         if offer.teacher_type is not None:
@@ -127,9 +128,9 @@ class Enroller:
 
     async def _enroll_student_again_by_offer(
         self,
-        student_product: StudentProductData,
+        student_product: StudentProduct,
         new_offer: Offer,
-    ) -> StudentProductData:
+    ) -> StudentProduct:
         old_offer = await self.uow.offer.read_by_id(student_product.offer_id)
         if (
             (not student_product.is_active or student_product.is_alone)
@@ -162,8 +163,6 @@ class Enroller:
                 teacher_type=new_offer.teacher_type,  # type: ignore[arg-type]
                 flow_id=student_product.flow_id,
             )
-            student_product.teacher_type = new_offer.teacher_type
-            student_product.teacher_product_id = teacher_product.id
             await self.uow.teacher_assignment.create(
                 student_product_id=student_product.id,
                 teacher_product_id=teacher_product.id,
@@ -180,7 +179,7 @@ class Enroller:
                 target_path=subject.autopilot_url,
                 student_vk_id=student.vk_id,
                 teacher_vk_id=teacher.vk_id,
-                teacher_type=student_product.teacher_type,  # type:ignore[arg-type]
+                teacher_type=new_offer.teacher_type,  # type:ignore[arg-type]
             )
             if (
                 await self.uow.student_product.calculate_active_students(
@@ -195,12 +194,13 @@ class Enroller:
                     vk_id=teacher.vk_id,
                     product_id=teacher_product.product_id,
                 )
-        student_product.expulsion_at = None
-        student_product.offer_id = new_offer.id
 
         return await self.uow.student_product.update(
-            StudentProduct.id == student_product.id,
-            **asdict(student_product),
+            student_product_id=student_product.id,
+            expulsion_at=None,
+            offer_id=new_offer.id,
+            teacher_type=new_offer.teacher_type,
+            teacher_product_id=teacher_product.id,
         )
 
     async def change_teacher_for_student(
@@ -208,7 +208,7 @@ class Enroller:
         product_id: int,
         student_vk_id: int,
         teacher_vk_id: int,
-    ) -> StudentProductData:
+    ) -> StudentProduct:
         student = await self.uow.student.read_by_vk_id(vk_id=student_vk_id)
         if student is None:
             raise StudentNotFoundError
@@ -239,7 +239,7 @@ class Enroller:
                 pass
         if student_product.teacher_product_id != teacher_product.id:
             student_product = await self.uow.student_product.update(
-                StudentProduct.id == student_product.id,
+                student_product_id=student_product.id,
                 teacher_product_id=teacher_product.id,
                 teacher_type=teacher_product.type,
             )

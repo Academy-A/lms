@@ -17,7 +17,7 @@ from starlette_admin.fields import (
 )
 
 from lms.admin.views.models.base import BaseModelView
-from lms.enums import TeacherType
+from lms.generals.enums import TeacherType
 
 
 class OfferModel(BaseModel):
