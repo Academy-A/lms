@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from yarl import URL
 
 from lms.db.models import TeacherAssignment
-from lms.enums import TeacherType
+from lms.generals.enums import TeacherType
 from tests.plugins.factories import (
     OfferFactory,
     ProductFactory,

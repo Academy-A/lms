@@ -31,8 +31,8 @@ class AuthenticationProvider(AuthProvider):
         return response
 
     async def check_user(self, request: Request, username: str, password: str) -> None:
-        user = await UserRepository(request.state.session).get_by_username(username)
         try:
+            user = await UserRepository(request.state.session).get_by_username(username)
             if verify_password(password, user.password):
                 return
         except Exception:  # noqa: BLE001

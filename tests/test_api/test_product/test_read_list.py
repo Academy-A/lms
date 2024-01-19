@@ -63,8 +63,6 @@ async def test_successful_order(api_client: TestClient, token: str) -> None:
                 "name": p.name,
                 "start_date": p.start_date.isoformat(),
                 "end_date": p.end_date.isoformat(),
-                "drive_folder_id": p.drive_folder_id,
-                "check_spreadsheet_id": p.check_spreadsheet_id,
             }
             for p in sorted(products, key=lambda s: s.id)
         ],

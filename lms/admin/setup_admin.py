@@ -69,9 +69,16 @@ def build_admin(
             always_open=False,
             views=[
                 TeacherProductDashboardView(
-                    label="Teacher Dashboard",
+                    label="Annual Dashboard 2023/24",
                     template_path="./teacher_product_dashboard.html",
                     path="/dashboard/teachers",
+                    product_ids=[65, 66, 67, 68],
+                ),
+                TeacherProductDashboardView(
+                    label="SemiAnnual Dashboard 2024",
+                    template_path="./teacher_product_dashboard.html",
+                    path="/dashboard/teachers",
+                    product_ids=[73, 74, 75, 76],
                 ),
             ],
         )

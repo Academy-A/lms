@@ -12,11 +12,10 @@ from lms.api.v1.student.schemas import (
     EnrollStudentSchema,
     ExpulsionStudentSchema,
     GradeTeacherSchema,
-    ReadStudentProductSchema,
-    ReadStudentSchema,
 )
 from lms.db.uow import UnitOfWork
-from lms.dto import NewStudentData
+from lms.generals.models.student import NewStudent, Student
+from lms.generals.models.student_product import StudentProduct
 from lms.logic.change_vk_id import change_student_vk_id_by_soho_id
 from lms.logic.enroll_student import Enroller
 from lms.logic.expulse_student import expulse_student_by_offer_id
@@ -33,10 +32,10 @@ router = APIRouter(
 async def enroll_student_route(
     enrollment: EnrollStudentSchema,
     enroller: Enroller = Depends(EnrollerMarker),
-) -> ReadStudentProductSchema:
+) -> StudentProduct:
     async with enroller.uow:
         student_product = await enroller.enroll_student(
-            new_student=NewStudentData(
+            new_student=NewStudent(
                 vk_id=enrollment.student.vk_id,
                 soho_id=enrollment.student.soho_id,
                 email=enrollment.student.email,
@@ -47,7 +46,7 @@ async def enroll_student_route(
             offer_ids=enrollment.offer_ids,
         )
         await enroller.uow.commit()
-    return ReadStudentProductSchema.model_validate(student_product)
+    return student_product
 
 
 @router.post("/expulse/")
@@ -90,8 +89,9 @@ async def change_teacher_product(
 
 @router.get(
     "/{student_id}/",
-    response_model=ReadStudentSchema,
+    response_model=Student,
     responses={
+        HTTPStatus.OK: {"model": Student},
         HTTPStatus.FORBIDDEN: {"model": StatusResponseSchema},
         HTTPStatus.NOT_FOUND: {"model": StatusResponseSchema},
     },
@@ -99,18 +99,18 @@ async def change_teacher_product(
 async def read_student_by_id_route(
     student_id: PositiveInt = Path(),
     uow: UnitOfWork = Depends(UnitOfWorkMarker),
-) -> ReadStudentSchema:
+) -> Student:
     async with uow:
         student = await uow.student.read_by_id(student_id=student_id)
-    return ReadStudentSchema.model_validate(student)
+    return student
 
 
-@router.post("/soho/{soho_id}/change-vk-id/", response_model=ReadStudentSchema)
+@router.post("/soho/{soho_id}/change-vk-id/", response_model=Student)
 async def change_vk_id_by_soho_id_route(
     soho_id: PositiveInt,
     vk_id_data: ChangeVKIDSchema,
     uow: UnitOfWork = Depends(UnitOfWorkMarker),
-) -> ReadStudentSchema:
+) -> Student:
     async with uow:
         student = await change_student_vk_id_by_soho_id(
             uow=uow,
@@ -118,7 +118,7 @@ async def change_vk_id_by_soho_id_route(
             vk_id=vk_id_data.vk_id,
         )
         await uow.commit()
-    return ReadStudentSchema.model_validate(student)
+    return student
 
 
 @router.post("/soho/{soho_id}/grade-teacher/", response_model=StatusResponseSchema)

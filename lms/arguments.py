@@ -1,7 +1,23 @@
 import argparse
+import logging
 
 import configargparse
+import orjson
 from aiomisc_log import LogFormat, LogLevel
+from google_api_service_helper import GoogleKeys
+
+log = logging.getLogger(__name__)
+
+
+def load_google_keys(v: str) -> GoogleKeys:
+    try:
+        with open(v, "rb") as f:
+            data = orjson.loads(f.read())
+        return GoogleKeys(**data)
+    except ValueError:
+        log.warning("Can not load google keys")
+        raise
+
 
 parser = configargparse.ArgumentParser(
     allow_abbrev=False,
@@ -46,3 +62,6 @@ group = parser.add_argument_group("Telegram options")
 group.add_argument("--telegram-bot-token", type=str, required=True)
 group.add_argument("--telegram-chat-id", type=int, required=True)
 group.add_argument("--telegram-parse-mode", type=str, default="markdown")
+
+group = parser.add_argument_group("Google Keys")
+group.add_argument("--google-keys", required=True, type=load_google_keys)

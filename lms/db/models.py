@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from typing import Any
 
 from markupsafe import escape
 from sqlalchemy import (
@@ -15,13 +16,14 @@ from sqlalchemy import (
     String,
     UniqueConstraint,
 )
+from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils import ChoiceType
 from starlette.requests import Request
 
 from lms.db.base import Base
 from lms.db.mixins import TimestampMixin
-from lms.enums import TeacherType
+from lms.generals.enums import TeacherType
 
 
 class Student(TimestampMixin, Base):
@@ -72,6 +74,12 @@ class Subject(TimestampMixin, Base):
     )
     autopilot_url: Mapped[str] = mapped_column(String(1024), nullable=False)
     group_vk_url: Mapped[str] = mapped_column(String(1024), nullable=False)
+    check_spreadsheet_id: Mapped[str] = mapped_column(
+        String(256), nullable=False, default="", server_default="''"
+    )
+    drive_folder_id: Mapped[str] = mapped_column(
+        String(256), nullable=False, default="", server_default="''"
+    )
 
     def __admin_repr__(self, request: Request) -> str:
         return self.name
@@ -121,8 +129,6 @@ class Product(TimestampMixin, Base):
         index=True,
         nullable=False,
     )
-    check_spreadsheet_id: Mapped[str] = mapped_column(String(256), nullable=False)
-    drive_folder_id: Mapped[str] = mapped_column(String(256), nullable=False)
     start_date: Mapped[date | None] = mapped_column(Date, index=True, nullable=True)
     end_date: Mapped[date | None] = mapped_column(Date, index=True, nullable=True)
 
@@ -181,10 +187,6 @@ class Offer(TimestampMixin, Base):
     )
 
     product: Mapped[Product] = relationship("Product")
-
-    @property
-    def is_alone(self) -> bool:
-        return self.teacher_type is None
 
 
 class Teacher(TimestampMixin, Base):
@@ -429,24 +431,25 @@ class Reviewer(Base, TimestampMixin):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     first_name: Mapped[str] = mapped_column(String(128), nullable=False, default="")
     last_name: Mapped[str] = mapped_column(String(128), nullable=False, default="")
-    product_id: Mapped[int] = mapped_column(
+    subject_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("product.id"),
+        ForeignKey("subject.id"),
         nullable=False,
-    )
-    teacher_product_id: Mapped[int | None] = mapped_column(
-        Integer,
-        ForeignKey("teacher_product.id"),
-        nullable=True,
+        server_default="1",
     )
     email: Mapped[str] = mapped_column(String(128), nullable=False)
     desired: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     max_: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    min_: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        nullable=False,
+        server_default="0",
+    )
     abs_max: Mapped[int] = mapped_column(Integer, default=1000, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
-    product: Mapped[Product] = relationship("Product")
-    teacher_product: Mapped[TeacherProduct | None] = relationship("TeacherProduct")
+    subject: Mapped[Subject] = relationship("Subject")
 
 
 class VerifiedWorkFile(TimestampMixin, Base):
@@ -485,3 +488,16 @@ class User(TimestampMixin, Base):
         String(128), unique=True, index=True, nullable=False
     )
     password: Mapped[str] = mapped_column(String(128), nullable=False)
+
+
+class Distribution(TimestampMixin, Base):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    subject_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("subject.id"),
+        nullable=False,
+    )
+    data: Mapped[dict[str, Any]] = mapped_column(
+        JSON,
+        nullable=False,
+    )

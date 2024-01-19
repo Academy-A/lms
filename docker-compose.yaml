@@ -6,7 +6,7 @@ services:
     environment:
       APP_SOHO_API_TOKEN: ${SOHO_API_TOKEN}
       APP_API_SECRET_KEY: ${SECRET_KEY}
-      APP_PG_DSN: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgetset.ru:5433/${POSTGRES_DB}
+      APP_PG_DSN: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgetset.ru:5432/${POSTGRES_DB}
 
       APP_TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       APP_TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
@@ -16,3 +16,8 @@ services:
 
     ports:
       - 8000:80
+
+networks:
+  default:
+    external: true
+    name: academy

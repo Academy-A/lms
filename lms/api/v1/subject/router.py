@@ -2,8 +2,9 @@ from fastapi import APIRouter, Depends, Query
 
 from lms.api.auth import token_required
 from lms.api.deps import UnitOfWorkMarker
-from lms.api.v1.subject.schema import ReadSubjectSchema, SubjectPageSchema
 from lms.db.uow import UnitOfWork
+from lms.generals.models.pagination import Pagination
+from lms.generals.models.subject import Subject
 
 router = APIRouter(
     prefix="/subjects",
@@ -13,24 +14,24 @@ router = APIRouter(
 
 
 @router.get("/")
-async def read_subjects(
+async def read_list(
     page: int = Query(gt=0, default=1),
     page_size: int = Query(gt=0, le=100, default=20),
     uow: UnitOfWork = Depends(UnitOfWorkMarker),
-) -> SubjectPageSchema:
+) -> Pagination[Subject]:
     async with uow:
         pagination = await uow.subject.paginate(
             page=page,
             page_size=page_size,
         )
-    return SubjectPageSchema.from_pagination(pagination=pagination)
+    return pagination
 
 
 @router.get("/{subject_id}/")
-async def read_subject_by_id(
+async def read_by_id(
     subject_id: int,
     uow: UnitOfWork = Depends(UnitOfWorkMarker),
-) -> ReadSubjectSchema:
+) -> Subject:
     async with uow:
         subject = await uow.subject.read_by_id(subject_id=subject_id)
-    return ReadSubjectSchema.model_validate(subject)
+    return subject

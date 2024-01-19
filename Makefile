@@ -1,6 +1,7 @@
 PROJECT_PATH := ./lms/
 TEST_PATH := ./tests/
 
+VERSION = $(shell poetry version -s)
 
 HELP_FUN = \
 	%help; while(<>){push@{$$help{$$2//'options'}},[$$1,$$3] \

@@ -1,7 +1,10 @@
+from argparse import Namespace
+
 import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from aiohttp.web_app import Application
 from aiomisc_log import LogFormat, LogLevel
+from sqlalchemy.ext.asyncio import AsyncEngine
 from yarl import URL
 
 from lms.api.auth import generate_token
@@ -9,11 +12,10 @@ from lms.api.service import REST
 from lms.clients.autopilot import Autopilot
 from lms.clients.soho import Soho
 from lms.clients.telegram import Telegram
-from lms.db.uow import UnitOfWork
 
 
 @pytest.fixture
-def app_secret_key() -> str:
+def api_secret_key() -> str:
     return "api-super-secret"
 
 
@@ -24,30 +26,28 @@ def rest_port(aiomisc_unused_port_factory) -> int:
 
 @pytest.fixture
 def rest_service(
-    async_engine,
+    args: Namespace,
+    async_engine: AsyncEngine,
     autopilot: Autopilot,
     soho: Soho,
     telegram: Telegram,
-    uow: UnitOfWork,
-    app_secret_key: str,
-    rest_port: int,
-    localhost,
     sessionmaker,
+    get_distributor,
 ) -> REST:
     return REST(
-        debug=False,
-        project_name="Test LMS",
-        project_description="test lms description",
-        project_version="0.0.1",
-        secret_key=app_secret_key,
-        address=localhost,
-        port=rest_port,
+        debug=args.debug,
+        project_name=args.project_name,
+        project_description=args.project_description,
+        project_version=args.project_version,
+        secret_key=args.api_secret_key,
+        address=args.api_address,
+        port=args.api_port,
         engine=async_engine,
         autopilot=autopilot,
         soho=soho,
         telegram=telegram,
-        uow=uow,
         session_factory=sessionmaker,
+        get_distributor=get_distributor,
     )
 
 
@@ -80,8 +80,8 @@ def entrypoint_kwargs() -> dict[str, str]:
 
 
 @pytest.fixture
-def token(app_secret_key: str) -> str:
+def token(api_secret_key: str) -> str:
     return generate_token(
         data={"test_data": True},
-        secret_key=app_secret_key,
+        secret_key=api_secret_key,
     )

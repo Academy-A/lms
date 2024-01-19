@@ -13,7 +13,7 @@ from lms.clients.base.root_handler import ResponseHandlersType
 from lms.clients.base.timeout import TimeoutType
 
 
-class HomeworkSchema(BaseModel):
+class SohoHomework(BaseModel):
     student_homework_id: int = Field(alias="clientHomeworkId")
     student_soho_id: int = Field(alias="clientId")
     sent_to_review_at: datetime = Field(alias="sentToReviewAt")
@@ -21,8 +21,8 @@ class HomeworkSchema(BaseModel):
     student_vk_id: int | None = Field(alias="vkId", default=None)
 
 
-class SohoHomeworksForReviewSchema(BaseModel):
-    homeworks: list[HomeworkSchema]
+class SohoHomeworksResponse(BaseModel):
+    homeworks: list[SohoHomework]
 
 
 class ClientSchema(BaseModel):
@@ -63,7 +63,7 @@ class Soho(BaseHttpClient):
 
     HOMEWORKS_FOR_REVIEW_HANDLERS: ResponseHandlersType = MappingProxyType(
         {
-            HTTPStatus.OK: parse_model(SohoHomeworksForReviewSchema),
+            HTTPStatus.OK: parse_model(SohoHomeworksResponse),
         }
     )
     PRODUCT_LIST_HANDLERS: ResponseHandlersType = MappingProxyType(
@@ -91,7 +91,7 @@ class Soho(BaseHttpClient):
         self,
         homework_id: int,
         timeout: TimeoutType = DEFAULT_TIMEOUT,
-    ) -> SohoHomeworksForReviewSchema:
+    ) -> SohoHomeworksResponse:
         return await self._make_req(
             method=hdrs.METH_POST,
             url=self._url / "api/v1/learning/homework/for_review_list",

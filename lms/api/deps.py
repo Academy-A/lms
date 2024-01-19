@@ -28,3 +28,7 @@ class TelegramMarker:
 
 class EnrollerMarker:
     pass
+
+
+class DistributorMarker:
+    pass

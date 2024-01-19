@@ -13,7 +13,7 @@ from lms.db.models import (
     TeacherAssignment,
     TeacherProduct,
 )
-from lms.enums import TeacherType
+from lms.generals.enums import TeacherType
 
 
 class SubjectFactory(SQLAlchemyFactory[Subject]):

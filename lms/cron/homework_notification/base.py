@@ -8,9 +8,9 @@ from google_api_service_helper import GoogleDrive
 from google_api_service_helper.drive.schemas import FileResponse
 
 from lms.clients.autopilot import Autopilot
-from lms.cron.homework_notification.dto import FileData
 from lms.cron.homework_notification.utils import get_google_folder_files_recursively
 from lms.db.uow import UnitOfWork
+from lms.generals.models.parsed_file import ParsedFile
 
 NOTIFICATION_TIME_PAUSE_SECONDS = 0.3
 
@@ -47,8 +47,8 @@ class BaseNotification(abc.ABC):
         self._regexp = regexp
 
         self._new_files: list[FileResponse] = []
-        self._parsed_files: list[FileData] = []
-        self._filtered_files: list[FileData] = []
+        self._parsed_files: list[ParsedFile] = []
+        self._filtered_files: list[ParsedFile] = []
 
     async def notify(self) -> None:
         await self.get_new_files()
@@ -98,7 +98,7 @@ class BaseNotification(abc.ABC):
                     vk_id,
                 )
             self._parsed_files.append(
-                FileData(
+                ParsedFile(
                     id=file.id,
                     name=file.name,
                     url=file.webViewLink,

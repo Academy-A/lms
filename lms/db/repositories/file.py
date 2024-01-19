@@ -2,20 +2,20 @@ from sqlalchemy import ScalarResult, insert, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lms.db.models import VerifiedWorkFile
+from lms.db.models import VerifiedWorkFile as VerifiedWorkFileDb
 from lms.db.repositories.base import Repository
-from lms.dto import VerifiedWorkFileData
+from lms.generals.models.verified_work_file import VerifiedWorkFile
 
 
-class FileRepository(Repository[VerifiedWorkFile]):
+class FileRepository(Repository[VerifiedWorkFileDb]):
     def __init__(self, session: AsyncSession) -> None:
-        super().__init__(model=VerifiedWorkFile, session=session)
+        super().__init__(model=VerifiedWorkFileDb, session=session)
 
-    async def get_by_google_drive_id(self, file_id: str) -> VerifiedWorkFileData | None:
-        query = select(VerifiedWorkFile).filter_by(file_id=file_id)
+    async def get_by_google_drive_id(self, file_id: str) -> VerifiedWorkFile | None:
+        query = select(VerifiedWorkFileDb).filter_by(file_id=file_id)
 
         file = (await self._session.scalars(query)).first()
-        return VerifiedWorkFileData.from_orm(file) if file else None
+        return VerifiedWorkFile.model_validate(file) if file else None
 
     async def create(
         self,
@@ -24,9 +24,9 @@ class FileRepository(Repository[VerifiedWorkFile]):
         url: str,
         student_id: int | None,
         subject_id: int,
-    ) -> VerifiedWorkFileData:
+    ) -> VerifiedWorkFile:
         query = (
-            insert(VerifiedWorkFile)
+            insert(VerifiedWorkFileDb)
             .values(
                 file_id=file_id,
                 name=name,
@@ -34,14 +34,16 @@ class FileRepository(Repository[VerifiedWorkFile]):
                 subject_id=subject_id,
                 student_id=student_id,
             )
-            .returning(VerifiedWorkFile)
+            .returning(VerifiedWorkFileDb)
         )
 
         try:
-            result: ScalarResult[VerifiedWorkFile] = await self._session.scalars(query)
+            result: ScalarResult[VerifiedWorkFileDb] = await self._session.scalars(
+                query
+            )
             await self._session.flush()
         except IntegrityError as e:
             await self._session.rollback()
             self._raise_error(e)
         else:
-            return VerifiedWorkFileData.from_orm(result.one())
+            return VerifiedWorkFile.model_validate(result.one())

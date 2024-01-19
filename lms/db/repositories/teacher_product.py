@@ -2,36 +2,42 @@ from sqlalchemy import desc, select, text
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lms.db.models import TeacherProduct, TeacherProductFlow
+from lms.db.models import (
+    TeacherProduct as TeacherProductDb,
+)
+from lms.db.models import (
+    TeacherProductFlow as TeacherProductFlowDb,
+)
 from lms.db.repositories.base import Repository
-from lms.dto import TeacherDashboardData, TeacherProductDto
-from lms.enums import TeacherType
 from lms.exceptions import TeacherProductNotFoundError
 from lms.exceptions.base import EntityNotFoundError
+from lms.generals.enums import TeacherType
+from lms.generals.models.teacher_dashboard import TeacherDashboardRow
+from lms.generals.models.teacher_product import TeacherProduct
 
 
-class TeacherProductRepository(Repository[TeacherProduct]):
+class TeacherProductRepository(Repository[TeacherProductDb]):
     def __init__(self, session: AsyncSession) -> None:
-        super().__init__(model=TeacherProduct, session=session)
+        super().__init__(model=TeacherProductDb, session=session)
 
-    async def read_by_id(self, teacher_product_id: int) -> TeacherProductDto:
+    async def read_by_id(self, teacher_product_id: int) -> TeacherProduct:
         try:
             obj = await self._read_by_id(teacher_product_id)
-            return TeacherProductDto.from_orm(obj)
         except EntityNotFoundError as e:
             raise TeacherProductNotFoundError from e
+        return TeacherProduct.model_validate(obj)
 
     async def find_by_teacher_and_product(
         self, teacher_id: int, product_id: int
-    ) -> TeacherProductDto:
-        stmt = select(TeacherProduct).filter_by(
+    ) -> TeacherProduct:
+        stmt = select(TeacherProductDb).filter_by(
             teacher_id=teacher_id, product_id=product_id
         )
         try:
             obj = (await self._session.scalars(stmt)).one()
-            return TeacherProductDto.from_orm(obj)
         except NoResultFound as e:
             raise TeacherProductNotFoundError from e
+        return TeacherProduct.model_validate(obj)
 
     async def get_for_enroll(
         self,
@@ -56,23 +62,24 @@ class TeacherProductRepository(Repository[TeacherProduct]):
         self, product_id: int, teacher_type: TeacherType, flow_id: int
     ) -> TeacherProduct | None:
         query = (
-            select(TeacherProduct)
+            select(TeacherProductDb)
             .join(
-                TeacherProductFlow,
-                TeacherProductFlow.teacher_product_id == TeacherProduct.id,
+                TeacherProductFlowDb,
+                TeacherProductFlowDb.teacher_product_id == TeacherProductDb.id,
             )
             .where(
-                TeacherProduct.product_id == product_id,
-                TeacherProduct.type == teacher_type,
-                TeacherProduct.max_students > 0,
-                TeacherProduct.is_active.is_(True),
-                TeacherProductFlow.flow_id == flow_id,
+                TeacherProductDb.product_id == product_id,
+                TeacherProductDb.type == teacher_type,
+                TeacherProductDb.max_students > 0,
+                TeacherProductDb.is_active.is_(True),
+                TeacherProductFlowDb.flow_id == flow_id,
             )
-            .order_by(desc(TeacherProduct.average_grade))
+            .order_by(desc(TeacherProductDb.average_grade))
             .limit(1)
         )
 
-        return (await self._session.scalars(query)).first()
+        obj = (await self._session.scalars(query)).first()
+        return TeacherProduct.model_validate(obj) if obj else None
 
     async def _search_without_flow(
         self,
@@ -80,21 +87,21 @@ class TeacherProductRepository(Repository[TeacherProduct]):
         teacher_type: TeacherType,
     ) -> TeacherProduct:
         query = (
-            select(TeacherProduct)
+            select(TeacherProductDb)
             .where(
-                TeacherProduct.product_id == product_id,
-                TeacherProduct.type == teacher_type,
-                TeacherProduct.max_students > 0,
-                TeacherProduct.is_active.is_(True),
+                TeacherProductDb.product_id == product_id,
+                TeacherProductDb.type == teacher_type,
+                TeacherProductDb.max_students > 0,
+                TeacherProductDb.is_active.is_(True),
             )
-            .order_by(desc(TeacherProduct.average_grade))
+            .order_by(desc(TeacherProductDb.average_grade))
             .limit(1)
         )
 
-        teacher_product = (await self._session.scalars(query)).first()
-        if teacher_product is None:
+        obj = (await self._session.scalars(query)).first()
+        if obj is None:
             raise TeacherProductNotFoundError
-        return teacher_product
+        return TeacherProduct.model_validate(obj)
 
     async def add_grade(self, teacher_product_id: int, grade: int) -> None:
         teacher_product = await self.read_by_id(teacher_product_id=teacher_product_id)
@@ -102,12 +109,12 @@ class TeacherProductRepository(Repository[TeacherProduct]):
             teacher_product.average_grade * teacher_product.grade_counter + grade
         ) / (teacher_product.grade_counter + 1)
         await self._update(
-            TeacherProduct.id == teacher_product.id,
+            TeacherProductDb.id == teacher_product.id,
             average_grade=new_average_grade,
             grade_counter=teacher_product.grade_counter + 1,
         )
 
-    async def get_dashboard_data(self, product_id: int) -> list[TeacherDashboardData]:
+    async def get_dashboard_data(self, product_id: int) -> list[TeacherDashboardRow]:
         stmt = """
             SELECT
                 teacher_product.id,
@@ -144,4 +151,4 @@ class TeacherProductRepository(Repository[TeacherProduct]):
             ORDER BY teacher.first_name
         """
         result = await self._session.execute(text(stmt), {"product_id": product_id})
-        return [TeacherDashboardData(*r) for r in result]
+        return [TeacherDashboardRow(*r) for r in result]
