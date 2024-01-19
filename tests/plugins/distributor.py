@@ -1,5 +1,5 @@
+import base64
 from argparse import Namespace
-from pathlib import Path
 
 import pytest
 from google_api_service_helper import GoogleDrive, GoogleSheets
@@ -30,13 +30,8 @@ def google_keys() -> str:
 
 
 @pytest.fixture
-def google_key_json_file(google_keys: str, tmp_path: Path) -> Path:
-    d = tmp_path / "test"
-    d.mkdir()
-
-    f = d / "google_keys.json"
-    f.write_text(google_keys)
-    yield f
+def google_keys_encoded(google_keys: str) -> str:
+    return base64.b64encode(google_keys.encode()).decode()
 
 
 @pytest.fixture
