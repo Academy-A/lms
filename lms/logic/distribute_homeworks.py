@@ -12,7 +12,6 @@ from lms.db.uow import UnitOfWork
 from lms.generals.models.distribution import DistributionParams
 from lms.generals.models.subject import Subject
 from lms.utils.distribution.models import Distribution, DistributionReviewer
-from lms.utils.distribution.utils import NameGen
 from lms.utils.settings import SettingStorage
 
 SHEET_INDEX = 4
@@ -27,7 +26,11 @@ class Distributor:
     google_drive: GoogleDrive
     soho: Soho
 
-    async def make_distribution(self, params: DistributionParams) -> None:
+    async def make_distribution(
+        self,
+        params: DistributionParams,
+        created_at: datetime,
+    ) -> None:
         homeworks = await self._get_soho_homeworks(params.homework_ids)
         subject = await self._get_subject(params.product_ids[0])
         reviewers = await self._get_reviewers(subject_id=subject.id)
@@ -36,6 +39,7 @@ class Distributor:
             homeworks=homeworks,
         )
         distribution = Distribution(
+            created_at=created_at,
             params=params,
             homeworks=homeworks,
             reviewers=reviewers,
@@ -43,7 +47,7 @@ class Distributor:
         await distribution.distribute(students_data=students_data)
         new_folder_id = await self._create_folder_for_homeworks(
             parent_folder_id=subject.drive_folder_id,
-            homework_ids=params.homework_ids,
+            distribution=distribution,
         )
         distribution.new_folder_id = new_folder_id
         await self._write_data_in_new_sheet(
@@ -115,37 +119,32 @@ class Distributor:
     @threaded
     def _create_folder_for_homeworks(
         self,
+        distribution: Distribution,
         parent_folder_id: str,
-        homework_ids: Sequence[int],
     ) -> str:
-        now = datetime.now()
-        folder_title = NameGen(homework_ids=homework_ids, dt=now).folder_title
         new_folder = self.google_drive.make_new_folder(
-            new_folder_title=folder_title,
+            new_folder_title=distribution.folder_title,
             parent_folder_id=parent_folder_id,
         )
+        if new_folder is None:
+            raise ValueError("Folder not created")
         self.google_drive.set_permissions_for_anyone(folder_id=new_folder.id)
         return new_folder.id
 
     @threaded
     def _write_data_in_new_sheet(
         self,
-        spreadsheet_id: str,
         distribution: Distribution,
+        spreadsheet_id: str,
     ) -> None:
-        now = datetime.now()
-        sheet_title = NameGen(
-            homework_ids=distribution.params.homework_ids,
-            dt=now,
-        ).sheet_title
         self.google_sheets.create_sheet(
             spreadsheet_id=spreadsheet_id,
-            title=sheet_title,
+            title=distribution.sheet_title,
             index=SHEET_INDEX,
         )
         self.google_sheets.set_data(
             spreadsheet_id=spreadsheet_id,
-            range_sheet=sheet_title,
+            range_sheet=distribution.sheet_title,
             values=distribution.serialize_for_sheet(),
             major_dimension=SHEET_MAJOR_DIMENSION,
         )

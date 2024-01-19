@@ -74,9 +74,9 @@ class ReviewerModelView(BaseModelView):
             required=True,
         ),
         HasOne(
-            name="product",
-            label="Product",
-            identity="product",
+            name="subject",
+            label="Subject",
+            identity="subject",
             required=True,
         ),
         HasOne(

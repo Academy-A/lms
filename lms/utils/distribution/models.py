@@ -10,6 +10,7 @@ from lms.db.repositories.student_product import StudentDistributeData
 from lms.generals.enums import DistributionErrorMessage
 from lms.generals.models.distribution import DistributionParams
 from lms.generals.models.reviewer import Reviewer
+from lms.utils.distribution.utils import NameGen
 
 
 class ErrorHomework(BaseModel):
@@ -41,12 +42,29 @@ class DistributionReviewer(Reviewer):
 
 
 class Distribution(BaseModel):
+    created_at: datetime
     params: DistributionParams
     homeworks: Sequence[SohoHomework]
     reviewers: Sequence[DistributionReviewer]
 
     error_homeworks: list[ErrorHomework] = Field(default_factory=list)
     new_folder_id: str | None = None
+
+    @property
+    def name_gen(self) -> NameGen:
+        return NameGen(
+            base_name=self.params.name,
+            dt=self.created_at,
+            homework_ids=self.params.homework_ids,
+        )
+
+    @property
+    def sheet_title(self) -> str:
+        return self.name_gen.sheet_title
+
+    @property
+    def folder_title(self) -> str:
+        return self.name_gen.folder_title
 
     async def distribute(self, students_data: Sequence[StudentDistributeData]) -> None:
         pre_filtered_homeworks = await self._match_homeworks_and_students(students_data)

@@ -75,20 +75,6 @@ class ProductModelView(BaseModelView):
             identity="product_group",
             required=True,
         ),
-        StringField(
-            name="check_spreadsheet_id",
-            label="Check Spreadsheet ID",
-            maxlength=256,
-            required=True,
-            exclude_from_list=True,
-        ),
-        StringField(
-            name="drive_folder_id",
-            label="Drive Folder ID",
-            maxlength=256,
-            required=True,
-            exclude_from_list=True,
-        ),
         DateField(
             name="start_date",
             label="Start Date",

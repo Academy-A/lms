@@ -7,7 +7,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from lms.db.models import Distribution as DistributionDb
 from lms.db.repositories.base import Repository
-from lms.exceptions import LMSError, SubjectNotFoundError
+from lms.exceptions import (
+    DistributionNotFoundError,
+    LMSError,
+    SubjectNotFoundError,
+)
+from lms.exceptions.base import EntityNotFoundError
 from lms.generals.models.distribution import Distribution
 
 log = logging.getLogger(__name__)
@@ -34,6 +39,13 @@ class DistributionRepository(Repository[DistributionDb]):
             self._raise_error(e)
         else:
             return Distribution.model_validate(result.one())
+
+    async def read_by_id(self, distribution_id: int) -> Distribution:
+        try:
+            obj = await self._read_by_id(distribution_id)
+        except EntityNotFoundError as e:
+            raise DistributionNotFoundError from e
+        return Distribution.model_validate(obj)
 
     def _raise_error(self, e: DBAPIError) -> NoReturn:
         log.exception("Error has occurred")
