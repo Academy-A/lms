@@ -1,5 +1,4 @@
 from argparse import Namespace
-from pathlib import Path
 
 import pytest
 
@@ -15,7 +14,7 @@ def args(
     soho_api_token: str,
     telegram_bot_token: str,
     telegram_chat_id: int,
-    google_key_json_file: Path,
+    google_keys_encoded: str,
 ) -> Namespace:
     parser._default_config_files = []
     return parser.parse_args(
@@ -31,7 +30,7 @@ def args(
             f"--telegram-bot-token={telegram_bot_token}",
             f"--telegram-chat-id={telegram_chat_id}",
             "--telegram-parse-mode=markdown",
-            f"--google-keys={google_key_json_file}",
+            f"--google-keys={google_keys_encoded}",
         ],
         env_vars={},
     )
