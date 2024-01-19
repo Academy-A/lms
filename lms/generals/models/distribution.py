@@ -14,6 +14,20 @@ class Distribution(BaseModel):
     subject_id: int
     data: dict[str, Any]
 
+    def serialize_soho_homeworks(self) -> Sequence[Sequence[Any]]:
+        header = [
+            "soho_homework_id",
+            "student_soho_id",
+            "sent_to_review_at",
+            "chat_url",
+            "student_vk_id",
+        ]
+        data = []
+        data.append(header)
+        for hw in self.data["homeworks"]:
+            data.append([v for v in hw.values()])
+        return data
+
 
 class DistributionFilter(BaseModel):
     flow_id: int

@@ -10,6 +10,7 @@ from starlette_admin.contrib.sqla import Admin
 from starlette_admin.views import Link
 
 from lms.admin.auth_provider import AuthenticationProvider
+from lms.admin.views.models.distribution import DistributionModelView
 from lms.admin.views.models.flow import FlowModelView
 from lms.admin.views.models.flow_product import FlowProductModelView
 from lms.admin.views.models.offer import OfferModelView
@@ -26,6 +27,7 @@ from lms.admin.views.models.teacher_product import TeacherProductModelView
 from lms.admin.views.pages.home import HomeView
 from lms.admin.views.pages.teacher_product_dashboard import TeacherProductDashboardView
 from lms.db.models import (
+    Distribution,
     Flow,
     FlowProduct,
     Offer,
@@ -96,6 +98,7 @@ def build_admin(
                 ProductGroupModelView(model=ProductGroup),
                 ProductModelView(model=Product),
                 ReviewerModelView(model=Reviewer),
+                DistributionModelView(model=Distribution),
                 SettingModelView(model=Setting),
                 SohoModelView(model=SohoAccount),
                 StudentModelView(model=Student),

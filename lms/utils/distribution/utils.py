@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 
 @dataclass
 class NameGen:
+    base_name: str
     dt: datetime
     homework_ids: Sequence[int]
 
@@ -19,7 +20,7 @@ class NameGen:
     @property
     def _prefix(self) -> str:
         hw = "_".join(str(hw_id) for hw_id in self.homework_ids)
-        return f"{self._week_title}_({hw})"
+        return f"{self._week_title}_{self.base_name}_({hw})"
 
     @property
     def _week_title(self) -> str:

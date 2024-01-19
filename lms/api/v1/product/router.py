@@ -1,3 +1,4 @@
+from datetime import datetime
 from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, Query
@@ -56,7 +57,8 @@ async def create_distribution(
     params: DistributionParams,
     distributor: Distributor = Depends(DistributorMarker),
 ) -> StatusResponseSchema:
-    await distributor.make_distribution(params=params)
+    now = datetime.now()
+    await distributor.make_distribution(params=params, created_at=now)
     return StatusResponseSchema(
         ok=True,
         status_code=201,
