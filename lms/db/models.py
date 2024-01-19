@@ -501,3 +501,5 @@ class Distribution(TimestampMixin, Base):
         JSON,
         nullable=False,
     )
+
+    subject: Mapped[Subject] = relationship("Subject")

@@ -13,6 +13,8 @@ class SubjectModel(BaseModel):
     updated_at: datetime | None = None
     name: Annotated[str, StringConstraints(max_length=64, min_length=4)]
     eng_name: Annotated[str, StringConstraints(max_length=64, min_length=4)]
+    check_spreadsheet_id: str
+    drive_folder_id: str
     autopilot_url: HttpUrl
     group_vk_url: HttpUrl
 
@@ -52,6 +54,20 @@ class SubjectModelView(BaseModelView):
             label="Eng name",
             placeholder="English subject name",
             required=True,
+        ),
+        StringField(
+            name="check_spreadsheet_id",
+            label="Check Spreadsheet ID",
+            maxlength=256,
+            required=True,
+            exclude_from_list=True,
+        ),
+        StringField(
+            name="drive_folder_id",
+            label="Drive Folder ID",
+            maxlength=256,
+            required=True,
+            exclude_from_list=True,
         ),
         URLField(
             name="autopilot_url",
