@@ -1,4 +1,5 @@
 import argparse
+import base64
 import logging
 
 import configargparse
@@ -11,8 +12,8 @@ log = logging.getLogger(__name__)
 
 def load_google_keys(v: str) -> GoogleKeys:
     try:
-        with open(v, "rb") as f:
-            data = orjson.loads(f.read())
+        json_str = base64.b64decode(v)
+        data = orjson.loads(json_str)
         return GoogleKeys(**data)
     except ValueError:
         log.warning("Can not load google keys")
