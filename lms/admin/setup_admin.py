@@ -1,4 +1,5 @@
 import os
+from http import HTTPMethod
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -24,6 +25,7 @@ from lms.admin.views.models.student_product import StudentProductModelView
 from lms.admin.views.models.subject import SubjectModelView
 from lms.admin.views.models.teacher import TeacherModelView
 from lms.admin.views.models.teacher_product import TeacherProductModelView
+from lms.admin.views.pages.distribution import DistributionView
 from lms.admin.views.pages.home import HomeView
 from lms.admin.views.pages.teacher_product_dashboard import TeacherProductDashboardView
 from lms.db.models import (
@@ -47,7 +49,11 @@ TEMPLATES_DIR = Path(__file__).parent.resolve() / "templates"
 
 
 def build_admin(
-    app: FastAPI, engine: AsyncEngine, project_name: str, secret_key: str, debug: bool
+    app: FastAPI,
+    engine: AsyncEngine,
+    project_name: str,
+    secret_key: str,
+    debug: bool,
 ) -> None:
     admin = Admin(
         engine=engine,
@@ -63,7 +69,16 @@ def build_admin(
         ),
         auth_provider=AuthenticationProvider() if not debug else None,
     )
-
+    admin.add_view(
+        DistributionView(
+            label="Distrubution",
+            icon="fa fa-list",
+            path="/distribution",
+            template_path="./distribution.html",
+            methods=[HTTPMethod.GET, HTTPMethod.POST],
+            secret_key=secret_key,
+        ),
+    )
     admin.add_view(
         DropDown(
             "Dashboards and etc",
@@ -73,13 +88,13 @@ def build_admin(
                 TeacherProductDashboardView(
                     label="Annual Dashboard 2023/24",
                     template_path="./teacher_product_dashboard.html",
-                    path="/dashboard/teachers",
+                    path="/dashboard/teachers/annual",
                     product_ids=[65, 66, 67, 68],
                 ),
                 TeacherProductDashboardView(
                     label="SemiAnnual Dashboard 2024",
                     template_path="./teacher_product_dashboard.html",
-                    path="/dashboard/teachers",
+                    path="/dashboard/teachers/semiannual",
                     product_ids=[73, 74, 75, 76],
                 ),
             ],

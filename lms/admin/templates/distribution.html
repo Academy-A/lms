@@ -1,0 +1,90 @@
+{% extends "index.html" %}
+
+{% block header %}
+<h1>Распределение домашних работ</h1>
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+    {% if errors %}
+    <div class="row">
+        <div class="col-12 alert bg-warning-lt">
+            <ul>
+                {% for err in errors %}
+                <li>{{ err['msg'] }} in {{ err['loc'] }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+    {% if result %}
+    <div class="row">
+        <div class="col-12 alert bg-success-lt">
+            <ul>
+                <li>{{ result['msg'] }}</li>
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <form method="POST" id="distribution_form">
+                    <div class="card-header">
+                        <div class="container-fluid">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h3 class="card-title">Create distribution</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body border-bottom py-3">
+                        <div class="mb-3">
+                            <label class="form-label required" for="name">Distribution name:</label>
+                            <input class="field-string form-control" name="name" id="name" required/>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label required" for="product_ids">Choose product IDs:</label>
+                            <select class="form-control select2" name="product_ids" id="product_ids" multiple required>
+                            </select>
+                        </div>
+                        <div id="homework" class="mb-3">
+                            <label class="form-label required" for="homework_id">Homework IDs:</label>
+                            <input class="field-string form-control" name="homework_ids" required placeholder="Input numbers via comma: 1, 2, 3">
+                        </div>
+                    </div>
+                    <div class="card-footer text-black">
+                        <div class="btn-list ms-auto justify-content-between">
+                            <button class="btn btn-success" type="submit">Create</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block script %}
+<script>
+    let homework = 0;
+    const products = [
+        {% for product in products %}
+            [{{product.id}}, "{{product.name}}"],
+        {% endfor %}
+    ]
+    function fillProducts(){
+        products.forEach((el) => {
+            let optionHTML = `
+            <option value="${el[0]}">
+                ${el[1]}
+            </option>`;
+            $('#product_ids').append(optionHTML);
+        })
+    }
+    $(() => {
+        fillProducts();
+    });
+</script>
+
+{% endblock %}

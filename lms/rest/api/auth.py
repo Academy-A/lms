@@ -5,7 +5,7 @@ from fastapi import Depends, HTTPException
 from fastapi.security import APIKeyQuery
 from jose import JWTError, jwt
 
-from lms.api.deps import DebugMarker, SecretKeyMarker
+from lms.rest.api.deps import DebugMarker, SecretKeyMarker
 
 SECURITY_ALGORITHM = "HS256"
 

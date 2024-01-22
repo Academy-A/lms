@@ -1,4 +1,7 @@
+from typing import Any
+
 from polyfactory import Use
+from polyfactory.factories.pydantic_factory import ModelFactory
 from polyfactory.factories.sqlalchemy_factory import SQLAlchemyFactory
 
 from lms.db.models import (
@@ -14,12 +17,24 @@ from lms.db.models import (
     TeacherProduct,
 )
 from lms.generals.enums import TeacherType
+from lms.generals.models.subject import SubjectProperties
+
+
+class SubjectPropertiesFactory(ModelFactory[SubjectProperties]):
+    __model__ = SubjectProperties
+
+
+def generate_properties() -> dict[str, Any]:
+    properties = SubjectPropertiesFactory.build()
+    return properties.model_dump(mode="json")
 
 
 class SubjectFactory(SQLAlchemyFactory[Subject]):
     __model__ = Subject
-    __set_relationships__ = True
+    __set_relationships__ = False
     __set_foreign_keys__ = False
+
+    properties = generate_properties
 
 
 class ProductGroupFactory(SQLAlchemyFactory[ProductGroup]):
@@ -84,11 +99,11 @@ class StudentProductFactory(SQLAlchemyFactory[StudentProduct]):
     __set_relationships__ = True
     __set_foreign_keys__ = False
 
-    teacher_type = Use(SQLAlchemyFactory.__random__.choice, list(TeacherType))
+    teacher_type = None
 
-    offer = OfferFactory
-    product = ProductFactory
     student = StudentFactory
+    product = ProductFactory
+    offer = OfferFactory
     teacher_product = TeacherProductFactory
 
 

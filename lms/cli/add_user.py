@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from lms.db.repositories.user import UserRepository
 from lms.db.utils import create_async_engine
 from lms.exceptions import UserAlreadyExistsError
-from lms.logic.utils import get_password_hash
+from lms.utils.password import get_password_hash
 
 log = logging.getLogger(__name__)
 

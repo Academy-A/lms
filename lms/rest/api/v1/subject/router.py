@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, Query
 
-from lms.api.auth import token_required
-from lms.api.deps import UnitOfWorkMarker
 from lms.db.uow import UnitOfWork
 from lms.generals.models.pagination import Pagination
 from lms.generals.models.subject import Subject
+from lms.rest.api.auth import token_required
+from lms.rest.api.deps import UnitOfWorkMarker
 
 router = APIRouter(
     prefix="/subjects",

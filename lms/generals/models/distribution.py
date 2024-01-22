@@ -2,7 +2,8 @@ from collections.abc import Sequence
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, ValidationError
+from starlette.datastructures import FormData
 
 
 class Distribution(BaseModel):
@@ -39,10 +40,36 @@ class DistributionHomework(BaseModel):
 
 
 class DistributionParams(BaseModel):
-    product_ids: Sequence[int]
     name: str
+    product_ids: Sequence[int]
     homeworks: Sequence[DistributionHomework]
 
     @property
     def homework_ids(self) -> Sequence[int]:
         return tuple(hw.homework_id for hw in self.homeworks)
+
+    @classmethod
+    def parse_form(cls, form: FormData) -> "DistributionParams":
+        data: dict[str, list[int] | str] = {}
+        for k, v in form.multi_items():
+            if not isinstance(v, str):
+                continue
+            match k:
+                case "name":
+                    data[k] = v
+                case "product_ids":
+                    if k not in data:
+                        data[k] = []
+                    data[k].append(v)  # type: ignore[union-attr,arg-type]
+                case "homework_ids":
+                    data["homeworks"] = parse_homework_ids(v)
+        return cls.model_validate(data)
+
+
+def parse_homework_ids(s: str) -> list[int]:
+    try:
+        return list(map(int, s.split(",")))
+    except ValueError:
+        raise ValidationError.from_exception_data(
+            title="Invalid homeworks", input_type="json", line_errors=[]
+        )
