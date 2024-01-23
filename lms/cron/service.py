@@ -7,7 +7,7 @@ from lms.cron.homework_notification.builder import NotificationBuilder
 log = logging.getLogger(__name__)
 
 
-class LMSCronService(CronService):
+class NotificationCronService(CronService):
     __required__ = ("scheduler",)
     __dependencies__ = ("notification_builder",)
 

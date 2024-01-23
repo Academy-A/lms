@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends, Response
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
-from lms.api.deps import UnitOfWorkMarker
-from lms.api.v1.schemas import MonitoringSchema
 from lms.db.uow import UnitOfWork
+from lms.rest.api.deps import UnitOfWorkMarker
+from lms.rest.api.v1.schemas import MonitoringSchema
 
 router = APIRouter(tags=["Monitoring"], prefix="/monitoring")
 

@@ -2,7 +2,7 @@ import abc
 import asyncio
 import logging
 import re
-from typing import ClassVar
+from collections.abc import Sequence
 
 from google_api_service_helper import GoogleDrive
 from google_api_service_helper.drive.schemas import FileResponse
@@ -19,24 +19,21 @@ log = logging.getLogger(__name__)
 
 class BaseNotification(abc.ABC):
     uow: UnitOfWork
-    regexp_setting: ClassVar[str] = "checking_regexp_"
-    folder_ids_prefix: ClassVar[str]
-    autopilot_url_key: ClassVar[str]
 
     _google_drive: GoogleDrive
-    _folder_ids: list[str]
+    _folder_ids: Sequence[str]
     _subject_id: int
     _autopilot: Autopilot
 
     def __init__(
         self,
         uow: UnitOfWork,
+        autopilot: Autopilot,
+        google_drive: GoogleDrive,
         subject_id: int,
         autopilot_url: str,
-        autopilot: Autopilot,
         regexp: str,
-        folder_ids: list[str],
-        google_drive: GoogleDrive,
+        folder_ids: Sequence[str],
     ) -> None:
         self.uow = uow
         self._subject_id = subject_id
@@ -54,7 +51,7 @@ class BaseNotification(abc.ABC):
         await self.get_new_files()
         await self.parse_file_names()
         await self.filter_parsed_files()
-        await self.send_new_files_data()
+        await self.send_notificatons()
         await self.save_new_files()
 
     async def get_new_files(self) -> None:
@@ -123,7 +120,7 @@ class BaseNotification(abc.ABC):
             )
         await self.uow.commit()
 
-    async def send_new_files_data(self) -> None:
+    async def send_notificatons(self) -> None:
         for file in self._filtered_files:
             log.info("send file %s", file)
             await self._autopilot.send_homework(

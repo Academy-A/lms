@@ -3,16 +3,6 @@ from http import HTTPStatus
 from fastapi import APIRouter, Depends, Path
 from pydantic import PositiveInt
 
-from lms.api.auth import token_required
-from lms.api.deps import EnrollerMarker, UnitOfWorkMarker
-from lms.api.v1.schemas import StatusResponseSchema
-from lms.api.v1.student.schemas import (
-    ChangeTeacherSchema,
-    ChangeVKIDSchema,
-    EnrollStudentSchema,
-    ExpulsionStudentSchema,
-    GradeTeacherSchema,
-)
 from lms.db.uow import UnitOfWork
 from lms.generals.models.student import NewStudent, Student
 from lms.generals.models.student_product import StudentProduct
@@ -20,6 +10,16 @@ from lms.logic.change_vk_id import change_student_vk_id_by_soho_id
 from lms.logic.enroll_student import Enroller
 from lms.logic.expulse_student import expulse_student_by_offer_id
 from lms.logic.grade_teacher import grade_teacher
+from lms.rest.api.auth import token_required
+from lms.rest.api.deps import EnrollerMarker, UnitOfWorkMarker
+from lms.rest.api.v1.schemas import StatusResponseSchema
+from lms.rest.api.v1.student.schemas import (
+    ChangeTeacherSchema,
+    ChangeVKIDSchema,
+    EnrollStudentSchema,
+    ExpulsionStudentSchema,
+    GradeTeacherSchema,
+)
 
 router = APIRouter(
     prefix="/students",

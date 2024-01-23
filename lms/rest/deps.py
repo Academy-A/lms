@@ -8,7 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from lms.clients.autopilot import AUTOPILOT_BASE_URL, Autopilot
 from lms.clients.soho import SOHO_BASE_URL, Soho
 from lms.clients.telegram import TELEGRAM_BASE_URL, Telegram
-from lms.cron.homework_notification.builder import NotificationBuilder
 from lms.db.uow import UnitOfWork
 from lms.db.utils import create_async_engine, create_async_session_factory
 from lms.logic.distribute_homeworks import Distributor
@@ -16,7 +15,7 @@ from lms.utils.http import create_web_session
 from lms.utils.settings import SettingStorage
 
 
-def configure_dependencies(args: Namespace) -> None:  # noqa: C901
+def configure_dependencies(args: Namespace) -> None:
     @dependency
     async def engine() -> AsyncGenerator[AsyncEngine, None]:
         engine = create_async_engine(
@@ -58,16 +57,6 @@ def configure_dependencies(args: Namespace) -> None:  # noqa: C901
                 auth_token=args.soho_api_token,
                 client_name="Soho Client",
             )
-
-    @dependency
-    async def notification_builder(
-        session_factory: async_sessionmaker[AsyncSession],
-        autopilot: Autopilot,
-    ) -> NotificationBuilder:
-        return NotificationBuilder(
-            autopilot=autopilot,
-            session_factory=session_factory,
-        )
 
     @dependency
     async def google_sheets() -> GoogleSheets:

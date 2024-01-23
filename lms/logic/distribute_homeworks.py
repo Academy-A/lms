@@ -9,9 +9,15 @@ from lms.clients.soho import Soho, SohoHomework
 from lms.cron.homework_notification.utils import get_cleaned_folder_ids
 from lms.db.repositories.student_product import StudentDistributeData
 from lms.db.uow import UnitOfWork
+from lms.generals.enums import DistributionErrorMessage
 from lms.generals.models.distribution import DistributionParams
 from lms.generals.models.subject import Subject
-from lms.utils.distribution.models import Distribution, DistributionReviewer
+from lms.utils.distribution.models import (
+    Distribution,
+    DistributionReviewer,
+    ErrorHomework,
+    StudentHomework,
+)
 from lms.utils.settings import SettingStorage
 
 SHEET_INDEX = 4
@@ -34,19 +40,25 @@ class Distributor:
         homeworks = await self._get_soho_homeworks(params.homework_ids)
         subject = await self._get_subject(params.product_ids[0])
         reviewers = await self._get_reviewers(subject_id=subject.id)
-        students_data = await self._get_students_data(
+        student_data = await self._get_students_data(
             subject_id=subject.id,
             homeworks=homeworks,
+        )
+        filtered_homeworks, error_homeworks = await self._filter_homeworks(
+            homeworks=homeworks,
+            student_data=student_data,
         )
         distribution = Distribution(
             created_at=created_at,
             params=params,
             homeworks=homeworks,
+            filtered_homeworks=filtered_homeworks,
+            error_homeworks=error_homeworks,
             reviewers=reviewers,
         )
-        await distribution.distribute(students_data=students_data)
+        await distribution.distribute()
         new_folder_id = await self._create_folder_for_homeworks(
-            parent_folder_id=subject.drive_folder_id,
+            parent_folder_id=subject.check_drive_foler_id,
             distribution=distribution,
         )
         distribution.new_folder_id = new_folder_id
@@ -92,6 +104,50 @@ class Distributor:
             subject_id=subject_id,
             vk_ids=vk_ids,
         )
+
+    async def _filter_homeworks(
+        self,
+        student_data: Sequence[StudentDistributeData],
+        homeworks: Sequence[SohoHomework],
+    ) -> tuple[Sequence[StudentHomework], Sequence[ErrorHomework]]:
+        pre_filtered_homeworks: list[StudentHomework] = list()
+        error_homeworks: list[ErrorHomework] = list()
+        student_map = {st.vk_id: st for st in student_data}
+        for hw in homeworks:
+            if hw.student_vk_id is None:
+                error_homeworks.append(
+                    ErrorHomework(
+                        homework=hw,
+                        error_message=DistributionErrorMessage.HOMEWORK_WITHOUT_VK_ID,
+                    )
+                )
+            elif hw.student_vk_id not in student_map:
+                error_homeworks.append(
+                    ErrorHomework(
+                        homework=hw,
+                        error_message=DistributionErrorMessage.STUDENT_WITH_VK_ID_NOT_FOUND,
+                    )
+                )
+            elif student_map[hw.student_vk_id].is_expulsed:
+                error_homeworks.append(
+                    ErrorHomework(
+                        homework=hw,
+                        error_message=DistributionErrorMessage.STUDENT_WAS_EXPULSED,
+                    )
+                )
+            else:
+                pre_filtered_homeworks.append(
+                    StudentHomework(
+                        student_name=student_map[hw.student_vk_id].name,
+                        student_vk_id=student_map[hw.student_vk_id].vk_id,
+                        student_soho_id=hw.student_soho_id,
+                        submission_url=hw.chat_url,
+                        teacher_product_id=student_map[
+                            hw.student_vk_id
+                        ].teacher_product_id,
+                    )
+                )
+        return pre_filtered_homeworks, error_homeworks
 
     async def _add_folder_to_notification(
         self, subject_id: int, folder_id: str

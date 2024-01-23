@@ -73,7 +73,7 @@ class Enroller:
             )
             self.background_tasks.add_task(
                 self.autopilot.send_teacher,
-                target_path=subject.autopilot_url,
+                target_path=subject.enroll_autopilot_url,
                 student_vk_id=student.vk_id,
                 teacher_vk_id=teacher.vk_id,
                 teacher_type=student_product.teacher_type,
@@ -176,7 +176,7 @@ class Enroller:
             )
             self.background_tasks.add_task(
                 self.autopilot.send_teacher,
-                target_path=subject.autopilot_url,
+                target_path=subject.enroll_autopilot_url,
                 student_vk_id=student.vk_id,
                 teacher_vk_id=teacher.vk_id,
                 teacher_type=new_offer.teacher_type,  # type:ignore[arg-type]
@@ -250,7 +250,7 @@ class Enroller:
             )
         self.background_tasks.add_task(
             self.autopilot.send_teacher,
-            target_path=subject.autopilot_url,
+            target_path=subject.enroll_autopilot_url,
             student_vk_id=student.vk_id,
             teacher_vk_id=teacher.vk_id,
             teacher_type=teacher_product.type,

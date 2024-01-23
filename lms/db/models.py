@@ -69,16 +69,10 @@ class SohoAccount(TimestampMixin, Base):
 class Subject(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String, index=True, nullable=False)
-    eng_name: Mapped[str] = mapped_column(
-        String, index=True, unique=True, nullable=False
-    )
-    autopilot_url: Mapped[str] = mapped_column(String(1024), nullable=False)
-    group_vk_url: Mapped[str] = mapped_column(String(1024), nullable=False)
-    check_spreadsheet_id: Mapped[str] = mapped_column(
-        String(256), nullable=False, default="", server_default="''"
-    )
-    drive_folder_id: Mapped[str] = mapped_column(
-        String(256), nullable=False, default="", server_default="''"
+    properties: Mapped[dict[str, Any]] = mapped_column(
+        JSON,
+        nullable=False,
+        server_default="{ }",
     )
 
     def __admin_repr__(self, request: Request) -> str:
