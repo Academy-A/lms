@@ -5,7 +5,7 @@ description = "New LMS for Insperia School with Soho.LMS"
 authors = ["Sergey Natalenko <sergey.natalenko@mail.ru>"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "new_lms"}]
+packages = [{include = "lms"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -14,7 +14,6 @@ SQLAlchemy = "^2.0.22"
 sqlalchemy-utils = "^0.41.1"
 httpx = "^0.24.1"
 pydantic = {extras = ["email"], version = "^2.4.2"}
-celery = {extras = ["msgpack"], version = "^5.3.4"}
 orjson = "^3.9.9"
 greenlet = "^3.0.0"
 itsdangerous = "^2.1.2"
@@ -24,14 +23,14 @@ passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 google-api-service-helper = "^0.1.1"
 starlette-admin = "^0.12.2"
 aiomisc = {extras = ["asgi", "cron", "rich", "uvicorn", "uvloop"], version = "^17.3.41"}
-
-[tool.poetry.group.backend.dependencies]
 fastapi = "0.104.1"
 alembic = "^1.12.0"
 uvicorn = "^0.23.2"
 asyncpg = "^0.28.0"
 python-jose = "^3.3.0"
 gunicorn = "^21.2.0"
+wtforms = "^3.1.2"
+wtforms-sqlalchemy = "^0.4.1"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.5.0"

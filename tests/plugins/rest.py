@@ -7,11 +7,11 @@ from aiomisc_log import LogFormat, LogLevel
 from sqlalchemy.ext.asyncio import AsyncEngine
 from yarl import URL
 
-from lms.api.auth import generate_token
-from lms.api.service import REST
 from lms.clients.autopilot import Autopilot
 from lms.clients.soho import Soho
 from lms.clients.telegram import Telegram
+from lms.rest.api.auth import generate_token
+from lms.rest.service import REST
 
 
 @pytest.fixture

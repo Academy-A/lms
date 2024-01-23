@@ -8,7 +8,13 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from starlette.middleware.cors import CORSMiddleware
 
 from lms.admin.setup_admin import build_admin
-from lms.api.deps import (
+from lms.clients.autopilot import Autopilot
+from lms.clients.soho import Soho
+from lms.clients.telegram import Telegram
+from lms.db.uow import UnitOfWork
+from lms.exceptions.base import LMSError
+from lms.logic.enroll_student import Enroller
+from lms.rest.api.deps import (
     AutopilotMarker,
     DebugMarker,
     DistributorMarker,
@@ -18,18 +24,12 @@ from lms.api.deps import (
     TelegramMarker,
     UnitOfWorkMarker,
 )
-from lms.api.router import api_router
-from lms.api.v1.handler import (
+from lms.rest.api.router import api_router
+from lms.rest.api.v1.handler import (
     http_exception_handler,
     lms_exception_handler,
     requset_validation_handler,
 )
-from lms.clients.autopilot import Autopilot
-from lms.clients.soho import Soho
-from lms.clients.telegram import Telegram
-from lms.db.uow import UnitOfWork
-from lms.exceptions.base import LMSError
-from lms.logic.enroll_student import Enroller
 
 log = logging.getLogger(__name__)
 

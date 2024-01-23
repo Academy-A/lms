@@ -6,7 +6,6 @@ from typing import Any
 from pydantic import BaseModel, Field, HttpUrl
 
 from lms.clients.soho import SohoHomework
-from lms.db.repositories.student_product import StudentDistributeData
 from lms.generals.enums import DistributionErrorMessage
 from lms.generals.models.distribution import DistributionParams
 from lms.generals.models.reviewer import Reviewer
@@ -46,8 +45,8 @@ class Distribution(BaseModel):
     params: DistributionParams
     homeworks: Sequence[SohoHomework]
     reviewers: Sequence[DistributionReviewer]
-
-    error_homeworks: list[ErrorHomework] = Field(default_factory=list)
+    filtered_homeworks: MutableSequence[StudentHomework]
+    error_homeworks: MutableSequence[ErrorHomework]
     new_folder_id: str | None = None
 
     @property
@@ -66,81 +65,34 @@ class Distribution(BaseModel):
     def folder_title(self) -> str:
         return self.name_gen.folder_title
 
-    async def distribute(self, students_data: Sequence[StudentDistributeData]) -> None:
-        pre_filtered_homeworks = await self._match_homeworks_and_students(students_data)
-        random.shuffle(pre_filtered_homeworks)
-        await self._distribute_minimum(homeworks=pre_filtered_homeworks)
-        await self._distribute_premium(homeworks=pre_filtered_homeworks)
-        await self._distribute_main(homeworks=pre_filtered_homeworks)
+    async def distribute(self) -> None:
+        random.shuffle(self.filtered_homeworks)
+        await self._distribute_minimum()
+        await self._distribute_premium()
+        await self._distribute_main()
         await self._distribute_rechecks()
 
-    async def _match_homeworks_and_students(
-        self,
-        student_datas: Sequence[StudentDistributeData],
-    ) -> MutableSequence[StudentHomework]:
-        pre_filtered_homeworks: list[StudentHomework] = list()
-        student_data: dict[int, StudentDistributeData] = {
-            st.vk_id: st for st in student_datas
-        }
-        for hw in self.homeworks:
-            if hw.student_vk_id is None:
-                self.error_homeworks.append(
-                    ErrorHomework(
-                        homework=hw,
-                        error_message=DistributionErrorMessage.HOMEWORK_WITHOUT_VK_ID,
-                    )
-                )
-            elif hw.student_vk_id not in student_data:
-                self.error_homeworks.append(
-                    ErrorHomework(
-                        homework=hw,
-                        error_message=DistributionErrorMessage.STUDENT_WITH_VK_ID_NOT_FOUND,
-                    )
-                )
-            elif student_data[hw.student_vk_id].is_expulsed:
-                self.error_homeworks.append(
-                    ErrorHomework(
-                        homework=hw,
-                        error_message=DistributionErrorMessage.STUDENT_WAS_EXPULSED,
-                    )
-                )
-            else:
-                pre_filtered_homeworks.append(
-                    StudentHomework(
-                        student_name=student_data[hw.student_vk_id].name,
-                        student_vk_id=student_data[hw.student_vk_id].vk_id,
-                        student_soho_id=hw.student_soho_id,
-                        submission_url=hw.chat_url,
-                        teacher_product_id=student_data[
-                            hw.student_vk_id
-                        ].teacher_product_id,
-                    )
-                )
-        return pre_filtered_homeworks
-
-    async def _distribute_minimum(
-        self, homeworks: MutableSequence[StudentHomework]
-    ) -> None:
+    async def _distribute_minimum(self) -> None:
         for r in self.reviewers:
-            for _ in range(r.min_ - len(r.student_homeworks)):
-                if homeworks:
-                    r.student_homeworks.append(homeworks.pop())
+            actual_rev_min = r.min_ - len(r.student_homeworks)
+            for _ in range(actual_rev_min):
+                if self.filtered_homeworks:
+                    r.student_homeworks.append(self.filtered_homeworks.pop())
+                else:
+                    break
 
-    async def _distribute_premium(
-        self, homeworks: MutableSequence[StudentHomework]
-    ) -> None:
+    async def _distribute_premium(self) -> None:
         pass
 
-    async def _distribute_main(
-        self, homeworks: MutableSequence[StudentHomework]
-    ) -> None:
-        self._calculate_actual(homeworks_count=len(homeworks))
-        self._filled_main(homeworks=homeworks)
+    async def _distribute_main(self) -> None:
+        self._calculate_actual()
+        self._filled_main()
 
     async def _distribute_rechecks(self) -> None:
         pass
 
-    def _calculate_actual(self, homeworks_count: int) -> None:  # noqa: C901
+    def _calculate_actual(self) -> None:  # noqa: C901
+        homeworks_count = len(self.filtered_homeworks)
         total_desired = sum(r.optimal_desired for r in self.reviewers)
         total_max = sum(r.optimal_max for r in self.reviewers)
         if homeworks_count <= total_desired:
@@ -173,9 +125,9 @@ class Distribution(BaseModel):
             for r in self.reviewers:
                 r.actual = r.optimal_max
 
-    def _filled_main(self, homeworks: MutableSequence[StudentHomework]) -> None:
+    def _filled_main(self) -> None:
         total_actual = sum(r.actual for r in self.reviewers)
-        hws = homeworks[:total_actual]
+        hws = self.filtered_homeworks[:total_actual]
         count = 5
         while len(hws) and count > 0:
             k = 0
@@ -194,7 +146,7 @@ class Distribution(BaseModel):
             for r in self.reviewers:
                 if r.actual < len(r.student_homeworks):
                     r.student_homeworks.append(hw)
-        for hw in homeworks[total_actual:]:
+        for hw in self.filtered_homeworks[total_actual:]:
             self.error_homeworks.append(
                 ErrorHomework(
                     homework=SohoHomework(
@@ -207,6 +159,7 @@ class Distribution(BaseModel):
                     error_message=DistributionErrorMessage.STACK_OVERFLOW,
                 )
             )
+        self.filtered_homeworks.clear()
 
     def serialize_for_sheet(self) -> Sequence[Sequence[Any]]:
         data: list[list[str | int]] = [

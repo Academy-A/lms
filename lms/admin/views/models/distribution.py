@@ -29,6 +29,9 @@ class DistributionModelView(BaseModelView):
         ),
     ]
 
+    def can_create(self, request: Request) -> bool:
+        return False
+
     @row_action(  # type: ignore[arg-type]
         name="download_soho_data",
         text="Download Soho homeworks as CSV",

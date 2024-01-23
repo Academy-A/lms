@@ -5,7 +5,6 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from lms.api.v1.schemas import StatusResponseSchema
 from lms.exceptions import (
     EntityNotFoundError,
     LMSError,
@@ -14,6 +13,7 @@ from lms.exceptions import (
     StudentProductHasNotTeacherError,
     StudentVKIDAlreadyUsedError,
 )
+from lms.rest.api.v1.schemas import StatusResponseSchema
 
 log = logging.getLogger(__name__)
 

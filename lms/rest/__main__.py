@@ -3,10 +3,9 @@ import logging
 from aiomisc import entrypoint
 from aiomisc_log import basic_config
 
-from lms.api.service import REST
-from lms.arguments import parser
-from lms.cron.service import LMSCronService
-from lms.deps import configure_dependencies
+from lms.rest.args import parser
+from lms.rest.deps import configure_dependencies
+from lms.rest.service import REST
 
 log = logging.getLogger(__name__)
 
@@ -23,7 +22,6 @@ def main() -> None:
     configure_dependencies(args)
 
     services = [
-        LMSCronService(scheduler=args.scheduler),
         REST(
             host=args.api_address,
             port=args.api_port,

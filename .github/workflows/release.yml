@@ -41,7 +41,6 @@ jobs:
         with:
           push: true
           platforms: linux/amd64,linux/arm64
-          file: ./docker/backend/backend.dockerfile
           context: ./
           tags: |
             andytakker/insperia-lms-backend:latest

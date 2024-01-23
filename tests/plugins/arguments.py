@@ -2,7 +2,7 @@ from argparse import Namespace
 
 import pytest
 
-from lms.arguments import parser
+from lms.rest.args import parser
 
 
 @pytest.fixture

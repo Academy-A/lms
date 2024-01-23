@@ -4,14 +4,14 @@ from http import HTTPStatus
 from fastapi import APIRouter, Depends, Query
 from pydantic import PositiveInt
 
-from lms.api.auth import token_required
-from lms.api.deps import DistributorMarker, UnitOfWorkMarker
-from lms.api.v1.schemas import StatusResponseSchema
 from lms.db.uow import UnitOfWork
 from lms.generals.models.distribution import DistributionParams
 from lms.generals.models.pagination import Pagination
 from lms.generals.models.product import Product
 from lms.logic.distribute_homeworks import Distributor
+from lms.rest.api.auth import token_required
+from lms.rest.api.deps import DistributorMarker, UnitOfWorkMarker
+from lms.rest.api.v1.schemas import StatusResponseSchema
 
 router = APIRouter(
     prefix="/products",

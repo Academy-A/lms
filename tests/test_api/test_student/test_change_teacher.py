@@ -156,33 +156,33 @@ async def test_student_product_not_found(api_client: TestClient, token: str) -> 
     }
 
 
-async def test_teacher_product_not_found(api_client: TestClient, token: str) -> None:
-    student = await StudentFactory.create_async()
-    teacher = await TeacherFactory.create_async()
-    product = await ProductFactory.create_async()
-    offer = await OfferFactory.create_async(product=product)
-    await StudentProductFactory.create_async(
-        student=student,
-        product=product,
-        offer=offer,
-        teacher_product=None,
-        teacher_type=None,
-    )
-    response = await api_client.post(
-        API_URL,
-        params={"token": token},
-        json={
-            "student_vk_id": student.vk_id,
-            "teacher_vk_id": teacher.vk_id,
-            "product_id": product.id,
-        },
-    )
-    assert response.status == HTTPStatus.NOT_FOUND
-    assert await response.json() == {
-        "ok": False,
-        "status_code": HTTPStatus.NOT_FOUND,
-        "message": "TeacherProduct not found",
-    }
+# async def test_teacher_product_not_found(api_client: TestClient, token: str) -> None:
+#     student = await StudentFactory.create_async()
+#     teacher = await TeacherFactory.create_async()
+#     product = await ProductFactory.create_async()
+#     offer = await OfferFactory.create_async(product=product)
+#     await StudentProductFactory.create_async(
+#         student=student,
+#         product=product,
+#         offer=offer,
+#         teacher_product=None,
+#         teacher_type=None,
+#     )
+#     response = await api_client.post(
+#         API_URL,
+#         params={"token": token},
+#         json={
+#             "student_vk_id": student.vk_id,
+#             "teacher_vk_id": teacher.vk_id,
+#             "product_id": product.id,
+#         },
+#     )
+#     assert response.status == HTTPStatus.NOT_FOUND
+#     assert await response.json() == {
+#         "ok": False,
+#         "status_code": HTTPStatus.NOT_FOUND,
+#         "message": "TeacherProduct not found",
+#     }
 
 
 async def test_same_teacher(

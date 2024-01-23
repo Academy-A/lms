@@ -36,7 +36,12 @@ class ProductModelView(BaseModelView):
     label = "Product"
     pydantic_model = ProductModel
     fields = [
-        IntegerField(name="id", label="ID", required=True, exclude_from_create=True),
+        IntegerField(
+            name="id",
+            label="ID",
+            required=True,
+            exclude_from_create=True,
+        ),
         DateTimeField(
             name="created_at",
             label="Created at",

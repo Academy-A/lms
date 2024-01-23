@@ -5,7 +5,7 @@ from starlette_admin.exceptions import FormValidationError, LoginFailed
 
 from lms.db.repositories.user import UserRepository
 from lms.exceptions import UserNotFoundError
-from lms.logic.utils import verify_password
+from lms.utils.password import verify_password
 
 
 class AuthenticationProvider(AuthProvider):
