@@ -3,7 +3,9 @@ services:
   rest:
     restart: unless-stopped
     image: andytakker/insperia-lms-backend:latest
-    command: python -m lms.db upgrade head && python -m lms
+    command: python -m lms
+    ports:
+      - 8000:80
     environment:
       APP_API_ADDRESS: 0.0.0.0
       APP_API_PORT: 80
@@ -31,9 +33,6 @@ services:
 
       APP_REGULAR_NOTIFICATION_URL: ${REGULAR_NOTIFICATION_URL}
       APP_SUBSCRIPTION_NOTIFICATION_URL: ${SUBSCRIPTION_NOTIFICATION_URL}
-
-    ports:
-      - 8000:80
 
 networks:
   default:

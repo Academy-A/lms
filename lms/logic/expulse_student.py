@@ -36,7 +36,7 @@ async def expulse_student_by_offer_id(
         student_product_id=student_product.id
     )
     if teacher_product_id is not None:
-        await uow.teacher_assignment.expulse_from_teacher_assignment(
+        await uow.teacher_assignment.expulse_student_safety(
             student_product_id=student_product.id,
             teacher_product_id=teacher_product_id,
         )

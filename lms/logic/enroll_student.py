@@ -11,7 +11,6 @@ from lms.db.uow import UnitOfWork
 from lms.exceptions import (
     StudentNotFoundError,
     StudentProductNotFoundError,
-    TeacherAssignmentNotFoundError,
 )
 from lms.generals.models.offer import Offer
 from lms.generals.models.student import NewStudent
@@ -146,7 +145,7 @@ class Enroller:
             and not student_product.is_alone
             and new_offer.is_alone
         ):
-            await self.uow.teacher_assignment.expulse_from_teacher_assignment(
+            await self.uow.teacher_assignment.expulse_student_safety(
                 student_product_id=student_product.id,
                 teacher_product_id=student_product.teacher_product_id,  # type: ignore[arg-type]
             )
@@ -154,7 +153,7 @@ class Enroller:
             student_product.teacher_type = None
         elif not new_offer.is_alone:
             if not old_offer.is_alone:
-                await self.uow.teacher_assignment.expulse_from_teacher_assignment(
+                await self.uow.teacher_assignment.expulse_student_safety(
                     student_product_id=student_product.id,
                     teacher_product_id=student_product.teacher_product_id,  # type: ignore[arg-type]
                 )
@@ -230,13 +229,10 @@ class Enroller:
             student_product.teacher_product_id is not None
             and student_product.teacher_product_id != teacher_product.id
         ):
-            try:
-                await self.uow.teacher_assignment.expulse_from_teacher_assignment(
-                    student_product_id=student_product.id,
-                    teacher_product_id=teacher_product.id,
-                )
-            except TeacherAssignmentNotFoundError:
-                pass
+            await self.uow.teacher_assignment.expulse_student_safety(
+                student_product_id=student_product.id,
+                teacher_product_id=teacher_product.id,
+            )
         if student_product.teacher_product_id != teacher_product.id:
             student_product = await self.uow.student_product.update(
                 student_product_id=student_product.id,
