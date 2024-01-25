@@ -50,7 +50,7 @@ class TeacherAssignmentRepository(Repository[TeacherAssignment]):
             await self._session.rollback()
             raise TeacherAssignmentNotFoundError from e
 
-    async def expulse_from_teacher_assignment(
+    async def expulse_student(
         self, student_product_id: int, teacher_product_id: int
     ) -> None:
         now = datetime.now()
@@ -60,6 +60,19 @@ class TeacherAssignmentRepository(Repository[TeacherAssignment]):
             TeacherAssignment.removed_at.is_(None),
             removed_at=now,
         )
+
+    async def expulse_student_safety(
+        self,
+        student_product_id: int,
+        teacher_product_id: int,
+    ) -> None:
+        try:
+            await self.expulse_student(
+                student_product_id=student_product_id,
+                teacher_product_id=teacher_product_id,
+            )
+        except TeacherAssignmentNotFoundError:
+            pass
 
     async def find_last_teacher_product_id(self, student_product_id: int) -> int | None:
         query = (
