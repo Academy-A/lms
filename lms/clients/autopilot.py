@@ -67,6 +67,7 @@ class Autopilot(BaseHttpClient):
         self,
         target_path: str,
         student_vk_id: int | None,
+        subject_eng: str,
         file_url: str,
         title: str | None,
         timeout: TimeoutType = DEFAULT_TIMEOUT,
@@ -81,5 +82,6 @@ class Autopilot(BaseHttpClient):
                 "sid": student_vk_id,
                 "soch": file_url,
                 "title": title,
+                "subject": subject_eng,
             },
         )

@@ -23,6 +23,7 @@ class BaseNotification(abc.ABC):
     _google_drive: GoogleDrive
     _folder_ids: Sequence[str]
     _subject_id: int
+    _subject_eng: str
     _autopilot: Autopilot
 
     def __init__(
@@ -31,12 +32,14 @@ class BaseNotification(abc.ABC):
         autopilot: Autopilot,
         google_drive: GoogleDrive,
         subject_id: int,
+        subject_eng: str,
         autopilot_url: str,
         regexp: str,
         folder_ids: Sequence[str],
     ) -> None:
         self.uow = uow
         self._subject_id = subject_id
+        self._subject_eng = subject_eng
         self._autopilot = autopilot
         self._autopilot_url = autopilot_url
         self._google_drive = google_drive
@@ -128,5 +131,6 @@ class BaseNotification(abc.ABC):
                 student_vk_id=file.vk_id,
                 file_url=file.url,
                 title=file.essay_number,
+                subject_eng=self._subject_eng,
             )
             await asyncio.sleep(NOTIFICATION_TIME_PAUSE_SECONDS)
