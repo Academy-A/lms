@@ -66,6 +66,7 @@ class NotificationBuilder:
                     uow=uow,
                     google_drive=self.google_drive,
                     subject_id=subject.id,
+                    subject_eng=subject.eng_name,
                     autopilot_url=autopilot_url,
                     regexp=subject.check_file_regex,
                     folder_ids=folder_ids,
