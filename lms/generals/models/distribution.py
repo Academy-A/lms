@@ -50,7 +50,7 @@ class DistributionParams(BaseModel):
 
     @classmethod
     def parse_form(cls, form: FormData) -> "DistributionParams":
-        data: dict[str, list[int] | str] = {}
+        data: dict[str, Any] = {}
         for k, v in form.multi_items():
             if not isinstance(v, str):
                 continue
@@ -66,9 +66,9 @@ class DistributionParams(BaseModel):
         return cls.model_validate(data)
 
 
-def parse_homework_ids(s: str) -> list[int]:
+def parse_homework_ids(s: str) -> list[dict[str, int]]:
     try:
-        return list(map(int, s.split(",")))
+        return [{"homework_id": hw_id} for hw_id in map(int, s.split(","))]
     except ValueError:
         raise ValidationError.from_exception_data(
             title="Invalid homeworks", input_type="json", line_errors=[]
