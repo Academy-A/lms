@@ -6,7 +6,6 @@ from aiomisc import threaded
 from google_api_service_helper import GoogleDrive, GoogleSheets
 
 from lms.clients.soho import Soho, SohoHomework
-from lms.cron.homework_notification.utils import get_cleaned_folder_ids
 from lms.db.repositories.student_product import StudentDistributeData
 from lms.db.uow import UnitOfWork
 from lms.generals.enums import DistributionErrorMessage
@@ -153,13 +152,14 @@ class Distributor:
         self, subject_id: int, folder_id: str
     ) -> None:
         subject = await self.uow.subject.read_by_id(subject_id=subject_id)
-        folder_ids_key = "regular_notification_folder_ids_" + subject.eng_name
-        folder_ids_str = await self.settings.get(folder_ids_key)
-        folder_ids = get_cleaned_folder_ids(folder_ids_str)
-        if len(folder_ids) >= 20:
-            del folder_ids[0]
-        folder_ids.append(folder_id)
-        await self.settings.update(key=folder_ids_key, value="\n".join(folder_ids))
+        subject.check_regular_nofitication_folder_ids
+        if len(subject.check_regular_nofitication_folder_ids) >= 20:
+            del subject.properties.check_regular_notification_folder_ids[0]
+        subject.properties.check_regular_notification_folder_ids.append(folder_id)
+        await self.uow.subject.update(
+            id_=subject.id,
+            **subject.model_dump(mode="json"),
+        )
 
     async def _save_distribution(
         self,

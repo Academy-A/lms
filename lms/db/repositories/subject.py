@@ -1,3 +1,5 @@
+from typing import Any
+
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,6 +29,17 @@ class SubjectRepository(PaginateMixin, Repository[SubjectDb]):
         try:
             obj = await self._read_by_id(subject_id)
         except EntityNotFoundError as e:
+            raise SubjectNotFoundError from e
+        return Subject.model_validate(obj)
+
+    async def update(self, id_: int, **kwargs: Any) -> Subject:
+        try:
+            obj = await self._update(
+                SubjectDb.id == id_,
+                **kwargs,
+            )
+        except NoResultFound as e:
+            await self._session.rollback()
             raise SubjectNotFoundError from e
         return Subject.model_validate(obj)
 
