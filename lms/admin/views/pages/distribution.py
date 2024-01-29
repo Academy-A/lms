@@ -101,7 +101,9 @@ class DistributionView(BaseCustomView):
             )
 
     async def _call_create_distribution(self, params: DistributionParams) -> None:
-        url = URL("/v1/products/distribute").with_query(dict(token=self.token))
+        url = URL("http://postgetset.ru:8000/v1/products/distribute/").with_query(
+            dict(token=self.token)
+        )
         async with create_web_session(raise_for_status=True) as session:
             async with session.post(url, json=params.model_dump(mode="json")):
                 pass
