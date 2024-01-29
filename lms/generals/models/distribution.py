@@ -66,9 +66,15 @@ class DistributionParams(BaseModel):
         return cls.model_validate(data)
 
 
-def parse_homework_ids(s: str) -> list[dict[str, int]]:
+def parse_homework_ids(s: str) -> list[dict[str, Any]]:
     try:
-        return [{"homework_id": hw_id} for hw_id in map(int, s.split(","))]
+        return [
+            {
+                "homework_id": hw_id,
+                "filters": [],
+            }
+            for hw_id in map(int, s.split(","))
+        ]
     except ValueError:
         raise ValidationError.from_exception_data(
             title="Invalid homeworks", input_type="json", line_errors=[]
