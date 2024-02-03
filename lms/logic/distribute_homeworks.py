@@ -156,9 +156,11 @@ class Distributor:
         if len(subject.check_regular_nofitication_folder_ids) >= 20:
             del subject.properties.check_regular_notification_folder_ids[0]
         subject.properties.check_regular_notification_folder_ids.append(folder_id)
+        subj_dict = subject.model_dump()
+        subj_dict["properties"] = subject.properties.model_dump(mode="json")
         await self.uow.subject.update(
             id_=subject.id,
-            **subject.model_dump(mode="json"),
+            **subj_dict,
         )
 
     async def _save_distribution(
@@ -166,7 +168,7 @@ class Distributor:
         subject_id: int,
         distribution: Distribution,
     ) -> None:
-        data = distribution.model_dump(mode="json")
+        data = distribution.model_dump()
         await self.uow.distribution.create(
             subject_id=subject_id,
             data=data,

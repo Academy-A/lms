@@ -1,15 +1,18 @@
+import logging
 import random
 from collections.abc import MutableSequence, Sequence
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field
 
 from lms.clients.soho import SohoHomework
 from lms.generals.enums import DistributionErrorMessage
 from lms.generals.models.distribution import DistributionParams
 from lms.generals.models.reviewer import Reviewer
 from lms.utils.distribution.utils import NameGen
+
+log = logging.getLogger(__name__)
 
 
 class ErrorHomework(BaseModel):
@@ -21,7 +24,7 @@ class StudentHomework(BaseModel):
     student_name: str
     student_vk_id: int
     student_soho_id: int
-    submission_url: HttpUrl
+    submission_url: str
     teacher_product_id: int | None = None
 
 
@@ -80,6 +83,10 @@ class Distribution(BaseModel):
                     r.student_homeworks.append(self.filtered_homeworks.pop())
                 else:
                     break
+        log.info(
+            "Finish min distribution. Left %d homeworks",
+            len(self.filtered_homeworks),
+        )
 
     async def _distribute_premium(self) -> None:
         pass
@@ -134,7 +141,7 @@ class Distribution(BaseModel):
             while k < len(hws):
                 hw = hws.pop()
                 for r in self.reviewers:
-                    if r.actual != len(r.student_homeworks):
+                    if r.actual > len(r.student_homeworks):
                         r.student_homeworks.append(hw)
                         hw = None  # type: ignore[assignment]
                         break
