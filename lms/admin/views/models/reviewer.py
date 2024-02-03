@@ -73,18 +73,6 @@ class ReviewerModelView(BaseModelView):
             label="Last name",
             required=True,
         ),
-        HasOne(
-            name="subject",
-            label="Subject",
-            identity="subject",
-            required=True,
-        ),
-        HasOne(
-            name="teacher_product",
-            label="Teacher product",
-            identity="teacher_product",
-            required=False,
-        ),
         EmailField(
             name="email",
             label="Email",
@@ -102,6 +90,11 @@ class ReviewerModelView(BaseModelView):
             required=True,
         ),
         IntegerField(
+            name="min_",
+            label="Min",
+            required=True,
+        ),
+        IntegerField(
             name="abs_max",
             label="Abs max",
             required=True,
@@ -109,6 +102,12 @@ class ReviewerModelView(BaseModelView):
         BooleanField(
             name="is_active",
             label="Is active?",
+            required=True,
+        ),
+        HasOne(
+            name="subject",
+            label="Subject",
+            identity="subject",
             required=True,
         ),
     ]
