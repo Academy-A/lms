@@ -4,7 +4,7 @@ from types import MappingProxyType
 from typing import ClassVar
 
 from aiohttp import ClientSession, hdrs
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field
 from yarl import URL
 
 from lms.clients.base.client import BaseHttpClient
@@ -17,7 +17,7 @@ class SohoHomework(BaseModel):
     student_homework_id: int = Field(alias="clientHomeworkId")
     student_soho_id: int = Field(alias="clientId")
     sent_to_review_at: datetime = Field(alias="sentToReviewAt")
-    chat_url: HttpUrl = Field(alias="chatUrl")
+    chat_url: str = Field(alias="chatUrl")
     student_vk_id: int | None = Field(alias="vkId", default=None)
 
 
