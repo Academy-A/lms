@@ -197,7 +197,7 @@ class Enroller:
         teacher_product_id = (
             teacher_product.id
             if teacher_product
-            else student_product.teacher_product_id,
+            else student_product.teacher_product_id
         )
         return await self.uow.student_product.update(
             student_product_id=student_product.id,
