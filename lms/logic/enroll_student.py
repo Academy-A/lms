@@ -130,6 +130,7 @@ class Enroller:
         student_product: StudentProduct,
         new_offer: Offer,
     ) -> StudentProduct:
+        teacher_product = None
         old_offer = await self.uow.offer.read_by_id(student_product.offer_id)
         if (
             (not student_product.is_active or student_product.is_alone)
@@ -193,13 +194,17 @@ class Enroller:
                     vk_id=teacher.vk_id,
                     product_id=teacher_product.product_id,
                 )
-
+        teacher_product_id = (
+            teacher_product.id
+            if teacher_product
+            else student_product.teacher_product_id,
+        )
         return await self.uow.student_product.update(
             student_product_id=student_product.id,
             expulsion_at=None,
             offer_id=new_offer.id,
             teacher_type=new_offer.teacher_type,
-            teacher_product_id=teacher_product.id,
+            teacher_product_id=teacher_product_id,
         )
 
     async def change_teacher_for_student(
