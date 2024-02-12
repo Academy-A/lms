@@ -17,6 +17,7 @@ class BaseModelView(ModelView):
     form_include_pk = True
     row_actions = ["view", "edit"]
     row_actions_display_type = RowActionsDisplayType.DROPDOWN
+    page_size_options = [10, 25, 50, 100, 1000, 5000]
 
     def __init__(
         self,
