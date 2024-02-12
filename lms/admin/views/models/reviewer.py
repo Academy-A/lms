@@ -28,7 +28,6 @@ class ReviewerModel(BaseModel):
     max_: NonNegativeInt
     abs_max: NonNegativeInt
     is_active: bool
-    teacher_product: Any | None = None
 
     @field_validator("product")
     @classmethod
