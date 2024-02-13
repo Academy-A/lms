@@ -1,3 +1,8 @@
+from collections.abc import Callable
+
+from pyparsing import Any
+from starlette.requests import Request
+from starlette.templating import Jinja2Templates
 from starlette_admin import DateTimeField
 
 CREATED_AT_FIELD = DateTimeField(
@@ -16,3 +21,9 @@ UPDATED_AT_FIELD = DateTimeField(
     required=True,
     form_alt_format="H:i:S d.m.Y",
 )
+
+
+def template_cache_key_builder(
+    func: Callable, obj: Any, request: Request, templates: Jinja2Templates
+) -> str:
+    return str(obj) + func.__name__ + str(templates)

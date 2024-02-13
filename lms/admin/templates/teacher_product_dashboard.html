@@ -20,7 +20,7 @@
                     <th>ВК</th>
                     <th>Выдается?</th>
                     <th>Занято / Всего</th>
-                    <th>Средняя оценка</th>
+                    <th>Средняя оценка / Всего</th>
                     <th>Потоки</th>
                 </tr>
                 {% for teacher in row["teachers"][teacher_type]%}
@@ -39,7 +39,7 @@
                         {% endif %}
                     </td>
                     <td>{{ teacher.filled_students_count }} / {{teacher.max_students_count }}</td>
-                    <td>{{ "%.2f"|format(teacher.average_grade) }}</td>
+                    <td>{{ "%.2f"|format(teacher.average_grade) }} / {{ teacher.grade_counter }}</td>
                     <td>{{ teacher.flows }}</td>
                 </tr>
                 {% endfor %}

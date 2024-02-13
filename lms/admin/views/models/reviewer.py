@@ -28,8 +28,9 @@ class ReviewerModel(BaseModel):
     max_: NonNegativeInt
     abs_max: NonNegativeInt
     is_active: bool
+    subject: Any
 
-    @field_validator("product")
+    @field_validator("subject")
     @classmethod
     def check_is_not_none(cls, v: Any) -> Any:
         if v is None:
@@ -74,7 +75,7 @@ class ReviewerModelView(BaseModelView):
         EmailField(
             name="email",
             label="Email",
-            required=True,
+            required=False,
             exclude_from_list=True,
         ),
         IntegerField(
