@@ -12,4 +12,5 @@ class TeacherDashboardRow(NamedTuple):
     max_students_count: int
     filled_students_count: int
     average_grade: int
+    grade_counter: int
     flows: str
