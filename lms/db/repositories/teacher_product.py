@@ -128,6 +128,7 @@ class TeacherProductRepository(Repository[TeacherProductDb]):
                     ELSE 0
                 END AS filled,
                 teacher_product.average_grade,
+                teacher_product.grade_counter,
                 CASE
                     WHEN tpf.flows IS NOT NULL THEN tpf.flows
                     ELSE ''
