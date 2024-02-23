@@ -1,62 +1,47 @@
-from datetime import datetime
-from typing import Annotated
-
-from pydantic import BaseModel, PositiveInt, StringConstraints
-from starlette_admin.fields import DateTimeField, IntegerField, StringField
-
-from lms.admin.views.models.base import BaseModelView
+from lms.admin.utils import format_datetime_field
+from lms.admin.views.base import AdminCategories, BaseModelView
+from lms.db.models import Teacher as TeacherDb
 
 
-class TeacherModel(BaseModel):
-    id: PositiveInt | None = None
-    created_at: datetime | None = None
-    updated_at: datetime | None = None
-    vk_id: PositiveInt | None = None
-    first_name: Annotated[str, StringConstraints(max_length=128, strict=True)]
-    last_name: Annotated[str, StringConstraints(max_length=128, strict=True)]
-
-
-class TeacherModelView(BaseModelView):
-    identity = "teacher"
-    label = "Teacher"
-    pydantic_model = TeacherModel
-    fields = [
-        IntegerField(name="id", label="ID", required=True, exclude_from_create=True),
-        DateTimeField(
-            name="created_at",
-            label="Created at",
-            output_format="%H:%M:%S %d.%m.%Y",
-            exclude_from_create=True,
-            exclude_from_list=True,
-            required=True,
-            form_alt_format="H:i:S d.m.Y",
-        ),
-        DateTimeField(
-            name="updated_at",
-            label="Updated at",
-            output_format="%H:%M:%S %d.%m.%Y",
-            exclude_from_list=True,
-            exclude_from_create=True,
-            required=True,
-            form_alt_format="H:i:S d.m.Y",
-        ),
-        StringField(
-            name="first_name",
-            label="First name",
-            placeholder="First name",
-            maxlength=128,
-            required=True,
-        ),
-        StringField(
-            name="last_name",
-            label="Last name",
-            placeholder="Last name",
-            maxlength=128,
-            required=True,
-        ),
-        IntegerField(
-            name="vk_id",
-            label="VK ID",
-            required=True,
-        ),
+class TeacherModelView(BaseModelView, model=TeacherDb):
+    category = AdminCategories.MODELS
+    column_list = [
+        TeacherDb.id,
+        TeacherDb.name,
+        TeacherDb.vk_id,
+        TeacherDb.created_at,
+        TeacherDb.updated_at,
+    ]
+    column_sortable_list = [
+        TeacherDb.id,
+        TeacherDb.name,
+        TeacherDb.vk_id,
+        TeacherDb.created_at,
+        TeacherDb.updated_at,
+    ]
+    column_default_sort = "id"
+    column_formatters = {
+        TeacherDb.created_at: format_datetime_field,
+        TeacherDb.updated_at: format_datetime_field,
+    }
+    column_searchable_list = [
+        TeacherDb.id,
+        TeacherDb.name,
+        TeacherDb.vk_id,
+    ]
+    column_details_list = [
+        TeacherDb.id,
+        TeacherDb.name,
+        TeacherDb.vk_id,
+        TeacherDb.created_at,
+        TeacherDb.updated_at,
+    ]
+    column_formatters_detail = {
+        TeacherDb.created_at: format_datetime_field,
+        TeacherDb.updated_at: format_datetime_field,
+    }
+    form_columns = [
+        TeacherDb.first_name,
+        TeacherDb.last_name,
+        TeacherDb.vk_id,
     ]

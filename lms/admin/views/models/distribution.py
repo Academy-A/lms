@@ -2,49 +2,55 @@ import csv
 import io
 
 from fastapi.responses import ORJSONResponse
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqladmin import action
 from starlette.requests import Request
 from starlette.responses import StreamingResponse
-from starlette_admin import HasOne, IntegerField, row_action
 
-from lms.admin.views.models.base import BaseModelView
+from lms.admin.utils import format_datetime_field
+from lms.admin.views.base import AdminCategories, BaseModelView
+from lms.db.models import Distribution as DistributionDb
 from lms.db.repositories.distribution import DistributionRepository
 from lms.generals.models.distribution import Distribution
 
 
-class DistributionModelView(BaseModelView):
-    identity = "distribution"
-    label = "Distribution"
-    row_actions = ["download_soho_data", "download_distribution"]
-    actions = []
-    pydantic_model = Distribution
-
-    fields = [
-        IntegerField(name="id", label="ID", required=True),
-        HasOne(
-            name="subject",
-            label="subject",
-            identity="subject",
-            required=True,
-        ),
+class DistributionModelView(BaseModelView, model=DistributionDb):
+    category = AdminCategories.MODELS
+    can_create = False
+    column_list = [
+        DistributionDb.id,
+        DistributionDb.subject,
+        DistributionDb.created_at,
+        DistributionDb.updated_at,
     ]
+    column_sortable_list = [
+        DistributionDb.id,
+        DistributionDb.created_at,
+        DistributionDb.updated_at,
+    ]
+    column_default_sort = ("created_at", True)
+    column_formatters = {
+        DistributionDb.created_at: format_datetime_field,
+        DistributionDb.updated_at: format_datetime_field,
+    }
+    column_searchable_list = [
+        DistributionDb.id,
+        "subject.name",
+    ]
+    column_details_list = []
 
-    def can_create(self, request: Request) -> bool:
-        return False
-
-    @row_action(  # type: ignore[arg-type]
+    @action(
         name="download_soho_data",
-        text="Download Soho homeworks as CSV",
-        icon_class="fas fa-download",
-        custom_response=True,
+        label="Download Soho homeworks as CSV",
+        add_in_detail=False,
+        add_in_list=True,
     )
-    async def download_soho_data(
-        self,
-        request: Request,
-        id: int,
-    ) -> StreamingResponse:
-        session: AsyncSession = request.state.session
-        distribution = await DistributionRepository(session=session).read_by_id(int(id))
+    async def download_soho_data(self, request: Request) -> StreamingResponse:
+        pk = request.query_params.get("pks")
+        if pk is None:
+            raise ValueError
+        id = int(pk)
+        async with self.session_maker() as session:
+            distribution = await DistributionRepository(session=session).read_by_id(id)
         dumped_distr = distribution_dump_to_csv_string(distribution)
         response = StreamingResponse(iter([dumped_distr]), media_type="text/csv")
         response.headers[
@@ -52,19 +58,19 @@ class DistributionModelView(BaseModelView):
         ] = f"attachment; filename=soho_homeworks_{id}.csv"
         return response
 
-    @row_action(  # type: ignore[arg-type]
-        name="download_distribution",
-        text="Download whole distributioin as JSON",
-        icon_class="fas fa-download",
-        custom_response=True,
+    @action(
+        name="download_distribution_data",
+        label="Download distribution homeworks as JSON",
+        add_in_detail=False,
+        add_in_list=True,
     )
-    async def download_distribution_data(
-        self,
-        request: Request,
-        id: int,
-    ) -> ORJSONResponse:
-        session: AsyncSession = request.state.session
-        distribution = await DistributionRepository(session=session).read_by_id(int(id))
+    async def download_distribution_data(self, request: Request) -> ORJSONResponse:
+        pk = request.query_params.get("pks")
+        if pk is None:
+            raise ValueError
+        id = int(pk)
+        async with self.session_maker() as session:
+            distribution = await DistributionRepository(session=session).read_by_id(id)
         return ORJSONResponse(distribution.data)
 
 

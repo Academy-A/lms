@@ -21,7 +21,8 @@ metadata = MetaData(naming_convention=convention)  # type:ignore[arg-type]
 class Base:
     metadata: MetaData
 
-    @declared_attr  # type:ignore[arg-type]
+    @declared_attr.directive
+    @classmethod
     def __tablename__(cls) -> str:
         name_list = re.findall(r"[A-Z][a-z\d]*", cls.__name__)
         return "_".join(name_list).lower()

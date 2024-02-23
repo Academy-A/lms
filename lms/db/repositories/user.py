@@ -1,6 +1,6 @@
 from typing import NoReturn
 
-from sqlalchemy import ScalarResult, insert, select
+from sqlalchemy import ScalarResult, insert, select, update
 from sqlalchemy.exc import DBAPIError, IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -38,6 +38,23 @@ class UserRepository(Repository[UserDb]):
         except NoResultFound as e:
             raise UserNotFoundError from e
         return User.model_validate(obj)
+
+    async def update_password_by_username(
+        self, username: str, hashed_password: str
+    ) -> User:
+        stmt = (
+            update(UserDb)
+            .values(password=hashed_password)
+            .where(UserDb.username == username)
+            .returning(UserDb)
+        )
+        try:
+            result = await self._session.scalars(stmt)
+            return User.model_validate(result.one())
+        except IntegrityError as e:
+            self._raise_error(e)
+        except NoResultFound as e:
+            raise UserNotFoundError from e
 
     def _raise_error(self, e: DBAPIError) -> NoReturn:
         constraint = e.__cause__.__cause__.constraint_name  # type: ignore[union-attr]

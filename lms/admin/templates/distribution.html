@@ -1,11 +1,7 @@
 {% extends "index.html" %}
 
-{% block header %}
-<h1>Распределение домашних работ</h1>
-{% endblock %}
 
 {% block content %}
-
 <div class="container-fluid">
     {% if errors %}
     <div class="row">
@@ -65,7 +61,7 @@
 </div>
 
 {% endblock %}
-{% block script %}
+{% block tail %}
 <script>
     let homework = 0;
     const products = [
