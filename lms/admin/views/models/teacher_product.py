@@ -1,95 +1,74 @@
-from datetime import datetime
-from typing import Any
-
-from pydantic import BaseModel, NonNegativeFloat, NonNegativeInt, field_validator
-from starlette_admin.fields import (
-    BooleanField,
-    DateTimeField,
-    EnumField,
-    FloatField,
-    HasMany,
-    HasOne,
-    IntegerField,
-)
-
-from lms.admin.views.models.base import BaseModelView
-from lms.generals.enums import TeacherType
+from lms.admin.utils import format_datetime_field, format_float_field
+from lms.admin.views.base import AdminCategories, BaseModelView
+from lms.db.models import TeacherProduct as TeacherProductDb
 
 
-class TeacherProductModel(BaseModel):
-    id: int | None = None
-    created_at: datetime | None = None
-    updated_at: datetime | None = None
-    teacher: Any
-    product: Any
-    type: TeacherType
-    is_active: bool
-    max_students: NonNegativeInt
-    average_grade: NonNegativeFloat
-    grade_counter: NonNegativeInt
-
-    @field_validator("teacher", "product")
-    @classmethod
-    def check_is_not_none(cls, v: Any) -> Any:
-        if v is None:
-            raise ValueError("Field must be not none")
-        return v
-
-
-class TeacherProductModelView(BaseModelView):
-    identity = "teacher_product"
-    label = "Teacher Product"
-    pydantic_model = TeacherProductModel
-    fields = [
-        IntegerField(name="id", label="ID", required=True, exclude_from_create=True),
-        DateTimeField(
-            name="created_at",
-            label="Created at",
-            output_format="%H:%M:%S %d.%m.%Y",
-            exclude_from_create=True,
-            exclude_from_list=True,
-            required=True,
-            form_alt_format="H:i:S d.m.Y",
-        ),
-        DateTimeField(
-            name="updated_at",
-            label="Updated at",
-            output_format="%H:%M:%S %d.%m.%Y",
-            exclude_from_list=True,
-            exclude_from_create=True,
-            required=True,
-            form_alt_format="H:i:S d.m.Y",
-        ),
-        HasOne(name="teacher", label="Teacher", identity="teacher", required=True),
-        HasOne(name="product", label="Product", identity="product", required=True),
-        HasMany(name="flows", label="Flows", identity="flow"),
-        EnumField(
-            name="type",
-            label="type",
-            enum=TeacherType,
-        ),
-        BooleanField(
-            name="is_active",
-            label="Is active?",
-            required=True,
-        ),
-        IntegerField(
-            name="max_students",
-            label="Max Students",
-            required=True,
-            exclude_from_list=True,
-        ),
-        FloatField(
-            name="average_grade",
-            label="Average Grade",
-            required=True,
-            exclude_from_list=True,
-        ),
-        IntegerField(
-            name="grade_counter",
-            label="Grade Counter",
-            required=True,
-            exclude_from_list=True,
-            searchable=True,
-        ),
+class TeacherProductModelView(BaseModelView, model=TeacherProductDb):
+    category = AdminCategories.MODELS
+    column_list = [
+        TeacherProductDb.id,
+        TeacherProductDb.teacher,
+        TeacherProductDb.product,
+        TeacherProductDb.flows,
+        TeacherProductDb.type,
+        TeacherProductDb.is_active,
+        TeacherProductDb.average_grade,
+        TeacherProductDb.actual_students,
+        TeacherProductDb.max_students,
+        TeacherProductDb.rating_coef,
+        TeacherProductDb.created_at,
+        TeacherProductDb.updated_at,
+    ]
+    column_sortable_list = [
+        TeacherProductDb.id,
+        TeacherProductDb.type,
+        TeacherProductDb.is_active,
+        TeacherProductDb.max_students,
+        TeacherProductDb.average_grade,
+        TeacherProductDb.grade_counter,
+        TeacherProductDb.actual_students,
+        TeacherProductDb.rating_coef,
+        TeacherProductDb.created_at,
+        TeacherProductDb.updated_at,
+    ]
+    column_default_sort = "id"
+    column_formatters = {
+        TeacherProductDb.created_at: format_datetime_field,
+        TeacherProductDb.updated_at: format_datetime_field,
+        TeacherProductDb.average_grade: format_float_field(3),
+        TeacherProductDb.rating_coef: format_float_field(3),
+    }
+    column_searchable_list = [
+        "product.name",
+        "teacher.name",
+        TeacherProductDb.type,
+    ]
+    column_details_list = [
+        TeacherProductDb.id,
+        TeacherProductDb.product,
+        TeacherProductDb.teacher,
+        TeacherProductDb.type,
+        TeacherProductDb.is_active,
+        TeacherProductDb.max_students,
+        TeacherProductDb.average_grade,
+        TeacherProductDb.grade_counter,
+        TeacherProductDb.actual_students,
+        TeacherProductDb.rating_coef,
+        TeacherProductDb.created_at,
+        TeacherProductDb.updated_at,
+    ]
+    column_formatters_detail = {
+        TeacherProductDb.created_at: format_datetime_field,
+        TeacherProductDb.updated_at: format_datetime_field,
+        TeacherProductDb.average_grade: format_float_field(3),
+    }
+    form_columns = [
+        TeacherProductDb.product,
+        TeacherProductDb.teacher,
+        TeacherProductDb.type,
+        TeacherProductDb.is_active,
+        TeacherProductDb.max_students,
+        TeacherProductDb.average_grade,
+        TeacherProductDb.grade_counter,
+        TeacherProductDb.flows,
     ]

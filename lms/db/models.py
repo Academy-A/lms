@@ -3,7 +3,6 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Any
 
-from markupsafe import escape
 from sqlalchemy import (
     BigInteger,
     Boolean,
@@ -15,38 +14,28 @@ from sqlalchemy import (
     Integer,
     String,
     UniqueConstraint,
+    case,
+    func,
+    select,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSON
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy_utils import ChoiceType
-from starlette.requests import Request
+from sqlalchemy.orm import (
+    Mapped,
+    column_property,
+    mapped_column,
+    relationship,
+)
 
 from lms.db.base import Base
-from lms.db.mixins import TimestampMixin
+from lms.db.mixins import NameMixin, TimestampMixin
+from lms.db.utils import make_pg_enum
 from lms.generals.enums import TeacherType
 
 
-class Student(TimestampMixin, Base):
+class Student(TimestampMixin, NameMixin, Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     vk_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=False)
-    first_name: Mapped[str] = mapped_column(String(128), nullable=False, default="")
-    last_name: Mapped[str] = mapped_column(String(128), nullable=False, default="")
-
-    @property
-    def name(self) -> str:
-        return f"{self.first_name} {self.last_name}"
-
-    def __repr__(self) -> str:
-        return (
-            f"<Student id={self.id} vk_id={self.vk_id} "
-            f"first_name={self.first_name} last_name={self.last_name}>"
-        )
-
-    def __admin_repr__(self, request: Request) -> str:
-        return f"{self.name} ({self.vk_id})"
-
-    def __admin_select2_repr__(self, request: Request) -> str:
-        return f"<div><span>{escape(self.name)} {self.vk_id}</span></div>"
 
 
 class SohoAccount(TimestampMixin, Base):
@@ -75,11 +64,8 @@ class Subject(TimestampMixin, Base):
         server_default="{ }",
     )
 
-    def __admin_repr__(self, request: Request) -> str:
+    def __repr__(self) -> str:
         return self.name
-
-    def __admin_select2_repr__(self, request: Request) -> str:
-        return f"<div><span>{escape(self.name)}</span></div>"
 
 
 class Flow(TimestampMixin, Base):
@@ -90,10 +76,7 @@ class Flow(TimestampMixin, Base):
     )
 
     def __repr__(self) -> str:
-        return f"<Flow id={self.id}>"
-
-    def __admin_select2_repr__(self, request: Request) -> str:
-        return f"<div><span>{escape(self.id)}</span></div>"
+        return str(self.id)
 
 
 class ProductGroup(TimestampMixin, Base):
@@ -101,11 +84,8 @@ class ProductGroup(TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(256), nullable=False, index=True)
     eng_name: Mapped[str] = mapped_column(String(256), nullable=False, index=True)
 
-    def __admin_repr__(self, request: Request) -> str:
+    def __repr__(self) -> str:
         return self.name
-
-    def __admin_select2_repr__(self, request: Request) -> str:
-        return f"<div><span>{escape(self.name)}</span></div>"
 
 
 class Product(TimestampMixin, Base):
@@ -130,13 +110,7 @@ class Product(TimestampMixin, Base):
     product_group: Mapped[ProductGroup] = relationship("ProductGroup")
 
     def __repr__(self) -> str:
-        return "<Product id={self.id} name={self.name}>"
-
-    def __admin_repr__(self, request: Request) -> str:
         return self.name
-
-    def __admin_select2_repr__(self, request: Request) -> str:
-        return f"<div><span>{escape(self.name)}</span></div>"
 
 
 class FlowProduct(Base):
@@ -175,201 +149,20 @@ class Offer(TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(2048), unique=True, nullable=False)
     cohort: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     teacher_type: Mapped[TeacherType | None] = mapped_column(
-        ChoiceType(TeacherType, impl=String(16)),
+        make_pg_enum(TeacherType, name="teacher_type", schema=None),
         nullable=True,
         default=None,
     )
 
     product: Mapped[Product] = relationship("Product")
 
+    def __repr__(self) -> str:
+        return self.name
 
-class Teacher(TimestampMixin, Base):
+
+class Teacher(TimestampMixin, NameMixin, Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     vk_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True)
-    first_name: Mapped[str] = mapped_column(String(128), nullable=False, default="")
-    last_name: Mapped[str] = mapped_column(String(128), nullable=False, default="")
-
-    @property
-    def name(self) -> str:
-        return f"{self.first_name} {self.last_name}"
-
-    def __admin_repr__(self, request: Request) -> str:
-        return f"{self.name} ({self.vk_id})"
-
-    def __admin_select2_repr__(self, request: Request) -> str:
-        return f"<div><span>{escape(self.name)}</span></div>"
-
-
-class TeacherProduct(TimestampMixin, Base):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    teacher_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("teacher.id"),
-        index=True,
-        nullable=False,
-    )
-    product_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("product.id"),
-        index=True,
-        nullable=False,
-    )
-    type: Mapped[TeacherType] = mapped_column(
-        ChoiceType(TeacherType, impl=String(16)),
-        default=TeacherType.MENTOR,
-        nullable=False,
-    )
-    is_active: Mapped[bool] = mapped_column(
-        Boolean,
-        default=True,
-        nullable=False,
-    )
-    max_students: Mapped[int] = mapped_column(Integer, default=100, nullable=False)
-    average_grade: Mapped[float] = mapped_column(Float, default=5, nullable=False)
-    grade_counter: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-
-    # fullness: Mapped[float] = column_property(
-    #     select(
-    #         func.count(TeacherAssignment.student_product_id),
-    #     )
-    #     .select_from(TeacherAssignment)
-    #     .where(
-    #         TeacherAssignment.removed_at.is_(None),
-    #         TeacherAssignment.teacher_product_id == id,
-    #     )
-    #     .scalar_subquery()
-    #     / max_students,
-    # )
-
-    # total_students: Mapped[int] = column_property(
-    #     select(
-    #         func.count(TeacherAssignment.student_product_id),
-    #     )
-    #     .select_from(TeacherAssignment)
-    #     .where(TeacherAssignment.teacher_product_id == id)
-    #     .scalar_subquery(),
-    # )
-
-    # removal_students: Mapped[int] = column_property(
-    #     select(
-    #         func.count(TeacherAssignment.student_product_id),
-    #     )
-    #     .select_from(TeacherAssignment)
-    #     .where(
-    #         TeacherAssignment.removed_at.is_not(None),
-    #         TeacherAssignment.teacher_product_id == id,
-    #         TeacherAssignment.removed_at
-    #         > (func.current_timestamp() - text("(interval '1 month')")),
-    #     )
-    #     .scalar_subquery(),
-    # )
-
-    # removability: Mapped[float] = column_property(
-    #     case(
-    #         *[
-    #             (
-    #                 total_students.expression > 0,  # type: ignore[attr-defined]
-    #                 (total_students.expression - removal_students.expression)
-    #                 / total_students.expression,  # type: ignore[attr-defined]
-    #             ),
-    #         ],
-    #         else_=1.0,
-    #     ),
-    # )
-
-    # rating_coef: Mapped[float] = column_property(
-    #     case(
-    #         *[
-    #             (
-    #                 average_grade == 0,
-    #                 5 * (1 - fullness.expression) * removability.expression,
-    #             ),
-    #         ],
-    #         else_=average_grade * (1 - fullness.expression) * removability.expression,
-    #     ),
-    # )
-
-    teacher: Mapped[Teacher] = relationship("Teacher")
-    product: Mapped[Product] = relationship("Product")
-    flows: Mapped[list[Flow]] = relationship(
-        "Flow", secondary="teacher_product_flow", back_populates="teacher_products"
-    )
-
-    @property
-    def is_mentor(self) -> bool:
-        return self.type == TeacherType.MENTOR
-
-    @property
-    def is_curator(self) -> bool:
-        return self.type == TeacherType.CURATOR
-
-    def __admin_repr__(self, request: Request) -> str:
-        return f"{self.type}, " + ("" if self.is_active else "not ") + "active"
-
-
-class StudentProduct(TimestampMixin, Base):
-    __table_args__ = (
-        CheckConstraint(
-            "(teacher_type IS NULL) = (teacher_product_id IS NULL)",
-            name="check_teacher",
-        ),
-        UniqueConstraint("student_id", "product_id"),
-    )
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    student_id: Mapped[int] = mapped_column(
-        BigInteger,
-        ForeignKey("student.id"),
-        index=True,
-        nullable=False,
-    )
-    product_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("product.id"),
-        index=True,
-        nullable=False,
-    )
-    teacher_product_id: Mapped[int | None] = mapped_column(
-        Integer,
-        ForeignKey("teacher_product.id"),
-        index=True,
-        nullable=True,
-    )
-    teacher_type: Mapped[TeacherType | None] = mapped_column(
-        ChoiceType(TeacherType, impl=String(16)),
-        nullable=True,
-        default=None,
-    )
-    offer_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("offer.id"),
-        index=True,
-        nullable=False,
-    )
-    flow_id: Mapped[int | None] = mapped_column(
-        Integer,
-        ForeignKey("flow.id"),
-        index=True,
-        nullable=True,
-    )
-    cohort: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
-    teacher_grade: Mapped[int | None] = mapped_column(
-        Integer, default=None, nullable=True
-    )
-    teacher_graded_at: Mapped[datetime | None] = mapped_column(
-        DateTime, default=None, nullable=True
-    )
-    expulsion_at: Mapped[datetime | None] = mapped_column(
-        DateTime,
-        default=None,
-        index=True,
-        nullable=True,
-    )
-
-    student: Mapped[Student] = relationship("Student")
-    product: Mapped[Product] = relationship("Product")
-    teacher_product: Mapped[TeacherProduct | None] = relationship("TeacherProduct")
-    offer: Mapped[Offer] = relationship("Offer")
-    flow: Mapped[Flow | None] = relationship("Flow")
 
 
 class TeacherAssignment(TimestampMixin, Base):
@@ -405,6 +198,191 @@ class TeacherAssignment(TimestampMixin, Base):
         )
 
 
+class TeacherProduct(TimestampMixin, Base):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    teacher_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("teacher.id"),
+        index=True,
+        nullable=False,
+    )
+    product_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("product.id"),
+        index=True,
+        nullable=False,
+    )
+    type: Mapped[TeacherType] = mapped_column(
+        make_pg_enum(TeacherType, name="teacher_type", schema=None),
+        default=TeacherType.MENTOR.value,
+        nullable=False,
+    )
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        nullable=False,
+    )
+    max_students: Mapped[int] = mapped_column(Integer, default=100, nullable=False)
+    average_grade: Mapped[float] = mapped_column(Float, default=5, nullable=False)
+    grade_counter: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+    actual_students: Mapped[int] = column_property(
+        select(
+            func.count(TeacherAssignment.student_product_id),
+        )
+        .select_from(TeacherAssignment)
+        .where(
+            TeacherAssignment.removed_at.is_(None),
+            TeacherAssignment.teacher_product_id == id,
+        )
+        .scalar_subquery()
+    )
+
+    fullness: Mapped[float] = column_property(
+        case(
+            *[
+                (
+                    max_students > 0,
+                    actual_students.expression / max_students,  # type: ignore[attr-defined]
+                ),
+            ],
+            else_=1,
+        )
+    )
+
+    total_students: Mapped[int] = column_property(
+        select(
+            func.count(TeacherAssignment.student_product_id),
+        )
+        .select_from(TeacherAssignment)
+        .where(TeacherAssignment.teacher_product_id == id)
+        .scalar_subquery(),
+    )
+
+    removal_students: Mapped[int] = column_property(
+        select(
+            func.count(TeacherAssignment.student_product_id),
+        )
+        .select_from(TeacherAssignment)
+        .where(
+            TeacherAssignment.removed_at.is_not(None),
+            TeacherAssignment.teacher_product_id == id,
+            TeacherAssignment.removed_at
+            > (func.current_timestamp() - text("(interval '1 month')")),
+        )
+        .scalar_subquery()
+    )
+
+    removability: Mapped[float] = column_property(
+        case(
+            *[
+                (
+                    total_students.expression > 0,  # type: ignore[attr-defined]
+                    (total_students.expression - removal_students.expression)  # type: ignore[attr-defined]
+                    / total_students.expression,  # type: ignore[attr-defined]
+                ),
+            ],
+            else_=1.0,
+        ),
+    )
+
+    rating_coef: Mapped[float] = column_property(
+        case(
+            *[
+                (
+                    average_grade == 0,
+                    5 * (1 - fullness.expression) * removability.expression,  # type: ignore[attr-defined]
+                ),
+            ],
+            else_=average_grade * (1 - fullness.expression) * removability.expression,  # type: ignore[attr-defined]
+        ),
+    )
+
+    teacher: Mapped[Teacher] = relationship("Teacher", lazy="joined")
+    product: Mapped[Product] = relationship("Product")
+    flows: Mapped[list[Flow]] = relationship(
+        "Flow", secondary="teacher_product_flow", back_populates="teacher_products"
+    )
+
+    def __repr__(self) -> str:
+        return f"{self.teacher.name}, {self.type.value}, " + (
+            "active" if self.is_active else "not active"
+        )
+
+    @property
+    def is_mentor(self) -> bool:
+        return self.type == TeacherType.MENTOR
+
+    @property
+    def is_curator(self) -> bool:
+        return self.type == TeacherType.CURATOR
+
+
+class StudentProduct(TimestampMixin, Base):
+    __table_args__ = (
+        CheckConstraint(
+            "(teacher_type IS NULL) = (teacher_product_id IS NULL)",
+            name="check_teacher",
+        ),
+        UniqueConstraint("student_id", "product_id"),
+    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    student_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("student.id"),
+        index=True,
+        nullable=False,
+    )
+    product_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("product.id"),
+        index=True,
+        nullable=False,
+    )
+    teacher_product_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("teacher_product.id"),
+        index=True,
+        nullable=True,
+    )
+    teacher_type: Mapped[TeacherType | None] = mapped_column(
+        make_pg_enum(TeacherType, name="teacher_type", schema=None),
+        nullable=True,
+        default=None,
+    )
+    offer_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("offer.id"),
+        index=True,
+        nullable=False,
+    )
+    flow_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("flow.id"),
+        index=True,
+        nullable=True,
+    )
+    cohort: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    teacher_grade: Mapped[int | None] = mapped_column(
+        Integer, default=None, nullable=True
+    )
+    teacher_graded_at: Mapped[datetime | None] = mapped_column(
+        DateTime, default=None, nullable=True
+    )
+    expulsion_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        default=None,
+        index=True,
+        nullable=True,
+    )
+
+    student: Mapped[Student] = relationship("Student")
+    product: Mapped[Product] = relationship("Product")
+    teacher_product: Mapped[TeacherProduct | None] = relationship("TeacherProduct")
+    offer: Mapped[Offer] = relationship("Offer", lazy="joined")
+    flow: Mapped[Flow | None] = relationship("Flow", lazy="joined")
+
+
 class TeacherProductFlow(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     teacher_product_id: Mapped[int] = mapped_column(
@@ -421,10 +399,8 @@ class TeacherProductFlow(Base):
     )
 
 
-class Reviewer(Base, TimestampMixin):
+class Reviewer(Base, NameMixin, TimestampMixin):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    first_name: Mapped[str] = mapped_column(String(128), nullable=False, default="")
-    last_name: Mapped[str] = mapped_column(String(128), nullable=False, default="")
     subject_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("subject.id"),

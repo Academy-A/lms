@@ -1,104 +1,56 @@
 import logging
 from collections.abc import Sequence
 from datetime import datetime
-from http import HTTPMethod, HTTPStatus
-from json import JSONDecodeError
-from types import MappingProxyType
-from typing import Any
+from functools import cached_property
+from http import HTTPMethod
 
 from pydantic import ValidationError
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqladmin import BaseView, expose
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from starlette.requests import Request
 from starlette.responses import Response
-from starlette.templating import Jinja2Templates
 from yarl import URL
 
-from lms.admin.exceptions import ExtendedHTTPException
-from lms.admin.views.pages.base import BaseCustomView
 from lms.db.repositories.product import ProductRepository
 from lms.generals.models.product import Product
+from lms.rest.api.auth import generate_token
 from lms.utils.distribution.models import DistributionParams
 from lms.utils.http import create_web_session
 
 log = logging.getLogger(__name__)
 
 
-async def bad_request(
-    exc: ExtendedHTTPException,
-    request: Request,
-    templates: Jinja2Templates,
-    template_path: str,
-) -> Response:
-    return templates.TemplateResponse(
-        template_path,
-        {
-            "request": request,
-            "errors": exc.errors(),
-        },
-    )
+class DistributionView(BaseView):
+    secret_key: str
+    session_factory: async_sessionmaker[AsyncSession]
 
+    name = "Distribution"
 
-class DistributionView(BaseCustomView):
-    ERROR_HANDLERS = MappingProxyType(
-        {
-            HTTPStatus.BAD_REQUEST: bad_request,
-        }
-    )
-
-    async def _render(
-        self,
-        request: Request,
-        templates: Jinja2Templates,
-    ) -> Response:
+    @expose(path="/create-distribution", methods=[HTTPMethod.GET, HTTPMethod.POST])
+    async def create_distribution(self, request: Request) -> Response:
         result = {}
-        errors: list[Any] = []
-        try:
-            if request.method == HTTPMethod.POST:
-                params = await self._parse_params(request=request)
+        errors = []
+        if request.method == HTTPMethod.POST:
+            form_data = await request.form()
+            try:
+                params = DistributionParams.parse_form(form_data)
                 await self._call_create_distribution(params=params)
                 result["msg"] = "Distribution was created!"
-        except ExtendedHTTPException as e:
-            log.info("Form not parsed")
-            errors.extend(e.errors())
+            except ValidationError as e:
+                log.info("Form not parsed")
+                errors = e.errors()
 
-        products = await self._get_product_list(request=request)
-        return templates.TemplateResponse(
-            self.template_path,
-            {
-                "request": request,
+        products = await self._get_product_list()
+        return await self.templates.TemplateResponse(
+            request=request,
+            name="./distribution.html",
+            context={
                 "products": products,
                 "result": result,
                 "errors": errors,
+                "title": "Распределение домашних работ",
             },
         )
-
-    async def _get_product_list(self, request: Request) -> Sequence[Product]:
-        session: AsyncSession = request.state.session
-        now = datetime.now()
-        return await ProductRepository(session=session).read_actual_list(dt=now)
-
-    async def _parse_params(
-        self,
-        request: Request,
-    ) -> DistributionParams:
-        form = await request.form()
-        try:
-            return DistributionParams.parse_form(form)
-        except ValidationError as err:
-            raise ExtendedHTTPException(
-                status_code=HTTPStatus.BAD_REQUEST,
-                errors=err.errors(),
-            )
-        except JSONDecodeError:
-            raise ExtendedHTTPException(
-                status_code=HTTPStatus.BAD_REQUEST,
-                errors=[
-                    {
-                        "msg": "Cannot parse JSON object",
-                        "loc": "body",
-                    },
-                ],
-            )
 
     async def _call_create_distribution(self, params: DistributionParams) -> None:
         url = URL("http://0.0.0.0:80/v1/products/distribute/").with_query(
@@ -110,3 +62,12 @@ class DistributionView(BaseCustomView):
             ) as response:
                 a = await response.text()
                 log.info("response: %s ", a)
+
+    async def _get_product_list(self) -> Sequence[Product]:
+        async with self.session_factory() as session:
+            now = datetime.now()
+            return await ProductRepository(session=session).read_actual_list(dt=now)
+
+    @cached_property
+    def token(self) -> str:
+        return generate_token({"source": "admin"}, self.secret_key)

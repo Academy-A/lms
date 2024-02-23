@@ -11,7 +11,6 @@ packages = [{include = "lms"}]
 python = "^3.11"
 pydantic-settings = "^2.0.3"
 SQLAlchemy = "^2.0.22"
-sqlalchemy-utils = "^0.41.1"
 httpx = "^0.24.1"
 pydantic = {extras = ["email"], version = "^2.4.2"}
 orjson = "^3.9.9"
@@ -21,7 +20,6 @@ configargparse = "^1.7"
 aiomisc-dependency = "^0.1.20"
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 google-api-service-helper = "^0.1.1"
-starlette-admin = "^0.12.2"
 aiomisc = {extras = ["asgi", "cron", "rich", "uvicorn", "uvloop"], version = "^17.3.41"}
 fastapi = "0.104.1"
 alembic = "^1.12.0"
@@ -32,6 +30,7 @@ gunicorn = "^21.2.0"
 wtforms = "^3.1.2"
 wtforms-sqlalchemy = "^0.4.1"
 aiocache = "^0.12.2"
+sqladmin = {extras = ["full"], version = "^0.16.0"}
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.5.0"

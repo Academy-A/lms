@@ -4,10 +4,10 @@ from collections.abc import Callable
 from aiomisc.service.uvicorn import UvicornApplication, UvicornService
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from starlette.middleware.cors import CORSMiddleware
 
-from lms.admin.setup_admin import build_admin
+from lms.admin.setup_admin import configure_admin
 from lms.clients.autopilot import Autopilot
 from lms.clients.soho import Soho
 from lms.clients.telegram import Telegram
@@ -44,7 +44,6 @@ class REST(UvicornService):
     )
 
     __dependencies__ = (
-        "engine",
         "autopilot",
         "soho",
         "telegram",
@@ -52,7 +51,6 @@ class REST(UvicornService):
         "get_distributor",
     )
 
-    engine: AsyncEngine
     session_factory: async_sessionmaker[AsyncSession]
     autopilot: Autopilot
     soho: Soho
@@ -106,10 +104,10 @@ class REST(UvicornService):
                 DistributorMarker: self.get_distributor,
             }
         )
-        build_admin(
+        configure_admin(
             app=app,
-            engine=self.engine,
-            project_name=self.project_name,
+            session_factory=self.session_factory,
+            title=self.project_name,
             secret_key=self.secret_key,
             debug=self.debug,
         )

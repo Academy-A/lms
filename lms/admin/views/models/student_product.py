@@ -1,117 +1,110 @@
-from datetime import datetime
-from typing import Any
+from sqlalchemy import Select, String, cast, or_, select
+from sqlalchemy.orm import joinedload
 
-from pydantic import BaseModel, PositiveInt, field_validator, model_validator
-from starlette_admin.fields import DateTimeField, EnumField, HasOne, IntegerField
-
-from lms.admin.views.models.base import BaseModelView
-from lms.generals.enums import TeacherType
-
-
-class StudentProductModel(BaseModel):
-    id: int | None = None
-    created_at: datetime | None = None
-    updated_at: datetime | None = None
-    student: Any
-    product: Any
-    teacher_product: Any | None
-    teacher_type: TeacherType | None
-    offer: Any
-    flow: Any | None
-    cohort: PositiveInt
-    teacher_grade: PositiveInt | None
-    teacher_graded_at: datetime | None
-    expulsion_at: datetime | None
-
-    @field_validator("student", "product", "offer")
-    @classmethod
-    def check_is_not_none(cls, v: Any) -> Any:
-        if v is None:
-            raise ValueError("Field must be not none")
-        return v
-
-    @model_validator(mode="after")
-    def check_teacher_type(self) -> "StudentProductModel":
-        if (self.teacher_type is None) is (self.teacher_product is None):
-            return self
-        raise ValueError("Teacher Type does not match wih teacher product")
+from lms.admin.utils import format_datetime_field
+from lms.admin.views.base import AdminCategories, BaseModelView
+from lms.db.models import Offer, Product, Student, Teacher, TeacherProduct
+from lms.db.models import StudentProduct as StudentProduct
 
 
-class StudentProductModelView(BaseModelView):
-    identity = "student_product"
-    label = "Student Product"
-    pydantic_model = StudentProductModel
-    fields = [
-        IntegerField(name="id", label="ID", required=True, exclude_from_create=True),
-        DateTimeField(
-            name="created_at",
-            label="Created at",
-            output_format="%H:%M:%S %d.%m.%Y",
-            exclude_from_create=True,
-            exclude_from_list=True,
-            required=True,
-            form_alt_format="H:i:S d.m.Y",
-        ),
-        DateTimeField(
-            name="updated_at",
-            label="Updated at",
-            output_format="%H:%M:%S %d.%m.%Y",
-            exclude_from_list=True,
-            exclude_from_create=True,
-            required=True,
-            form_alt_format="H:i:S d.m.Y",
-        ),
-        HasOne(
-            name="student",
-            label="Student",
-            identity="student",
-            required=True,
-            searchable=True,
-        ),
-        HasOne(name="product", label="Product", identity="product", required=True),
-        HasOne(
-            name="teacher_product", label="Teacher Product", identity="teacher_product"
-        ),
-        EnumField(
-            name="teacher_type",
-            label="Teacher Type",
-            choices=tuple(
-                (v, t)
-                for v, t in zip(
-                    (None, TeacherType.CURATOR, TeacherType.MENTOR),
-                    ("Empty", "Curator", "Mentor"),
-                )
-            ),
-            required=True,
-            coerce=lambda x: x if x != "None" else None,
-        ),
-        HasOne(
-            name="offer",
-            label="Offer",
-            identity="offer",
-            required=True,
-            exclude_from_list=True,
-        ),
-        HasOne(name="flow", label="Flow", identity="flow", exclude_from_list=True),
-        IntegerField(
-            name="cohort", label="Cohort", required=True, exclude_from_list=True
-        ),
-        IntegerField(
-            name="teacher_grade",
-            label="Teacher Grade",
-            required=False,
-            exclude_from_list=True,
-        ),
-        DateTimeField(
-            name="teacher_graded_at",
-            label="Teacher Graded at",
-            required=False,
-            exclude_from_list=True,
-        ),
-        DateTimeField(
-            name="expulsion_at",
-            label="Expulsion at",
-            required=False,
-            exclude_from_list=True,
-        ),
+class StudentProductModelView(BaseModelView, model=StudentProduct):
+    category = AdminCategories.MODELS
+    column_list = [
+        StudentProduct.id,
+        StudentProduct.student,
+        StudentProduct.product,
+        StudentProduct.teacher_product,
+        StudentProduct.expulsion_at,
+        StudentProduct.created_at,
+        StudentProduct.updated_at,
     ]
+    column_sortable_list = [
+        StudentProduct.id,
+        StudentProduct.expulsion_at,
+        StudentProduct.created_at,
+        StudentProduct.updated_at,
+    ]
+    column_default_sort = "id"
+    column_formatters = {
+        StudentProduct.created_at: format_datetime_field,
+        StudentProduct.updated_at: format_datetime_field,
+        StudentProduct.expulsion_at: format_datetime_field,
+    }
+
+    column_searchable_list = [
+        "student.name",
+        "offer.name",
+        "product.name",
+    ]
+    column_details_list = [
+        StudentProduct.id,
+        StudentProduct.student,
+        StudentProduct.product,
+        StudentProduct.teacher_product,
+        StudentProduct.offer,
+        StudentProduct.flow,
+        StudentProduct.cohort,
+        StudentProduct.teacher_grade,
+        StudentProduct.teacher_graded_at,
+        StudentProduct.expulsion_at,
+        StudentProduct.created_at,
+        StudentProduct.updated_at,
+    ]
+    column_formatters_detail = {
+        StudentProduct.teacher_graded_at: format_datetime_field,
+        StudentProduct.expulsion_at: format_datetime_field,
+        StudentProduct.created_at: format_datetime_field,
+        StudentProduct.updated_at: format_datetime_field,
+    }
+    form_columns = [
+        StudentProduct.student,
+        StudentProduct.product,
+        StudentProduct.teacher_product,
+        StudentProduct.offer,
+        StudentProduct.flow,
+        StudentProduct.teacher_type,
+        StudentProduct.cohort,
+        StudentProduct.teacher_grade,
+        StudentProduct.teacher_graded_at,
+        StudentProduct.expulsion_at,
+    ]
+    column_export_list = [
+        StudentProduct.id,
+        "student.name",
+        "student.vk_id",
+        "teacher_product.teacher.name",
+        "teacher_product.teacher.vk_id",
+        "offer.name",
+        StudentProduct.expulsion_at,
+    ]
+
+    def search_query(self, stmt: Select, term: str) -> Select:
+        return (
+            select(StudentProduct)
+            .join(Student, Student.id == StudentProduct.student_id)
+            .join(Product, Product.id == StudentProduct.product_id)
+            .join(Offer, Offer.id == StudentProduct.offer_id)
+            .join(
+                TeacherProduct,
+                TeacherProduct.id == StudentProduct.teacher_product_id,
+                isouter=True,
+            )
+            .join(Teacher, Teacher.id == TeacherProduct.teacher_id)
+            .options(
+                joinedload(StudentProduct.student),
+                joinedload(StudentProduct.teacher_product),
+                joinedload(StudentProduct.teacher_product).joinedload(
+                    TeacherProduct.teacher
+                ),
+                joinedload(StudentProduct.offer),
+                joinedload(StudentProduct.product),
+            )
+        ).where(
+            or_(
+                Student.name.ilike(f"%{term}%"),
+                Teacher.name.ilike(f"%{term}%"),
+                Offer.name.ilike(f"%{term}%"),
+                Teacher.name.ilike(f"%{term}%"),
+                cast(StudentProduct.teacher_type, String).ilike(f"%{term}%"),
+            )
+        )

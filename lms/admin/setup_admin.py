@@ -1,16 +1,11 @@
 import os
-from http import HTTPMethod
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.middleware import Middleware
-from sqlalchemy.ext.asyncio import AsyncEngine
-from starlette.middleware.sessions import SessionMiddleware
-from starlette_admin import DropDown
-from starlette_admin.contrib.sqla import Admin
-from starlette_admin.views import Link
+from sqladmin import Admin
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from lms.admin.auth_provider import AuthenticationProvider
+from lms.admin.auth_provider import AuthBackend
 from lms.admin.views.models.distribution import DistributionModelView
 from lms.admin.views.models.flow import FlowModelView
 from lms.admin.views.models.flow_product import FlowProductModelView
@@ -19,125 +14,57 @@ from lms.admin.views.models.product import ProductModelView
 from lms.admin.views.models.product_group import ProductGroupModelView
 from lms.admin.views.models.reviewer import ReviewerModelView
 from lms.admin.views.models.setting import SettingModelView
-from lms.admin.views.models.soho import SohoModelView
+from lms.admin.views.models.soho import SohoAccountModelView
 from lms.admin.views.models.student import StudentModelView
 from lms.admin.views.models.student_product import StudentProductModelView
 from lms.admin.views.models.subject import SubjectModelView
 from lms.admin.views.models.teacher import TeacherModelView
 from lms.admin.views.models.teacher_product import TeacherProductModelView
+from lms.admin.views.models.verified_work import VerifiedWorkFileModelView
 from lms.admin.views.pages.distribution import DistributionView
-from lms.admin.views.pages.home import HomeView
+from lms.admin.views.pages.home import HomePageView
 from lms.admin.views.pages.teacher_product_dashboard import TeacherProductDashboardView
-from lms.db.models import (
-    Distribution,
-    Flow,
-    FlowProduct,
-    Offer,
-    Product,
-    ProductGroup,
-    Reviewer,
-    Setting,
-    SohoAccount,
-    Student,
-    StudentProduct,
-    Subject,
-    Teacher,
-    TeacherProduct,
-)
 
 TEMPLATES_DIR = Path(__file__).parent.resolve() / "templates"
 
 
-def build_admin(
+def configure_admin(
     app: FastAPI,
-    engine: AsyncEngine,
-    project_name: str,
+    session_factory: async_sessionmaker[AsyncSession],
+    title: str,
     secret_key: str,
     debug: bool,
 ) -> None:
+    auth_backend = AuthBackend(
+        session_factory=session_factory,
+        secret_key=secret_key,
+    )
     admin = Admin(
-        engine=engine,
-        title=project_name,
+        app=app,
+        session_maker=session_factory,
         templates_dir=os.fspath(TEMPLATES_DIR),
-        middlewares=[Middleware(SessionMiddleware, secret_key=secret_key)],
-        index_view=HomeView(
-            label="Home",
-            template_path="./home.html",
-            icon="fa fa-home",
-            methods=["GET"],
-            add_to_menu=True,
-        ),
-        auth_provider=AuthenticationProvider() if not debug else None,
+        debug=debug,
+        title=title,
+        authentication_backend=auth_backend,
     )
-    admin.add_view(
-        DistributionView(
-            label="Distrubution",
-            icon="fa fa-list",
-            path="/distribution",
-            template_path="./distribution.html",
-            methods=[HTTPMethod.GET, HTTPMethod.POST],
-            secret_key=secret_key,
-        ),
-    )
-    admin.add_view(
-        DropDown(
-            "Dashboards and etc",
-            icon="fa fa-list",
-            always_open=False,
-            views=[
-                TeacherProductDashboardView(
-                    label="Annual Dashboard 2023/24",
-                    template_path="./teacher_product_dashboard.html",
-                    path="/dashboard/teachers/annual",
-                    product_ids=[65, 66, 67, 68],
-                ),
-                TeacherProductDashboardView(
-                    label="SemiAnnual Dashboard 2024",
-                    template_path="./teacher_product_dashboard.html",
-                    path="/dashboard/teachers/semiannual",
-                    product_ids=[73, 74, 75, 76],
-                ),
-            ],
-        )
-    )
-
-    admin.add_view(
-        DropDown(
-            "Models",
-            icon="fa fa-list",
-            always_open=False,
-            views=[
-                FlowModelView(model=Flow),
-                FlowProductModelView(model=FlowProduct),
-                OfferModelView(model=Offer),
-                ProductGroupModelView(model=ProductGroup),
-                ProductModelView(model=Product),
-                ReviewerModelView(model=Reviewer),
-                DistributionModelView(model=Distribution),
-                SettingModelView(model=Setting),
-                SohoModelView(model=SohoAccount),
-                StudentModelView(model=Student),
-                StudentProductModelView(model=StudentProduct),
-                SubjectModelView(model=Subject),
-                TeacherModelView(model=Teacher),
-                TeacherProductModelView(model=TeacherProduct),
-            ],
-        )
-    )
-
-    # useful links
-    admin.add_view(
-        Link(
-            label="API",
-            url="/docs",
-            icon="fa fa-laptop",
-        )
-    )
-    admin.add_view(
-        Link(
-            label="SOHO.LMS",
-            url="https://master.soholms.com/",
-            icon="fa fa-graduation-cap",
-        ),
-    )
-    admin.mount_to(app)
+    admin.add_view(HomePageView)
+    admin.add_view(DistributionModelView)
+    admin.add_view(ProductGroupModelView)
+    admin.add_view(ProductModelView)
+    admin.add_view(FlowModelView)
+    admin.add_view(FlowProductModelView)
+    admin.add_view(OfferModelView)
+    admin.add_view(ReviewerModelView)
+    admin.add_view(SettingModelView)
+    admin.add_view(SohoAccountModelView)
+    admin.add_view(StudentModelView)
+    admin.add_view(StudentProductModelView)
+    admin.add_view(SubjectModelView)
+    admin.add_view(TeacherModelView)
+    admin.add_view(TeacherProductModelView)
+    admin.add_view(VerifiedWorkFileModelView)
+    admin.add_view(DistributionView)
+    admin._views[-1].session_factory = session_factory  # type: ignore[union-attr]
+    admin._views[-1].secret_key = secret_key  # type: ignore[union-attr]
+    admin.add_view(TeacherProductDashboardView)
+    admin._views[-1].session_factory = session_factory  # type: ignore[union-attr]

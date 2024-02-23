@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: pguser
-      POSTGRES_PASSWORD: pgpass
+      POSTGRES_PASSWORD: pguser
       POSTGRES_DB: pgdb
     ports:
       - 5432:5432

@@ -1,59 +1,44 @@
-from datetime import datetime
-from typing import Annotated
-
-from pydantic import BaseModel, PositiveInt, StringConstraints
-from starlette_admin.fields import (
-    DateTimeField,
-    IntegerField,
-    StringField,
-    TextAreaField,
-)
-
-from lms.admin.views.models.base import BaseModelView
+from lms.admin.utils import format_datetime_field
+from lms.admin.views.base import AdminCategories, BaseModelView
+from lms.db.models import Setting as SettingDb
 
 
-class SettingModel(BaseModel):
-    id: PositiveInt | None = None
-    created_at: datetime | None = None
-    updated_at: datetime | None = None
-    key: Annotated[str, StringConstraints(max_length=128)]
-    description: Annotated[str, StringConstraints(max_length=512)]
-    value: Annotated[str, StringConstraints(max_length=4096)]
-
-
-class SettingModelView(BaseModelView):
-    identity = "setting"
-    label = "Setting"
-    pydantic_model = SettingModel
-    fields = [
-        IntegerField(name="id", label="ID", required=True, exclude_from_create=True),
-        DateTimeField(
-            name="created_at",
-            label="Created at",
-            output_format="%H:%M:%S %d.%m.%Y",
-            exclude_from_create=True,
-            exclude_from_list=True,
-            required=True,
-            form_alt_format="H:i:S d.m.Y",
-        ),
-        DateTimeField(
-            name="updated_at",
-            label="Updated at",
-            output_format="%H:%M:%S %d.%m.%Y",
-            exclude_from_list=True,
-            exclude_from_create=True,
-            required=True,
-            form_alt_format="H:i:S d.m.Y",
-        ),
-        StringField(name="key", label="Key", required=True, maxlength=128),
-        StringField(
-            name="description", label="Description", required=True, maxlength=512
-        ),
-        TextAreaField(
-            name="value",
-            label="Value",
-            required=True,
-            maxlength=4096,
-            exclude_from_list=True,
-        ),
+class SettingModelView(BaseModelView, model=SettingDb):
+    category = AdminCategories.MODELS
+    column_list = [
+        SettingDb.id,
+        SettingDb.key,
+        SettingDb.description,
+        SettingDb.created_at,
+        SettingDb.updated_at,
+    ]
+    column_sortable_list = [
+        SettingDb.id,
+        SettingDb.key,
+        SettingDb.description,
+        SettingDb.created_at,
+        SettingDb.updated_at,
+    ]
+    column_default_sort = "id"
+    column_formatters = {
+        SettingDb.created_at: format_datetime_field,
+        SettingDb.updated_at: format_datetime_field,
+    }
+    column_searchable_list = [SettingDb.key, SettingDb.description]
+    column_details_list = [
+        SettingDb.id,
+        SettingDb.key,
+        SettingDb.value,
+        SettingDb.description,
+        SettingDb.created_at,
+        SettingDb.updated_at,
+    ]
+    column_formatters_detail = {
+        SettingDb.created_at: format_datetime_field,
+        SettingDb.updated_at: format_datetime_field,
+    }
+    form_columns = [
+        SettingDb.key,
+        SettingDb.value,
+        SettingDb.description,
     ]
