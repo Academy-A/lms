@@ -1,112 +1,68 @@
-from typing import Annotated, Any
-
-from pydantic import (
-    BaseModel,
-    EmailStr,
-    NonNegativeInt,
-    StringConstraints,
-    field_validator,
-)
-from starlette_admin.fields import (
-    BooleanField,
-    DateTimeField,
-    EmailField,
-    HasOne,
-    IntegerField,
-    StringField,
-)
-
-from lms.admin.views.models.base import BaseModelView
+from lms.admin.utils import format_datetime_field
+from lms.admin.views.base import AdminCategories, BaseModelView
+from lms.db.models import Reviewer as ReviewerDb
 
 
-class ReviewerModel(BaseModel):
-    id: int | None = None
-    first_name: Annotated[str, StringConstraints(max_length=128, strict=True)]
-    last_name: Annotated[str, StringConstraints(max_length=128, strict=True)]
-    email: EmailStr
-    desired: NonNegativeInt
-    max_: NonNegativeInt
-    abs_max: NonNegativeInt
-    is_active: bool
-    subject: Any
-
-    @field_validator("subject")
-    @classmethod
-    def check_is_not_none(cls, v: Any) -> Any:
-        if v is None:
-            raise ValueError("Product must be not none")
-        return v
-
-
-class ReviewerModelView(BaseModelView):
-    identity = "reviewer"
-    label = "Reviewer"
-    pydantic_model = ReviewerModel
-    fields = [
-        IntegerField(name="id", label="ID", required=True, exclude_from_create=True),
-        DateTimeField(
-            name="created_at",
-            label="Created at",
-            output_format="%H:%M:%S %d.%m.%Y",
-            exclude_from_create=True,
-            exclude_from_list=True,
-            required=True,
-            form_alt_format="H:i:S d.m.Y",
-        ),
-        DateTimeField(
-            name="updated_at",
-            label="Updated at",
-            output_format="%H:%M:%S %d.%m.%Y",
-            exclude_from_list=True,
-            exclude_from_create=True,
-            required=True,
-            form_alt_format="H:i:S d.m.Y",
-        ),
-        StringField(
-            name="first_name",
-            label="First name",
-            required=True,
-        ),
-        StringField(
-            name="last_name",
-            label="Last name",
-            required=True,
-        ),
-        EmailField(
-            name="email",
-            label="Email",
-            required=False,
-            exclude_from_list=True,
-        ),
-        IntegerField(
-            name="desired",
-            label="Desired",
-            required=True,
-        ),
-        IntegerField(
-            name="max_",
-            label="Max",
-            required=True,
-        ),
-        IntegerField(
-            name="min_",
-            label="Min",
-            required=True,
-        ),
-        IntegerField(
-            name="abs_max",
-            label="Abs max",
-            required=True,
-        ),
-        BooleanField(
-            name="is_active",
-            label="Is active?",
-            required=True,
-        ),
-        HasOne(
-            name="subject",
-            label="Subject",
-            identity="subject",
-            required=True,
-        ),
+class ReviewerModelView(BaseModelView, model=ReviewerDb):
+    category = AdminCategories.MODELS
+    column_list = [
+        ReviewerDb.id,
+        ReviewerDb.name,
+        ReviewerDb.subject,
+        ReviewerDb.desired,
+        ReviewerDb.min_,
+        ReviewerDb.max_,
+        ReviewerDb.abs_max,
+        ReviewerDb.is_active,
+        ReviewerDb.created_at,
+        ReviewerDb.updated_at,
+    ]
+    column_sortable_list = [
+        ReviewerDb.id,
+        ReviewerDb.name,
+        ReviewerDb.desired,
+        ReviewerDb.min_,
+        ReviewerDb.max_,
+        ReviewerDb.abs_max,
+        ReviewerDb.is_active,
+        ReviewerDb.created_at,
+        ReviewerDb.updated_at,
+    ]
+    column_default_sort = "id"
+    column_formatters = {
+        ReviewerDb.created_at: format_datetime_field,
+        ReviewerDb.updated_at: format_datetime_field,
+    }
+    column_searchable_list = [
+        "subject.name",
+        ReviewerDb.name,
+        ReviewerDb.email,
+    ]
+    column_details_list = [
+        ReviewerDb.id,
+        ReviewerDb.name,
+        ReviewerDb.email,
+        ReviewerDb.subject,
+        ReviewerDb.desired,
+        ReviewerDb.min_,
+        ReviewerDb.max_,
+        ReviewerDb.abs_max,
+        ReviewerDb.is_active,
+        ReviewerDb.created_at,
+        ReviewerDb.updated_at,
+    ]
+    column_formatters_detail = {
+        ReviewerDb.created_at: format_datetime_field,
+        ReviewerDb.updated_at: format_datetime_field,
+    }
+    form_columns = [
+        ReviewerDb.first_name,
+        ReviewerDb.last_name,
+        ReviewerDb.email,
+        ReviewerDb.subject,
+        ReviewerDb.desired,
+        ReviewerDb.min_,
+        ReviewerDb.max_,
+        ReviewerDb.abs_max,
+        ReviewerDb.is_active,
     ]

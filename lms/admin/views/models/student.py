@@ -1,57 +1,45 @@
-from pydantic import BaseModel
-from starlette_admin.fields import DateTimeField, IntegerField, StringField
-
-from lms.admin.views.models.base import BaseModelView
-
-
-class StudentModel(BaseModel):
-    first_name: str
-    last_name: str
-    vk_id: int
+from lms.admin.utils import format_datetime_field, format_vk_id_field
+from lms.admin.views.base import AdminCategories, BaseModelView
+from lms.db.models import Student as StudentDb
 
 
-class StudentModelView(BaseModelView):
-    identity = "student"
-    label = "Student"
-    icon = "fa fa-blog"
-    pydantic_model = StudentModel
-    fields = [
-        IntegerField(name="id", label="ID", required=True, exclude_from_create=True),
-        DateTimeField(
-            name="created_at",
-            label="Created at",
-            output_format="%H:%M:%S %d.%m.%Y",
-            exclude_from_create=True,
-            exclude_from_list=True,
-            required=True,
-            form_alt_format="H:i:S d.m.Y",
-        ),
-        DateTimeField(
-            name="updated_at",
-            label="Updated at",
-            output_format="%H:%M:%S %d.%m.%Y",
-            exclude_from_list=True,
-            exclude_from_create=True,
-            required=True,
-            form_alt_format="H:i:S d.m.Y",
-        ),
-        StringField(
-            name="first_name",
-            label="First name",
-            placeholder="First name",
-            maxlength=128,
-            required=True,
-        ),
-        StringField(
-            name="last_name",
-            label="Last name",
-            placeholder="Last name",
-            maxlength=128,
-            required=True,
-        ),
-        IntegerField(
-            name="vk_id",
-            label="VK ID",
-            required=True,
-        ),
+class StudentModelView(BaseModelView, model=StudentDb):
+    category = AdminCategories.MODELS
+    column_list = [
+        StudentDb.id,
+        StudentDb.name,
+        StudentDb.vk_id,
+        StudentDb.created_at,
+        StudentDb.updated_at,
+    ]
+    column_sortable_list = [
+        StudentDb.id,
+        StudentDb.name,
+        StudentDb.vk_id,
+        StudentDb.created_at,
+        StudentDb.updated_at,
+    ]
+    column_default_sort = "id"
+    column_formatters = {
+        StudentDb.created_at: format_datetime_field,
+        StudentDb.updated_at: format_datetime_field,
+        StudentDb.vk_id: format_vk_id_field,
+    }
+    column_searchable_list = [StudentDb.id, StudentDb.name, StudentDb.vk_id]
+    column_details_list = [
+        StudentDb.id,
+        StudentDb.name,
+        StudentDb.vk_id,
+        StudentDb.created_at,
+        StudentDb.updated_at,
+    ]
+    column_formatters_detail = {
+        StudentDb.created_at: format_datetime_field,
+        StudentDb.updated_at: format_datetime_field,
+        StudentDb.vk_id: format_vk_id_field,
+    }
+    form_columns = [
+        StudentDb.first_name,
+        StudentDb.last_name,
+        StudentDb.vk_id,
     ]

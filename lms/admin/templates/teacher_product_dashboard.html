@@ -1,7 +1,13 @@
-{% extends "index.html" %}
-{% block header %}<h1>Статистика преподавателей по продуктам</h1>{% endblock %}
+{% extends "layout.html" %}
 
 {% block content %}
+    <h1>Статистика преподавателей по продуктам</h1>
+
+    <div class="row">
+        <div class="col"><a href="/admin/dashboards/annual/">Годовые курсы</a></div>
+        <div class="col"><a href="/admin/dashboards/semiannual/">Полугодовые курсы</a></div>
+    </div>
+
     {% for row in dashboard %}
     {% with
         product = row["product"],

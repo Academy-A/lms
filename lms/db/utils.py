@@ -1,9 +1,11 @@
 import os
 from argparse import Namespace
+from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
 import orjson
+import sqlalchemy.dialects.postgresql as pg
 from alembic.config import Config
 from sqlalchemy import Engine
 from sqlalchemy import create_engine as sa_create_engine
@@ -71,3 +73,15 @@ def make_alembic_config(cmd_opts: Namespace, base_path: Path = PROJECT_PATH) -> 
     config.attributes["configure_logger"] = False
 
     return config
+
+
+def make_pg_enum(enum_cls: type[StrEnum], **kwargs: Any) -> pg.ENUM:
+    return pg.ENUM(
+        enum_cls,
+        values_callable=_choices,
+        **kwargs,
+    )
+
+
+def _choices(enum_cls: type[StrEnum]) -> tuple[str, ...]:
+    return tuple(map(str, enum_cls))

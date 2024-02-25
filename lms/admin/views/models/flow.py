@@ -1,41 +1,38 @@
-from datetime import datetime
-
-from pydantic import BaseModel, PositiveInt
-from starlette_admin.fields import DateTimeField, IntegerField
-
-from lms.admin.views.models.base import BaseModelView
+from lms.admin.utils import format_datetime_field
+from lms.admin.views.base import AdminCategories, BaseModelView
+from lms.db.models import Flow as FlowDb
 
 
-class FlowModel(BaseModel):
-    id: PositiveInt
-    created_at: datetime | None = None
-    updated_at: datetime | None = None
-
-
-class FlowModelView(BaseModelView):
-    identity = "flow"
-    label = "Flow"
-    pydantic_model = FlowModel
-    fields = [
-        IntegerField(name="id", label="ID", required=True),
-        DateTimeField(
-            name="created_at",
-            label="Created at",
-            output_format="%H:%M:%S %d.%m.%Y",
-            exclude_from_create=True,
-            exclude_from_list=False,
-            required=True,
-            form_alt_format="H:i:S d.m.Y",
-            read_only=True,
-        ),
-        DateTimeField(
-            name="updated_at",
-            label="Updated at",
-            output_format="%H:%M:%S %d.%m.%Y",
-            exclude_from_create=True,
-            exclude_from_list=False,
-            required=True,
-            form_alt_format="H:i:S d.m.Y",
-            read_only=True,
-        ),
+class FlowModelView(BaseModelView, model=FlowDb):
+    category = AdminCategories.MODELS
+    column_list = [
+        FlowDb.id,
+        FlowDb.created_at,
+        FlowDb.updated_at,
+    ]
+    column_sortable_list = [
+        FlowDb.id,
+        FlowDb.created_at,
+        FlowDb.updated_at,
+    ]
+    column_default_sort = "id"
+    column_formatters = {
+        FlowDb.created_at: format_datetime_field,
+        FlowDb.updated_at: format_datetime_field,
+    }
+    column_searchable_list = [
+        FlowDb.id,
+    ]
+    column_details_list = [
+        FlowDb.id,
+        FlowDb.created_at,
+        FlowDb.updated_at,
+    ]
+    column_formatters_detail = {
+        FlowDb.created_at: format_datetime_field,
+        FlowDb.updated_at: format_datetime_field,
+    }
+    form_include_pk = True
+    form_columns = [
+        FlowDb.id,
     ]
