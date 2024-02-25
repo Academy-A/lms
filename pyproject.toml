@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "lms"
-version = "0.1.0"
+version = "0.3.0"
 description = "New LMS for Insperia School with Soho.LMS"
 authors = ["Sergey Natalenko <sergey.natalenko@mail.ru>"]
 license = "MIT"
@@ -55,7 +55,8 @@ provider = "git"
 update_pyproject = true
 
 [tool.poem-plugins.version.git]
-format = "long"
+format = "short"
+prefix = "v"
 
 [build-system]
 requires = ["poetry-core"]

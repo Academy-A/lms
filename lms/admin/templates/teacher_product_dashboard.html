@@ -2,10 +2,12 @@
 
 {% block content %}
     <h1>Статистика преподавателей по продуктам</h1>
+    <h2>{{ title }}</h2>
 
     <div class="row">
         <div class="col"><a href="/admin/dashboards/annual/">Годовые курсы</a></div>
         <div class="col"><a href="/admin/dashboards/semiannual/">Полугодовые курсы</a></div>
+        <div class="col"><a href="/admin/dashboards/sotochka/">Ещё чуть-чуть и соточка</a></div>
     </div>
 
     {% for row in dashboard %}
@@ -31,7 +33,7 @@
                 </tr>
                 {% for teacher in row["teachers"][teacher_type]%}
                 <tr>
-                    <td><a href="/admin/teacher_product/edit/{{teacher.teacher_product_id}}">{{ teacher.name }}</a></td>
+                    <td><a href="/admin/teacher-product/edit/{{teacher.teacher_product_id}}">{{ teacher.name }}</a></td>
                     <td><a href="https://vk.com/id{{ teacher.vk_id }}">{{ teacher.vk_id }}</a></td>
                     <td>
                         {% if teacher.is_active%}

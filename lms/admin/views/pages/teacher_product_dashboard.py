@@ -30,9 +30,7 @@ class TeacherProductDashboardView(BaseView):
         return await self.templates.TemplateResponse(
             request=request,
             name="./teacher_product_dashboard.html",
-            context={
-                "dashboard": dashboard,
-            },
+            context={"dashboard": dashboard, "title": "Годовые курсы 2023/24"},
         )
 
     @expose("/dashboards/semiannual/", identity="semiannual")
@@ -45,7 +43,19 @@ class TeacherProductDashboardView(BaseView):
             name="./teacher_product_dashboard.html",
             context={
                 "dashboard": dashboard,
+                "title": "Полугодовые курсы 2024",
             },
+        )
+
+    @expose("/dashboards/sotochka/", identity="sotochka")
+    @cached(ttl=CACHE_TTL, key_builder=template_cache_key_builder)
+    async def dashboard_sotochka(self, request: Request) -> Response:
+        product_ids = [77, 78, 79, 80]
+        dashboard = await self._load_dashboard_data(product_ids=product_ids)
+        return await self.templates.TemplateResponse(
+            request=request,
+            name="./teacher_product_dashboard.html",
+            context={"dashboard": dashboard, "title": "Ещё чуть-чуть и соточка"},
         )
 
     async def _load_dashboard_data(

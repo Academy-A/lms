@@ -74,7 +74,7 @@ class TeacherProductRepository(Repository[TeacherProductDb]):
                 TeacherProductDb.is_active.is_(True),
                 TeacherProductFlowDb.flow_id == flow_id,
             )
-            .order_by(desc(TeacherProductDb.average_grade))
+            .order_by(desc(TeacherProductDb.rating_coef))
             .limit(1)
         )
 
@@ -94,7 +94,7 @@ class TeacherProductRepository(Repository[TeacherProductDb]):
                 TeacherProductDb.max_students > 0,
                 TeacherProductDb.is_active.is_(True),
             )
-            .order_by(desc(TeacherProductDb.average_grade))
+            .order_by(desc(TeacherProductDb.rating_coef))
             .limit(1)
         )
 
