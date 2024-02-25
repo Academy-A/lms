@@ -199,7 +199,7 @@ class Distribution(BaseModel):
                 r.id,
                 r.optimal_max,
                 len(r.student_homeworks),
-                f"=COUNTA(OFFSET(A2;5;{3 + (5 * (counter - 1))};200;1))",
+                f"=COUNTA(OFFSET(A2;4;{3 + (5 * (counter - 1))};200;1))",
                 "Имя Фамилия",
             ]
             for hw in r.student_homeworks:
