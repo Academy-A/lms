@@ -1,4 +1,4 @@
-from sqlalchemy import desc, select, text
+from sqlalchemy import desc, select, text, update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -103,16 +103,20 @@ class TeacherProductRepository(Repository[TeacherProductDb]):
             raise TeacherProductNotFoundError
         return TeacherProduct.model_validate(obj)
 
-    async def add_grade(self, teacher_product_id: int, grade: int) -> None:
-        teacher_product = await self.read_by_id(teacher_product_id=teacher_product_id)
-        new_average_grade = (
-            teacher_product.average_grade * teacher_product.grade_counter + grade
-        ) / (teacher_product.grade_counter + 1)
-        await self._update(
-            TeacherProductDb.id == teacher_product.id,
-            average_grade=new_average_grade,
-            grade_counter=teacher_product.grade_counter + 1,
+    async def update_average_grade(
+        self, teacher_product_id: int, average_grade: float, counter: int
+    ) -> None:
+        stmt = (
+            update(TeacherProductDb)
+            .where(
+                TeacherProductDb.id == teacher_product_id,
+            )
+            .values(
+                average_grade=average_grade,
+                grade_counter=counter,
+            )
         )
+        await self._session.execute(stmt)
 
     async def get_dashboard_data(self, product_id: int) -> list[TeacherDashboardRow]:
         stmt = """
