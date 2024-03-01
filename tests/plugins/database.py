@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import (
 from lms.db.base import Base
 from lms.db.uow import UnitOfWork
 from lms.db.utils import make_alembic_config
-from tests.plugins.factories import factories
+from tests.plugins.factories.factories import factories
 from tests.utils.database import clear_db, prepare_new_database, run_async_migrations
 
 
@@ -76,7 +76,7 @@ async def sessionmaker(async_engine: AsyncEngine):
     )
 
 
-@pytest.fixture(autouse=True, scope="function")
+@pytest.fixture
 async def session(
     sessionmaker: async_sessionmaker[AsyncSession],
     async_engine: AsyncEngine,

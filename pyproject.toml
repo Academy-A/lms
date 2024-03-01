@@ -49,6 +49,7 @@ pytest-subtests = "^0.11.0"
 types-passlib = "^1.7.7.13"
 aiomisc-pytest = "^1.1.1"
 ruff = "^0.1.8"
+factory-boy = "^3.3.0"
 
 [tool.poem-plugins.version]
 provider = "git"
