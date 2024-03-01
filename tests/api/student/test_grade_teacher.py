@@ -5,14 +5,6 @@ import pytest
 from aiohttp.test_utils import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from tests.plugins.factories import (
-    OfferFactory,
-    ProductFactory,
-    SohoAccountFactory,
-    StudentProductFactory,
-    TeacherProductFactory,
-)
-
 
 async def test_unauthorized_user_check_status(api_client: TestClient) -> None:
     response = await api_client.post("/v1/students/soho/1/grade-teacher/")
@@ -174,8 +166,14 @@ async def test_soho_not_found(api_client: TestClient, token: str) -> None:
     }
 
 
-async def test_product_not_found(api_client: TestClient, token: str) -> None:
-    soho = await SohoAccountFactory.create_async()
+async def test_product_not_found(
+    api_client: TestClient,
+    token: str,
+    create_student,
+    create_soho_account,
+) -> None:
+    student = await create_student()
+    soho = await create_soho_account(student=student)
     response = await api_client.post(
         f"v1/students/soho/{soho.id}/grade-teacher/",
         params={"token": token},
@@ -192,9 +190,23 @@ async def test_product_not_found(api_client: TestClient, token: str) -> None:
     }
 
 
-async def test_student_product_not_found(api_client: TestClient, token: str) -> None:
-    soho = await SohoAccountFactory.create_async()
-    product = await ProductFactory.create_async()
+async def test_student_product_not_found(
+    api_client: TestClient,
+    token: str,
+    create_student,
+    create_soho_account,
+    create_subject,
+    create_product_group,
+    create_product,
+) -> None:
+    student = await create_student()
+    soho = await create_soho_account(student=student)
+    subject = await create_subject()
+    product_group = await create_product_group()
+    product = await create_product(
+        product_group=product_group,
+        subject=subject,
+    )
     response = await api_client.post(
         f"/v1/students/soho/{soho.id}/grade-teacher/",
         params={"token": token},
@@ -214,13 +226,33 @@ async def test_student_product_not_found(api_client: TestClient, token: str) -> 
 async def test_student_product_has_not_teacher_product(
     api_client: TestClient,
     token: str,
+    create_student,
+    create_soho_account,
+    create_subject,
+    create_product_group,
+    create_product,
+    create_student_product,
+    create_offer,
+    create_flow,
 ) -> None:
-    student_product = await StudentProductFactory.create_async(
+    student = await create_student()
+    soho = await create_soho_account(student=student)
+    subject = await create_subject()
+    product_group = await create_product_group()
+    product = await create_product(
+        product_group=product_group,
+        subject=subject,
+    )
+    offer = await create_offer(product=product)
+    flow = await create_flow()
+    student_product = await create_student_product(
+        student=student,
+        product=product,
+        offer=offer,
+        flow=flow,
         teacher_product=None,
-        teacher_product_id=None,
         teacher_type=None,
     )
-    soho = await SohoAccountFactory.create_async(student=student_product.student)
     response = await api_client.post(
         f"/v1/students/soho/{soho.id}/grade-teacher/",
         params={"token": token},
@@ -238,27 +270,51 @@ async def test_student_product_has_not_teacher_product(
 
 
 async def test_successful(
-    api_client: TestClient, token: str, session: AsyncSession
+    api_client: TestClient,
+    token: str,
+    session: AsyncSession,
+    create_student,
+    create_soho_account,
+    create_subject,
+    create_product_group,
+    create_product,
+    create_student_product,
+    create_offer,
+    create_flow,
+    create_teacher,
+    create_teacher_product,
 ) -> None:
-    teacher_product = await TeacherProductFactory.create_async(
-        average_grade=5,
+    student = await create_student()
+    soho = await create_soho_account(student=student)
+    subject = await create_subject()
+    product_group = await create_product_group()
+    product = await create_product(
+        product_group=product_group,
+        subject=subject,
+    )
+    teacher = await create_teacher()
+    teacher_product = await create_teacher_product(
+        teacher=teacher,
+        product=product,
+        average_grade=2,
         grade_counter=2,
     )
-    offer = await OfferFactory.create_async(product=teacher_product.product)
-    student_product = await StudentProductFactory.create_async(
-        teacher_product=teacher_product,
-        product=teacher_product.product,
+    offer = await create_offer(product=product)
+    flow = await create_flow()
+    student_product = await create_student_product(
+        student=student,
+        product=product,
         offer=offer,
-        teacher_grade=None,
-        teacher_graded_at=None,
+        flow=flow,
+        teacher_product=teacher_product,
+        teacher_type=teacher_product.type,
     )
-    soho = await SohoAccountFactory.create_async(student=student_product.student)
     response = await api_client.post(
         f"/v1/students/soho/{soho.id}/grade-teacher/",
         params={"token": token},
         json={
             "product_id": student_product.product.id,
-            "grade": 2,
+            "grade": 5,
         },
     )
     assert response.status == HTTPStatus.OK
@@ -269,8 +325,8 @@ async def test_successful(
     }
     await session.refresh(teacher_product)
     assert teacher_product.grade_counter == 3
-    assert teacher_product.average_grade == 4
+    assert teacher_product.average_grade == 3
 
     await session.refresh(student_product)
-    assert student_product.teacher_grade == 2
+    assert student_product.teacher_grade == 5
     assert student_product.teacher_graded_at is not None

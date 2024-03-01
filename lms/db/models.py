@@ -37,6 +37,9 @@ class Student(TimestampMixin, NameMixin, Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     vk_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=False)
 
+    def __repr__(self) -> str:
+        return str(self.id) + " " + self.last_name
+
 
 class SohoAccount(TimestampMixin, Base):
     __tablename__ = "soho"  # type: ignore[assignment]
@@ -90,7 +93,6 @@ class ProductGroup(TimestampMixin, Base):
 
 class Product(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[str] = mapped_column(String(1024), index=True, nullable=False)
     subject_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("subject.id"),
@@ -103,6 +105,7 @@ class Product(TimestampMixin, Base):
         index=True,
         nullable=False,
     )
+    name: Mapped[str] = mapped_column(String(1024), index=True, nullable=False)
     start_date: Mapped[date | None] = mapped_column(Date, index=True, nullable=True)
     end_date: Mapped[date | None] = mapped_column(Date, index=True, nullable=True)
 
