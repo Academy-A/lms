@@ -5,7 +5,8 @@ import factory
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lms.db.models import Product, ProductGroup, Subject
+from lms.db.models import Product, ProductGroup
+from tests.plugins.factories.subject import SubjectFactory
 
 
 class ProductGroupFactory(factory.Factory):
@@ -25,6 +26,8 @@ class ProductFactory(factory.Factory):
     name = "Product-1"
     start_date = date(2020, 2, 2)
     end_date = date(2020, 8, 10)
+    product_group = factory.SubFactory(ProductGroupFactory)
+    subject = factory.SubFactory(SubjectFactory)
 
 
 @pytest.fixture
@@ -41,8 +44,8 @@ def create_product_group(session: AsyncSession) -> Callable:
 
 @pytest.fixture
 def create_product(session: AsyncSession) -> Callable:
-    async def _factory(product_group: ProductGroup, subject: Subject, **kwargs):
-        product = ProductFactory(subject=subject, product_group=product_group, **kwargs)
+    async def _factory(**kwargs) -> Product:
+        product = ProductFactory(**kwargs)
         session.add(product)
         await session.commit()
         await session.flush(product)

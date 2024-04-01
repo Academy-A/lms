@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 
 from lms.db.uow import UnitOfWork
 from lms.generals.models.pagination import Pagination
-from lms.generals.models.subject import Subject
+from lms.generals.models.subject import ShortSubject, Subject
 from lms.rest.api.auth import token_required
 from lms.rest.api.deps import UnitOfWorkMarker
 
@@ -18,7 +18,7 @@ async def read_list(
     page: int = Query(gt=0, default=1),
     page_size: int = Query(gt=0, le=100, default=20),
     uow: UnitOfWork = Depends(UnitOfWorkMarker),
-) -> Pagination[Subject]:
+) -> Pagination[ShortSubject]:
     async with uow:
         pagination = await uow.subject.paginate(
             page=page,

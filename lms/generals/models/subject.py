@@ -21,7 +21,6 @@ class Subject(BaseModel):
 
     id: PositiveInt
     name: str
-
     created_at: datetime
     updated_at: datetime
     properties: SubjectProperties
@@ -57,3 +56,12 @@ class Subject(BaseModel):
     @property
     def check_file_regex(self) -> str:
         return self.properties.check_file_regex
+
+
+class ShortSubject(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: PositiveInt
+    name: str
+    created_at: datetime
+    updated_at: datetime

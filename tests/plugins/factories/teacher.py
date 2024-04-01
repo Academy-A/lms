@@ -1,5 +1,4 @@
 from collections.abc import Callable
-from datetime import datetime
 
 import factory
 import pytest
@@ -7,15 +6,13 @@ from factory import fuzzy
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from lms.db.models import (
-    Flow,
-    Product,
-    StudentProduct,
     Teacher,
-    TeacherAssignment,
     TeacherProduct,
     TeacherProductFlow,
 )
 from lms.generals.enums import TeacherType
+from tests.plugins.factories.flow import FlowFactory
+from tests.plugins.factories.product import ProductFactory
 
 
 class TeacherFactory(factory.Factory):
@@ -38,6 +35,8 @@ class TeacherProductFactory(factory.Factory):
     max_students = 20
     average_grade = 5
     grade_counter = 1
+    teacher = factory.SubFactory(TeacherFactory)
+    product = factory.SubFactory(ProductFactory)
 
 
 class TeacherProductFlowFactory(factory.Factory):
@@ -45,15 +44,8 @@ class TeacherProductFlowFactory(factory.Factory):
         model = TeacherProductFlow
 
     id = factory.Sequence(lambda n: n + 1)
-
-
-class TeacherAssignmentFactory(factory.Factory):
-    class Meta:
-        model = TeacherAssignment
-
-    id = factory.Sequence(lambda n: n + 1)
-    assignment_at = factory.LazyFunction(datetime.now)
-    removed_at = None
+    teacher_product = factory.SubFactory(TeacherProductFactory)
+    flow = factory.SubFactory(FlowFactory)
 
 
 @pytest.fixture
@@ -70,15 +62,11 @@ def create_teacher(session: AsyncSession) -> Callable:
 
 @pytest.fixture
 def create_teacher_product(session: AsyncSession) -> Callable:
-    async def _factory(teacher: Teacher, product: Product, **kwargs):
-        teacher_product: TeacherProduct = TeacherProductFactory(
-            teacher=teacher,
-            product=product,
-            **kwargs,
-        )
+    async def _factory(**kwargs):
+        teacher_product: TeacherProduct = TeacherProductFactory(**kwargs)
         session.add(teacher_product)
         await session.commit()
-        await session.flush(teacher_product)
+        await session.refresh(teacher_product)
         return teacher_product
 
     return _factory
@@ -86,39 +74,11 @@ def create_teacher_product(session: AsyncSession) -> Callable:
 
 @pytest.fixture
 def create_teacher_product_flow(session: AsyncSession) -> Callable:
-    async def _factory(
-        teacher_product: TeacherProduct,
-        flow: Flow,
-        **kwargs,
-    ) -> TeacherProductFlow:
-        teacher_product_flow = TeacherProductFlowFactory(
-            teacher_product=teacher_product,
-            flow=flow,
-            **kwargs,
-        )
+    async def _factory(**kwargs) -> TeacherProductFlow:
+        teacher_product_flow = TeacherProductFlowFactory(**kwargs)
         session.add(teacher_product_flow)
         await session.commit()
         await session.flush(teacher_product_flow)
         return teacher_product_flow
-
-    return _factory
-
-
-@pytest.fixture
-def create_teacher_assignment(session: AsyncSession) -> Callable:
-    async def _factory(
-        student_product: StudentProduct,
-        teacher_product: TeacherProduct,
-        **kwargs,
-    ) -> TeacherAssignment:
-        teacher_assignment = TeacherAssignmentFactory(
-            student_product=student_product,
-            teacher_product=teacher_product,
-            **kwargs,
-        )
-        session.add(teacher_assignment)
-        await session.commit()
-        await session.flush(teacher_assignment)
-        return teacher_assignment
 
     return _factory

@@ -401,6 +401,9 @@ class TeacherProductFlow(Base):
         index=True,
     )
 
+    teacher_product: Mapped[TeacherProduct] = relationship("TeacherProduct")
+    flow: Mapped[Flow] = relationship("Flow")
+
 
 class Reviewer(Base, NameMixin, TimestampMixin):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)

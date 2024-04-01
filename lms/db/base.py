@@ -1,6 +1,7 @@
 import re
+from typing import Any
 
-from sqlalchemy import MetaData
+from sqlalchemy import MetaData, Table
 from sqlalchemy.orm import as_declarative, declared_attr
 
 convention = {
@@ -19,6 +20,7 @@ metadata = MetaData(naming_convention=convention)  # type:ignore[arg-type]
 
 @as_declarative(metadata=metadata)
 class Base:
+    __table__: Table
     metadata: MetaData
 
     @declared_attr.directive
@@ -26,3 +28,6 @@ class Base:
     def __tablename__(cls) -> str:
         name_list = re.findall(r"[A-Z][a-z\d]*", cls.__name__)
         return "_".join(name_list).lower()
+
+    def as_dict(self) -> dict[str, Any]:
+        return {c.name: getattr(self, c.key) for c in self.__table__.columns}

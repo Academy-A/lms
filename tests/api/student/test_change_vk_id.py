@@ -5,8 +5,6 @@ import pytest
 from aiohttp.test_utils import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from tests.plugins.factories import SohoAccountFactory, StudentFactory
-
 
 async def test_unauthorized_user(api_client: TestClient) -> None:
     response = await api_client.post("/v1/students/soho/1/change-vk-id/")
@@ -110,15 +108,21 @@ async def test_soho_not_found(api_client: TestClient, token: str) -> None:
     }
 
 
-async def test_vk_id_already_used(api_client: TestClient, token: str) -> None:
-    student = await StudentFactory.create_async()
-    soho = await SohoAccountFactory.create_async()
+async def test_vk_id_already_used(
+    api_client: TestClient,
+    token: str,
+    create_soho_account,
+    create_student,
+) -> None:
+    soho = await create_soho_account()
+
+    other_student = await create_student()
 
     response = await api_client.post(
         f"/v1/students/soho/{soho.id}/change-vk-id/",
         params={"token": token},
         json={
-            "vk_id": student.vk_id,
+            "vk_id": other_student.vk_id,
         },
     )
     assert response.status == HTTPStatus.CONFLICT
@@ -133,8 +137,9 @@ async def test_successful(
     api_client: TestClient,
     token: str,
     session: AsyncSession,
+    create_soho_account,
 ) -> None:
-    soho = await SohoAccountFactory.create_async()
+    soho = await create_soho_account()
     new_vk_id = soho.student.vk_id + 1
     response = await api_client.post(
         f"/v1/students/soho/{soho.id}/change-vk-id/",
