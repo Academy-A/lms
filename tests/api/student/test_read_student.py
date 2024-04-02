@@ -1,8 +1,7 @@
+from collections.abc import Callable
 from http import HTTPStatus
 
 from aiohttp.test_utils import TestClient
-
-from tests.plugins.factories import StudentFactory
 
 
 async def test_unauthorized_user_check_status(api_client: TestClient) -> None:
@@ -41,8 +40,12 @@ async def test_student_not_found(api_client: TestClient, token: str) -> None:
     }
 
 
-async def test_successful_read(api_client: TestClient, token: str) -> None:
-    student = await StudentFactory.create_async()
+async def test_successful_read(
+    api_client: TestClient,
+    token: str,
+    create_student: Callable,
+) -> None:
+    student = await create_student()
     response = await api_client.get(
         f"/v1/students/{student.id}/", params={"token": token}
     )

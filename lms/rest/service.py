@@ -2,7 +2,7 @@ import logging
 from collections.abc import Callable
 
 from aiomisc.service.uvicorn import UvicornApplication, UvicornService
-from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from starlette.middleware.cors import CORSMiddleware
@@ -49,6 +49,7 @@ class REST(UvicornService):
         "telegram",
         "session_factory",
         "get_distributor",
+        "enroller",
     )
 
     session_factory: async_sessionmaker[AsyncSession]
@@ -56,6 +57,7 @@ class REST(UvicornService):
     soho: Soho
     telegram: Telegram
     get_distributor: Callable
+    enroller: Enroller
 
     debug: bool
     project_name: str
@@ -84,14 +86,6 @@ class REST(UvicornService):
         app.exception_handler(RequestValidationError)(requset_validation_handler)
         app.exception_handler(LMSError)(lms_exception_handler)
 
-        def get_enroller(background_tasks: BackgroundTasks) -> Enroller:
-            return Enroller(
-                uow=UnitOfWork(self.session_factory),
-                autopilot=self.autopilot,
-                telegram=self.telegram,
-                background_tasks=background_tasks,
-            )
-
         app.dependency_overrides.update(
             {
                 UnitOfWorkMarker: lambda: UnitOfWork(self.session_factory),
@@ -100,7 +94,7 @@ class REST(UvicornService):
                 AutopilotMarker: lambda: self.autopilot,
                 SohoMarker: lambda: self.soho,
                 TelegramMarker: lambda: self.telegram,
-                EnrollerMarker: get_enroller,
+                EnrollerMarker: lambda: self.enroller,
                 DistributorMarker: self.get_distributor,
             }
         )

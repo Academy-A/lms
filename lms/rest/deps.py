@@ -11,11 +11,12 @@ from lms.clients.telegram import TELEGRAM_BASE_URL, Telegram
 from lms.db.uow import UnitOfWork
 from lms.db.utils import create_async_engine, create_async_session_factory
 from lms.logic.distribute_homeworks import Distributor
+from lms.logic.enroll_student import Enroller
 from lms.utils.http import create_web_session
 from lms.utils.settings import SettingStorage
 
 
-def configure_dependencies(args: Namespace) -> None:
+def configure_dependencies(args: Namespace) -> None:  # noqa: C901
     @dependency
     async def engine() -> AsyncGenerator[AsyncEngine, None]:
         engine = create_async_engine(
@@ -84,5 +85,17 @@ def configure_dependencies(args: Namespace) -> None:
                 )
 
         return new_distributor
+
+    @dependency
+    async def enroller(
+        session_factory: async_sessionmaker[AsyncSession],
+        autopilot: Autopilot,
+        telegram: Telegram,
+    ) -> Enroller:
+        return Enroller(
+            uow=UnitOfWork(session_factory),
+            autopilot=autopilot,
+            telegram=telegram,
+        )
 
     return

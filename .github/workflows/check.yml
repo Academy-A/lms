@@ -78,5 +78,5 @@ jobs:
           poetry config virtualenvs.create false
           poetry install --no-root
 
-      # - name: Run pytest
-      #   run: python -m pytest ./tests/ --junitxml=junit/test-results.xml --cov=./lms/ --cov-report=xml
+      - name: Run pytest
+        run: python -m pytest ./tests/ --junitxml=junit/test-results.xml --cov=./lms/ --cov-report=xml

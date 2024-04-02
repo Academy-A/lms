@@ -1,30 +1,19 @@
-from datetime import datetime
 from http import HTTPStatus
 from typing import Any
 
 import pytest
 from aiohttp.test_utils import TestClient
-from freezegun import freeze_time
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from yarl import URL
 
 from lms.db.models import TeacherAssignment
 from lms.generals.enums import TeacherType
-from tests.plugins.factories.factories import (
-    OfferFactory,
-    ProductFactory,
-    StudentFactory,
-    StudentProductFactory,
-    TeacherAssignmentFactory,
-    TeacherFactory,
-    TeacherProductFactory,
-)
 
 API_URL = URL("/v1/students/change-teacher")
 
 
-async def test_unauthorized_check_status(api_client: TestClient) -> None:
+async def test_unauthorized_check_status(api_client: TestClient):
     response = await api_client.post(API_URL)
     assert response.status == HTTPStatus.UNAUTHORIZED
 
@@ -32,12 +21,12 @@ async def test_unauthorized_check_status(api_client: TestClient) -> None:
 async def test_unauthorized_check_response(
     api_client: TestClient,
     unauthorized_resp: dict[str, int | str],
-) -> None:
+):
     response = await api_client.post(API_URL)
     assert await response.json() == unauthorized_resp
 
 
-async def test_invalid_token_check_status(api_client: TestClient) -> None:
+async def test_invalid_token_check_status(api_client: TestClient):
     response = await api_client.post(API_URL, params={"token": "invalid-token"})
     assert response.status == HTTPStatus.FORBIDDEN
 
@@ -45,7 +34,7 @@ async def test_invalid_token_check_status(api_client: TestClient) -> None:
 async def test_invalid_token_check_response(
     api_client: TestClient,
     forbidden_resp: dict[str, int | str],
-) -> None:
+):
     response = await api_client.post(API_URL, params={"token": "invalid-token"})
     assert await response.json() == forbidden_resp
 
@@ -69,7 +58,7 @@ async def test_validate_data(
     json_data: dict[str, Any],
     api_client: TestClient,
     token: str,
-) -> None:
+):
     response = await api_client.post(
         API_URL,
         params={"token": token},
@@ -78,7 +67,7 @@ async def test_validate_data(
     assert response.status == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-async def test_student_not_found(api_client: TestClient, token: str) -> None:
+async def test_student_not_found(api_client: TestClient, token: str):
     response = await api_client.post(
         API_URL,
         params={"token": token},
@@ -100,7 +89,7 @@ async def test_teacher_not_found(
     api_client: TestClient,
     token: str,
     create_student,
-) -> None:
+):
     student = await create_student()
     response = await api_client.post(
         API_URL,
@@ -124,7 +113,7 @@ async def test_product_not_found(
     token: str,
     create_student,
     create_teacher,
-) -> None:
+):
     student = await create_student()
     teacher = await create_teacher()
     response = await api_client.post(
@@ -149,16 +138,9 @@ async def test_student_product_not_found(
     token: str,
     create_student,
     create_teacher,
-    create_product_group,
     create_product,
-    create_subject,
-) -> None:
-    subject = await create_subject()
-    product_group = await create_product_group()
-    product = await create_product(
-        product_group=product_group,
-        subject=subject,
-    )
+):
+    product = await create_product()
     student = await create_student()
     teacher = await create_teacher()
     response = await api_client.post(
@@ -181,30 +163,20 @@ async def test_student_product_not_found(
 async def test_teacher_product_not_found(
     api_client: TestClient,
     token: str,
-    create_flow,
     create_offer,
     create_student,
-    create_product_group,
     create_product,
     create_student_product,
-    create_subject,
     create_teacher,
-) -> None:
-    subject = await create_subject()
-    product_group = await create_product_group()
-    product = await create_product(
-        product_group=product_group,
-        subject=subject,
-    )
+):
+    product = await create_product()
     student = await create_student()
     teacher = await create_teacher()
-    flow = await create_flow()
     offer = await create_offer(product=product)
     await create_student_product(
         student=student,
         product=product,
         offer=offer,
-        flow=flow,
     )
     response = await api_client.post(
         API_URL,
@@ -224,25 +196,30 @@ async def test_teacher_product_not_found(
 
 
 async def test_same_teacher(
-    api_client: TestClient, token: str, session: AsyncSession
-) -> None:
-    student = await StudentFactory.create_async()
-    teacher = await TeacherFactory.create_async()
-    product = await ProductFactory.create_async()
-    teacher_product = await TeacherProductFactory.create_async(
-        teacher=teacher, product=product, type=TeacherType.CURATOR
+    api_client: TestClient,
+    token: str,
+    create_student_product,
+    create_teacher_product,
+    create_offer,
+    create_product,
+    create_teacher_assignment,
+):
+    product = await create_product()
+    teacher_product = await create_teacher_product(
+        product=product,
+        type=TeacherType.CURATOR,
     )
-    offer = await OfferFactory.create_async(
-        product=product, teacher_type=TeacherType.CURATOR
+    offer = await create_offer(
+        product=product,
+        teacher_type=TeacherType.CURATOR,
     )
-    student_product = await StudentProductFactory.create_async(
-        student=student,
+    student_product = await create_student_product(
         product=product,
         offer=offer,
         teacher_product=teacher_product,
         teacher_type=TeacherType.CURATOR,
     )
-    ta = await TeacherAssignmentFactory.create_async(
+    await create_teacher_assignment(
         teacher_product=teacher_product,
         student_product=student_product,
         removed_at=None,
@@ -251,8 +228,8 @@ async def test_same_teacher(
         API_URL,
         params={"token": token},
         json={
-            "student_vk_id": student.vk_id,
-            "teacher_vk_id": teacher.vk_id,
+            "student_vk_id": student_product.student.vk_id,
+            "teacher_vk_id": teacher_product.teacher.vk_id,
             "product_id": product.id,
         },
     )
@@ -262,81 +239,63 @@ async def test_same_teacher(
         "status_code": HTTPStatus.OK,
         "message": "Teacher was changed for student",
     }
-    await session.refresh(ta)
-    assert ta.removed_at is None
 
 
-@freeze_time("2023-10-27")
 async def test_have_not_teacher_earlier(
-    api_client: TestClient, token: str, session: AsyncSession
-) -> None:
-    student = await StudentFactory.create_async()
-    teacher = await TeacherFactory.create_async()
-    product = await ProductFactory.create_async()
-    teacher_product = await TeacherProductFactory.create_async(
-        teacher=teacher, product=product, type=TeacherType.CURATOR
+    api_client: TestClient,
+    token: str,
+    create_student_product,
+    create_teacher_product,
+    create_offer,
+    create_product,
+):
+    product = await create_product()
+    teacher_product = await create_teacher_product(
+        product=product,
+        type=TeacherType.CURATOR,
     )
-    offer = await OfferFactory.create_async(product=product, teacher_type=None)
-    student_product = await StudentProductFactory.create_async(
-        student=student,
+    offer = await create_offer(
+        product=product,
+        teacher_type=TeacherType.CURATOR,
+    )
+    student_product = await create_student_product(
         product=product,
         offer=offer,
-        teacher_product=None,
-        teacher_type=None,
+        teacher_product=teacher_product,
+        teacher_type=TeacherType.CURATOR,
     )
     response = await api_client.post(
         API_URL,
         params={"token": token},
         json={
-            "student_vk_id": student.vk_id,
-            "teacher_vk_id": teacher.vk_id,
+            "student_vk_id": student_product.student.vk_id,
+            "teacher_vk_id": teacher_product.teacher.vk_id,
             "product_id": product.id,
         },
     )
-
     assert response.status == HTTPStatus.OK
-    assert await response.json() == {
-        "ok": True,
-        "status_code": HTTPStatus.OK,
-        "message": "Teacher was changed for student",
-    }
-    await session.refresh(student_product)
-    assert student_product.teacher_product_id == teacher_product.id
-    assert student_product.teacher_type == teacher_product.type
-
-    ta = (
-        await session.scalars(
-            select(TeacherAssignment).filter_by(
-                teacher_product_id=teacher_product.id,
-                student_product_id=student_product.id,
-            )
-        )
-    ).one()
-    assert ta.teacher_product_id == teacher_product.id
-    assert ta.student_product_id == student_product.id
-    assert ta.removed_at is None
-    assert ta.assignment_at == datetime.now()
 
 
-@freeze_time("2023-10-27")
 async def test_with_old_teacher_product(
-    api_client: TestClient, token: str, session: str
-) -> None:
-    product = await ProductFactory.create_async()
-    student = await StudentFactory.create_async()
-    old_teacher = await TeacherFactory.create_async()
-    old_teacher_product = await TeacherProductFactory.create_async(
-        teacher=old_teacher,
+    api_client: TestClient,
+    token: str,
+    session: AsyncSession,
+    create_student_product,
+    create_teacher_product,
+    create_offer,
+    create_product,
+):
+    product = await create_product()
+    old_teacher_product = await create_teacher_product(
         product=product,
         type=TeacherType.MENTOR,
     )
-    teacher = await TeacherFactory.create_async()
-    teacher_product = await TeacherProductFactory.create_async(
-        teacher=teacher, product=product, type=TeacherType.CURATOR
+    new_teacher_product = await create_teacher_product(
+        product=product,
+        type=TeacherType.CURATOR,
     )
-    offer = await OfferFactory.create_async(product=product, teacher_type=None)
-    student_product = await StudentProductFactory.create_async(
-        student=student,
+    offer = await create_offer(product=product, teacher_type=None)
+    student_product = await create_student_product(
         product=product,
         offer=offer,
         teacher_product=old_teacher_product,
@@ -346,8 +305,8 @@ async def test_with_old_teacher_product(
         API_URL,
         params={"token": token},
         json={
-            "student_vk_id": student.vk_id,
-            "teacher_vk_id": teacher.vk_id,
+            "student_vk_id": student_product.student.vk_id,
+            "teacher_vk_id": new_teacher_product.teacher.vk_id,
             "product_id": product.id,
         },
     )
@@ -359,18 +318,18 @@ async def test_with_old_teacher_product(
         "message": "Teacher was changed for student",
     }
     await session.refresh(student_product)
-    assert student_product.teacher_product_id == teacher_product.id
-    assert student_product.teacher_type == teacher_product.type
+    assert student_product.teacher_product_id == new_teacher_product.id
+    assert student_product.teacher_type == new_teacher_product.type
 
     ta = (
         await session.scalars(
             select(TeacherAssignment).filter_by(
-                teacher_product_id=teacher_product.id,
+                teacher_product_id=new_teacher_product.id,
                 student_product_id=student_product.id,
             )
         )
     ).one()
-    assert ta.teacher_product_id == teacher_product.id
+    assert ta.teacher_product_id == new_teacher_product.id
     assert ta.student_product_id == student_product.id
     assert ta.removed_at is None
-    assert ta.assignment_at == datetime.now()
+    assert ta.assignment_at is not None

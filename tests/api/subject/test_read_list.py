@@ -2,8 +2,6 @@ from http import HTTPStatus
 
 from aiohttp.test_utils import TestClient
 
-from tests.plugins.factories import SubjectFactory
-
 
 async def test_unauthorized_user(api_client: TestClient) -> None:
     response = await api_client.get("/v1/subjects/")
@@ -39,8 +37,12 @@ async def test_successful_empty_list(api_client: TestClient, token: str) -> None
     }
 
 
-async def test_successful_order(api_client: TestClient, token: str) -> None:
-    subjects = await SubjectFactory.create_batch_async(size=5)
+async def test_successful_order(
+    api_client: TestClient,
+    token: str,
+    create_subject,
+) -> None:
+    subjects = [await create_subject() for _ in range(5)]
     response = await api_client.get("/v1/subjects/", params={"token": token})
     assert response.status == HTTPStatus.OK
     assert await response.json() == {
@@ -53,14 +55,9 @@ async def test_successful_order(api_client: TestClient, token: str) -> None:
         "items": [
             {
                 "id": s.id,
+                "name": s.name,
                 "created_at": s.created_at.isoformat(),
                 "updated_at": s.updated_at.isoformat(),
-                "name": s.name,
-                "eng_name": s.eng_name,
-                "autopilot_url": s.autopilot_url,
-                "group_vk_url": s.group_vk_url,
-                "drive_folder_id": s.drive_folder_id,
-                "check_spreadsheet_id": s.check_spreadsheet_id,
             }
             for s in sorted(subjects, key=lambda s: s.id)
         ],

@@ -4,12 +4,14 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from aiohttp.web_app import Application
 from aiomisc_log import LogFormat, LogLevel
-from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from yarl import URL
 
 from lms.clients.autopilot import Autopilot
 from lms.clients.soho import Soho
 from lms.clients.telegram import Telegram
+from lms.db.uow import UnitOfWork
+from lms.logic.enroll_student import Enroller
 from lms.rest.api.auth import generate_token
 from lms.rest.service import REST
 
@@ -25,13 +27,27 @@ def rest_port(aiomisc_unused_port_factory) -> int:
 
 
 @pytest.fixture
+def enroller(
+    sessionmaker: async_sessionmaker[AsyncSession],
+    autopilot: Autopilot,
+    telegram: Telegram,
+) -> Enroller:
+    return Enroller(
+        uow=UnitOfWork(sessionmaker=sessionmaker),
+        autopilot=autopilot,
+        telegram=telegram,
+    )
+
+
+@pytest.fixture
 def rest_service(
     args: Namespace,
     async_engine: AsyncEngine,
     autopilot: Autopilot,
     soho: Soho,
     telegram: Telegram,
-    sessionmaker,
+    enroller: Enroller,
+    sessionmaker: async_sessionmaker[AsyncSession],
     get_distributor,
 ) -> REST:
     return REST(
@@ -48,6 +64,7 @@ def rest_service(
         telegram=telegram,
         session_factory=sessionmaker,
         get_distributor=get_distributor,
+        enroller=enroller,
     )
 
 
