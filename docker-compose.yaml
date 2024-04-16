@@ -3,7 +3,7 @@ services:
   rest:
     restart: unless-stopped
     image: andytakker/insperia-lms-backend:latest
-    command: python -m lms
+    entrypoint: python -m lms.rest
     ports:
       - 8000:80
     environment:
@@ -24,7 +24,7 @@ services:
   cron:
     restart: unless-stopped
     image: andytakker/insperia-lms-backend:latest
-    command: python -m lms.cron
+    entrypoint: python -m lms.cron
 
     environment:
       APP_PG_DSN: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}
@@ -34,6 +34,8 @@ services:
       APP_REGULAR_NOTIFICATION_URL: ${REGULAR_NOTIFICATION_URL}
       APP_SUBSCRIPTION_NOTIFICATION_URL: ${SUBSCRIPTION_NOTIFICATION_URL}
       APP_ADDITIONAL_NOTIFICATION_URL: ${ADDITIONAL_NOTIFICATION_URL}
+
+      APP_SCHEDULER: "0 */2 * * *"
 
 networks:
   default:
