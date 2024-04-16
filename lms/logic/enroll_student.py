@@ -1,9 +1,8 @@
+import asyncio
 import logging
-from collections.abc import Sequence
-from dataclasses import asdict, dataclass
+from collections.abc import Coroutine, Sequence
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
-
-from fastapi import BackgroundTasks
 
 from lms.clients.autopilot import Autopilot
 from lms.clients.telegram import Telegram
@@ -24,7 +23,7 @@ class Enroller:
     uow: UnitOfWork
     autopilot: Autopilot
     telegram: Telegram
-    background_tasks: BackgroundTasks
+    background_tasks: set = field(default_factory=set)
 
     async def enroll_student(
         self,
@@ -70,12 +69,13 @@ class Enroller:
             teacher = await self.uow.teacher.find_teacher_by_teacher_product(
                 teacher_product_id=student_product.teacher_product_id,
             )
-            self.background_tasks.add_task(
-                self.autopilot.send_teacher,
-                target_path=subject.enroll_autopilot_url,
-                student_vk_id=student.vk_id,
-                teacher_vk_id=teacher.vk_id,
-                teacher_type=student_product.teacher_type,
+            self.run_back(
+                self.autopilot.send_teacher(
+                    target_path=subject.enroll_autopilot_url,
+                    student_vk_id=student.vk_id,
+                    teacher_vk_id=teacher.vk_id,
+                    teacher_type=student_product.teacher_type,
+                )
             )
             teacher_product = await self.uow.teacher_product.read_by_id(
                 student_product.teacher_product_id
@@ -86,12 +86,13 @@ class Enroller:
                 )
                 > teacher_product.max_students
             ):
-                self.background_tasks.add_task(
-                    self.telegram.teacher_overflow_alert,
-                    max_students=teacher_product.max_students,
-                    name=teacher.name,
-                    vk_id=teacher.vk_id,
-                    product_id=teacher_product.product_id,
+                self.run_back(
+                    self.telegram.teacher_overflow_alert(
+                        name=teacher.name,
+                        max_students=teacher_product.max_students,
+                        vk_id=teacher.vk_id,
+                        product_id=teacher_product.product_id,
+                    )
                 )
         return student_product
 
@@ -174,12 +175,13 @@ class Enroller:
             teacher = await self.uow.teacher.find_teacher_by_teacher_product(
                 teacher_product.id
             )
-            self.background_tasks.add_task(
-                self.autopilot.send_teacher,
-                target_path=subject.enroll_autopilot_url,
-                student_vk_id=student.vk_id,
-                teacher_vk_id=teacher.vk_id,
-                teacher_type=new_offer.teacher_type,  # type:ignore[arg-type]
+            self.run_back(
+                self.autopilot.send_teacher(
+                    target_path=subject.enroll_autopilot_url,
+                    student_vk_id=student.vk_id,
+                    teacher_vk_id=teacher.vk_id,
+                    teacher_type=new_offer.teacher_type,  # type:ignore[arg-type]
+                )
             )
             if (
                 await self.uow.student_product.calculate_active_students(
@@ -187,12 +189,13 @@ class Enroller:
                 )
                 > teacher_product.max_students
             ):
-                self.background_tasks.add_task(
-                    self.telegram.teacher_overflow_alert,
-                    max_students=teacher_product.max_students,
-                    name=teacher.name,
-                    vk_id=teacher.vk_id,
-                    product_id=teacher_product.product_id,
+                self.run_back(
+                    self.telegram.teacher_overflow_alert(
+                        name=teacher.name,
+                        max_students=teacher_product.max_students,
+                        vk_id=teacher.vk_id,
+                        product_id=teacher_product.product_id,
+                    ),
                 )
         teacher_product_id = (
             teacher_product.id
@@ -249,22 +252,29 @@ class Enroller:
                 teacher_product_id=teacher_product.id,
                 assignment_at=datetime.now(),
             )
-        self.background_tasks.add_task(
-            self.autopilot.send_teacher,
-            target_path=subject.enroll_autopilot_url,
-            student_vk_id=student.vk_id,
-            teacher_vk_id=teacher.vk_id,
-            teacher_type=teacher_product.type,
+        self.run_back(
+            self.autopilot.send_teacher(
+                target_path=subject.enroll_autopilot_url,
+                student_vk_id=student.vk_id,
+                teacher_vk_id=teacher.vk_id,
+                teacher_type=teacher_product.type,
+            )
         )
         if (
             await self.uow.student_product.calculate_active_students(teacher_product.id)
             > teacher_product.max_students
         ):
-            self.background_tasks.add_task(
-                self.telegram.teacher_overflow_alert,
-                max_students=teacher_product.max_students,
-                name=teacher.name,
-                vk_id=teacher.vk_id,
-                product_id=teacher_product.product_id,
+            self.run_back(
+                self.telegram.teacher_overflow_alert(
+                    name=teacher.name,
+                    max_students=teacher_product.max_students,
+                    vk_id=teacher.vk_id,
+                    product_id=teacher_product.product_id,
+                )
             )
         return student_product
+
+    def run_back(self, coro: Coroutine) -> None:
+        task = asyncio.create_task(coro)
+        self.background_tasks.add(task)
+        task.add_done_callback(self.background_tasks.discard)

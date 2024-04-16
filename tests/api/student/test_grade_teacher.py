@@ -5,6 +5,8 @@ import pytest
 from aiohttp.test_utils import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from lms.generals.enums import TeacherType
+
 
 async def test_unauthorized_user_check_status(api_client: TestClient) -> None:
     response = await api_client.post("/v1/students/soho/1/grade-teacher/")
@@ -193,20 +195,11 @@ async def test_product_not_found(
 async def test_student_product_not_found(
     api_client: TestClient,
     token: str,
-    create_student,
     create_soho_account,
-    create_subject,
-    create_product_group,
     create_product,
 ) -> None:
-    student = await create_student()
-    soho = await create_soho_account(student=student)
-    subject = await create_subject()
-    product_group = await create_product_group()
-    product = await create_product(
-        product_group=product_group,
-        subject=subject,
-    )
+    soho = await create_soho_account()
+    product = await create_product()
     response = await api_client.post(
         f"/v1/students/soho/{soho.id}/grade-teacher/",
         params={"token": token},
@@ -226,30 +219,16 @@ async def test_student_product_not_found(
 async def test_student_product_has_not_teacher_product(
     api_client: TestClient,
     token: str,
-    create_student,
     create_soho_account,
-    create_subject,
-    create_product_group,
     create_product,
     create_student_product,
-    create_offer,
-    create_flow,
 ) -> None:
-    student = await create_student()
-    soho = await create_soho_account(student=student)
-    subject = await create_subject()
-    product_group = await create_product_group()
-    product = await create_product(
-        product_group=product_group,
-        subject=subject,
-    )
-    offer = await create_offer(product=product)
-    flow = await create_flow()
+    soho = await create_soho_account()
+    product = await create_product()
     student_product = await create_student_product(
-        student=student,
+        student=soho.student,
         product=product,
-        offer=offer,
-        flow=flow,
+        offer__product=product,
         teacher_product=None,
         teacher_type=None,
     )
@@ -273,48 +252,28 @@ async def test_successful(
     api_client: TestClient,
     token: str,
     session: AsyncSession,
-    create_student,
     create_soho_account,
-    create_subject,
-    create_product_group,
     create_product,
     create_student_product,
-    create_offer,
-    create_flow,
-    create_teacher,
-    create_teacher_product,
 ) -> None:
-    student = await create_student()
-    soho = await create_soho_account(student=student)
-    subject = await create_subject()
-    product_group = await create_product_group()
-    product = await create_product(
-        product_group=product_group,
-        subject=subject,
-    )
-    teacher = await create_teacher()
-    teacher_product = await create_teacher_product(
-        teacher=teacher,
-        product=product,
-        average_grade=2,
-        grade_counter=2,
-    )
-    offer = await create_offer(product=product)
-    flow = await create_flow()
+    soho = await create_soho_account()
+    product = await create_product()
     student_product = await create_student_product(
-        student=student,
+        student=soho.student,
         product=product,
-        offer=offer,
-        flow=flow,
-        teacher_product=teacher_product,
-        teacher_type=teacher_product.type,
+        teacher_type=TeacherType.CURATOR,
+        offer__teacher_type=TeacherType.CURATOR,
+        offer__product=product,
+        teacher_product__type=TeacherType.CURATOR,
+        teacher_product__grade_counter=2,
+        teacher_product__average_grade=5,
     )
     response = await api_client.post(
         f"/v1/students/soho/{soho.id}/grade-teacher/",
         params={"token": token},
         json={
             "product_id": student_product.product.id,
-            "grade": 5,
+            "grade": 2,
         },
     )
     assert response.status == HTTPStatus.OK
@@ -323,10 +282,10 @@ async def test_successful(
         "status_code": HTTPStatus.OK,
         "message": "Teacher was graded",
     }
-    await session.refresh(teacher_product)
-    assert teacher_product.grade_counter == 3
-    assert teacher_product.average_grade == 3
+    await session.refresh(student_product.teacher_product)
+    assert student_product.teacher_product.grade_counter == 3
+    assert student_product.teacher_product.average_grade == 4
 
     await session.refresh(student_product)
-    assert student_product.teacher_grade == 5
+    assert student_product.teacher_grade == 2
     assert student_product.teacher_graded_at is not None

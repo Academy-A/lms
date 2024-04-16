@@ -12,12 +12,13 @@ class SubjectPropertiesFactory(factory.Factory):
         model = dict
 
     eng_name = "subject-1"
-    enroll_autopilot_url = "http://example.com"
-    group_vk_url = "http://example.com"
+    enroll_autopilot_url = "http://example.com/"
+    group_vk_url = "http://example.com/"
     check_spreadsheet_id = "1"
     check_drive_folder_id = "1"
-    check_regula_notification_folder_ids = []
+    check_regular_notification_folder_ids = []
     check_subscription_notification_folder_ids = []
+    check_additional_notification_folder_ids = []
     check_file_regex = "Математика"
 
 
@@ -25,7 +26,7 @@ class SubjectFactory(factory.Factory):
     class Meta:
         model = Subject
 
-    id = 1
+    id = factory.Sequence(lambda n: n + 1)
     name = "Subject-1"
     properties = factory.SubFactory(SubjectPropertiesFactory)
 

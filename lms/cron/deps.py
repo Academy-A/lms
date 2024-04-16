@@ -49,4 +49,5 @@ def configure_cron_dependencies(args: Namespace) -> None:
             google_drive=google_drive,
             regular_notification_url=args.regular_notification_url,
             subscription_notification_url=args.subscription_notification_url,
+            additional_notification_url=args.additional_notification_url,
         )

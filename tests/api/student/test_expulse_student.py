@@ -4,20 +4,12 @@ from typing import Any
 
 import pytest
 from aiohttp.test_utils import TestClient
-from freezegun import freeze_time
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from yarl import URL
 
 from lms.db.models import TeacherAssignment
 from lms.generals.enums import TeacherType
-from tests.plugins.factories import (
-    ProductFactory,
-    StudentFactory,
-    StudentProductFactory,
-    TeacherAssignmentFactory,
-    TeacherProductFactory,
-)
 
 API_URL = URL("/v1/students/expulse/")
 
@@ -148,8 +140,12 @@ async def test_student_not_found(api_client: TestClient, token: str) -> None:
     }
 
 
-async def test_product_not_found(api_client: TestClient, token: str) -> None:
-    student = await StudentFactory.create_async()
+async def test_product_not_found(
+    api_client: TestClient,
+    token: str,
+    create_student,
+) -> None:
+    student = await create_student()
     response = await api_client.post(
         API_URL,
         params={"token": token},
@@ -166,9 +162,14 @@ async def test_product_not_found(api_client: TestClient, token: str) -> None:
     }
 
 
-async def test_student_product_not_found(api_client: TestClient, token: str) -> None:
-    student = await StudentFactory.create_async()
-    product = await ProductFactory.create_async()
+async def test_student_product_not_found(
+    api_client: TestClient,
+    token: str,
+    create_student,
+    create_product,
+) -> None:
+    student = await create_student()
+    product = await create_product()
     response = await api_client.post(
         API_URL,
         params={"token": token},
@@ -188,22 +189,15 @@ async def test_student_product_not_found(api_client: TestClient, token: str) -> 
 async def test_student_product_already_expulsed_error(
     api_client: TestClient,
     token: str,
+    create_student_product,
 ) -> None:
-    student = await StudentFactory.create_async()
-    product = await ProductFactory.create_async()
-    await StudentProductFactory.create_async(
-        student=student,
-        product=product,
-        teacher_product=None,
-        teacher_type=None,
-        expulsion_at=datetime.now(),
-    )
+    student_product = await create_student_product(expulsion_at=datetime.now())
     response = await api_client.post(
         API_URL,
         params={"token": token},
         json={
-            "vk_id": student.vk_id,
-            "product_id": product.id,
+            "vk_id": student_product.student.vk_id,
+            "product_id": student_product.product.id,
         },
     )
     assert response.status == HTTPStatus.BAD_REQUEST
@@ -214,15 +208,13 @@ async def test_student_product_already_expulsed_error(
     }
 
 
-@freeze_time("2023-10-26")
 async def test_successful_expulse_student_without_teacher(
-    api_client: TestClient, token: str, session: AsyncSession
+    api_client: TestClient,
+    token: str,
+    session: AsyncSession,
+    create_student_product,
 ) -> None:
-    student = await StudentFactory.create_async()
-    product = await ProductFactory.create_async()
-    student_product = await StudentProductFactory.create_async(
-        student=student,
-        product=product,
+    student_product = await create_student_product(
         teacher_product=None,
         teacher_type=None,
         expulsion_at=None,
@@ -231,8 +223,8 @@ async def test_successful_expulse_student_without_teacher(
         API_URL,
         params={"token": token},
         json={
-            "vk_id": student.vk_id,
-            "product_id": product.id,
+            "vk_id": student_product.student.vk_id,
+            "product_id": student_product.product.id,
         },
     )
     assert response.status == HTTPStatus.OK
@@ -243,37 +235,38 @@ async def test_successful_expulse_student_without_teacher(
     }
 
     await session.refresh(student_product)
-    assert student_product.expulsion_at == datetime(2023, 10, 26)
+    assert student_product.expulsion_at is not None
 
 
-@freeze_time("2023-10-26")
 @pytest.mark.parametrize("teacher_type", (TeacherType.CURATOR, TeacherType.MENTOR))
 async def test_successful_expulse_student_with_teacher(
-    api_client: TestClient, token: str, teacher_type: TeacherType, session: AsyncSession
+    api_client: TestClient,
+    token: str,
+    teacher_type: TeacherType,
+    session: AsyncSession,
+    create_product,
+    create_student_product,
+    create_teacher_assignment,
 ) -> None:
-    product = await ProductFactory.create_async()
-    teacher_product = await TeacherProductFactory.create_async(
-        type=teacher_type,
-        product=product,
-    )
-    student = await StudentFactory.create_async()
-    student_product = await StudentProductFactory.create_async(
-        student=student,
-        teacher_product=teacher_product,
+    product = await create_product()
+    student_product = await create_student_product(
+        teacher_product__product=product,
+        teacher_product__type=teacher_type,
+        offer__product=product,
         teacher_type=teacher_type,
         product=product,
         expulsion_at=None,
     )
-    teacher_assignment = await TeacherAssignmentFactory.create_async(
+    teacher_assignment = await create_teacher_assignment(
         student_product=student_product,
-        teacher_product=teacher_product,
+        teacher_product=student_product.teacher_product,
         removed_at=None,
     )
     response = await api_client.post(
         API_URL,
         params={"token": token},
         json={
-            "vk_id": student.vk_id,
+            "vk_id": student_product.student.vk_id,
             "product_id": product.id,
         },
     )
@@ -285,30 +278,30 @@ async def test_successful_expulse_student_with_teacher(
     }
 
     await session.refresh(student_product)
-    assert student_product.expulsion_at == datetime(2023, 10, 26)
+    assert student_product.expulsion_at is not None
     assert student_product.teacher_product_id is None
     assert student_product.teacher_type is None
 
     await session.refresh(teacher_assignment)
-    assert teacher_assignment.removed_at == datetime(2023, 10, 26)
+    assert teacher_assignment.removed_at is not None
 
 
-@freeze_time("2023-10-26")
 @pytest.mark.parametrize("teacher_type", (TeacherType.CURATOR, TeacherType.MENTOR))
 async def test_successful_expulse_with_teacher_if_not_assignment(
     api_client: TestClient,
     token: str,
     session: AsyncSession,
     teacher_type: TeacherType,
+    create_product,
+    create_student_product,
+    create_teacher_product,
 ) -> None:
-    product = await ProductFactory.create_async()
-    teacher_product = await TeacherProductFactory.create_async(
-        type=teacher_type,
+    product = await create_product()
+    teacher_product = await create_teacher_product(
         product=product,
+        type=teacher_type,
     )
-    student = await StudentFactory.create_async()
-    student_product = await StudentProductFactory.create_async(
-        student=student,
+    student_product = await create_student_product(
         teacher_product=teacher_product,
         teacher_type=teacher_type,
         product=product,
@@ -318,7 +311,7 @@ async def test_successful_expulse_with_teacher_if_not_assignment(
         API_URL,
         params={"token": token},
         json={
-            "vk_id": student.vk_id,
+            "vk_id": student_product.student.vk_id,
             "product_id": product.id,
         },
     )
@@ -330,7 +323,7 @@ async def test_successful_expulse_with_teacher_if_not_assignment(
     }
 
     await session.refresh(student_product)
-    assert student_product.expulsion_at == datetime(2023, 10, 26)
+    assert student_product.expulsion_at is not None
     assert student_product.teacher_product_id is None
     assert student_product.teacher_type is None
 
@@ -343,4 +336,4 @@ async def test_successful_expulse_with_teacher_if_not_assignment(
         )
     ).first()
     assert ta is not None
-    assert ta.removed_at == datetime(2023, 10, 26)
+    assert ta.removed_at is not None

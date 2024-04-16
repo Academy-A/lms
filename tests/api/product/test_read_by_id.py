@@ -1,9 +1,6 @@
-from datetime import date
 from http import HTTPStatus
 
 from aiohttp.test_utils import TestClient
-
-from tests.plugins.factories import ProductFactory
 
 
 async def test_unauthorized_user(api_client: TestClient) -> None:
@@ -36,15 +33,29 @@ async def test_subject_not_found(api_client: TestClient, token: str) -> None:
     }
 
 
-async def test_successful_read(api_client: TestClient, token: str) -> None:
-    product = await ProductFactory.create_async(
-        start_date=date.today(), end_date=date.today()
-    )
+async def test_succesful_status_ok(
+    api_client: TestClient,
+    token: str,
+    create_product,
+):
+    product = await create_product()
     response = await api_client.get(
         f"/v1/products/{product.id}/",
         params={"token": token},
     )
     assert response.status == HTTPStatus.OK
+
+
+async def test_successful_format_ok(
+    api_client: TestClient,
+    token: str,
+    create_product,
+) -> None:
+    product = await create_product()
+    response = await api_client.get(
+        f"/v1/products/{product.id}/",
+        params={"token": token},
+    )
     assert await response.json() == {
         "id": product.id,
         "product_group_id": product.product_group.id,
