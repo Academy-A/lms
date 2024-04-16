@@ -304,7 +304,9 @@ class TeacherProduct(TimestampMixin, Base):
     teacher: Mapped[Teacher] = relationship("Teacher", lazy="joined")
     product: Mapped[Product] = relationship("Product")
     flows: Mapped[list[Flow]] = relationship(
-        "Flow", secondary="teacher_product_flow", back_populates="teacher_products"
+        "Flow",
+        secondary="teacher_product_flow",
+        back_populates="teacher_products",
     )
 
     def __repr__(self) -> str:
@@ -400,9 +402,6 @@ class TeacherProductFlow(Base):
         nullable=False,
         index=True,
     )
-
-    teacher_product: Mapped[TeacherProduct] = relationship("TeacherProduct")
-    flow: Mapped[Flow] = relationship("Flow")
 
 
 class Reviewer(Base, NameMixin, TimestampMixin):

@@ -18,6 +18,7 @@ class SubjectPropertiesFactory(factory.Factory):
     check_drive_folder_id = "1"
     check_regular_notification_folder_ids = []
     check_subscription_notification_folder_ids = []
+    check_additional_notification_folder_ids = []
     check_file_regex = "Математика"
 
 

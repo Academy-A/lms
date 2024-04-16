@@ -33,7 +33,20 @@ async def test_subject_not_found(api_client: TestClient, token: str) -> None:
     }
 
 
-async def test_successful_read(
+async def test_succesful_status_ok(
+    api_client: TestClient,
+    token: str,
+    create_product,
+):
+    product = await create_product()
+    response = await api_client.get(
+        f"/v1/products/{product.id}/",
+        params={"token": token},
+    )
+    assert response.status == HTTPStatus.OK
+
+
+async def test_successful_format_ok(
     api_client: TestClient,
     token: str,
     create_product,
@@ -43,7 +56,6 @@ async def test_successful_read(
         f"/v1/products/{product.id}/",
         params={"token": token},
     )
-    assert response.status == HTTPStatus.OK
     assert await response.json() == {
         "id": product.id,
         "product_group_id": product.product_group.id,

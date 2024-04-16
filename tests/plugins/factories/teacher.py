@@ -8,10 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from lms.db.models import (
     Teacher,
     TeacherProduct,
-    TeacherProductFlow,
 )
 from lms.generals.enums import TeacherType
-from tests.plugins.factories.flow import FlowFactory
 from tests.plugins.factories.product import ProductFactory
 
 
@@ -39,15 +37,6 @@ class TeacherProductFactory(factory.Factory):
     product = factory.SubFactory(ProductFactory)
 
 
-class TeacherProductFlowFactory(factory.Factory):
-    class Meta:
-        model = TeacherProductFlow
-
-    id = factory.Sequence(lambda n: n + 1)
-    teacher_product = factory.SubFactory(TeacherProductFactory)
-    flow = factory.SubFactory(FlowFactory)
-
-
 @pytest.fixture
 def create_teacher(session: AsyncSession) -> Callable:
     async def _factory(**kwargs):
@@ -68,17 +57,5 @@ def create_teacher_product(session: AsyncSession) -> Callable:
         await session.commit()
         await session.refresh(teacher_product)
         return teacher_product
-
-    return _factory
-
-
-@pytest.fixture
-def create_teacher_product_flow(session: AsyncSession) -> Callable:
-    async def _factory(**kwargs) -> TeacherProductFlow:
-        teacher_product_flow = TeacherProductFlowFactory(**kwargs)
-        session.add(teacher_product_flow)
-        await session.commit()
-        await session.flush(teacher_product_flow)
-        return teacher_product_flow
 
     return _factory
