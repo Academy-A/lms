@@ -13,6 +13,7 @@ class SubjectProperties(BaseModel):
     check_drive_folder_id: str = ""
     check_regular_notification_folder_ids: list[str] = Field(default_factory=list)
     check_subscription_notification_folder_ids: list[str] = Field(default_factory=list)
+    check_additional_notification_folder_ids: list[str] = Field(default_factory=list)
     check_file_regex: str = ""
 
 
@@ -52,6 +53,10 @@ class Subject(BaseModel):
     @property
     def check_subscription_notification_folder_ids(self) -> Sequence[str]:
         return self.properties.check_subscription_notification_folder_ids
+
+    @property
+    def check_additional_notification_folder_ids(self) -> Sequence[str]:
+        return self.properties.check_additional_notification_folder_ids
 
     @property
     def check_file_regex(self) -> str:

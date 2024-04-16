@@ -48,7 +48,7 @@ freezegun = "^1.2.2"
 pytest-subtests = "^0.11.0"
 types-passlib = "^1.7.7.13"
 aiomisc-pytest = "^1.1.1"
-ruff = "^0.1.8"
+ruff = "0.3.7"
 factory-boy = "^3.3.0"
 dirty-equals = "^0.7.1.post0"
 
