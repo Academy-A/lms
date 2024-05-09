@@ -66,7 +66,7 @@ class DistributionView(BaseView):
     async def _get_product_list(self) -> Sequence[Product]:
         async with self.session_factory() as session:
             now = datetime.now()
-            return await ProductRepository(session=session).read_actual_list(dt=now)
+            return await ProductRepository(session=session).get_actual_list(dt=now)
 
     @cached_property
     def token(self) -> str:

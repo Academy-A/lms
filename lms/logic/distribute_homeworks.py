@@ -1,4 +1,4 @@
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -39,13 +39,13 @@ class Distributor:
         homeworks = await self._get_soho_homeworks(params.homework_ids)
         subject = await self._get_subject(params.product_ids[0])
         reviewers = await self._get_reviewers(subject_id=subject.id)
-        student_data = await self._get_students_data(
+        student_map = await self._get_student_data_map(
             subject_id=subject.id,
             homeworks=homeworks,
         )
-        filtered_homeworks, error_homeworks = await self._filter_homeworks(
+        filtered_homeworks, error_homeworks = await _filter_homeworks(
             homeworks=homeworks,
-            student_data=student_data,
+            student_map=student_map,
         )
         distribution = Distribution(
             created_at=created_at,
@@ -90,63 +90,19 @@ class Distributor:
         return await self.uow.subject.read_by_id(product.subject_id)
 
     async def _get_reviewers(self, subject_id: int) -> Sequence[DistributionReviewer]:
-        reviewers = await self.uow.reviewer.get_by_subject_id(subject_id)
+        reviewers = await self.uow.reviewer.get_list_by_subject_id(subject_id)
         return [DistributionReviewer(**r.model_dump()) for r in reviewers]
 
-    async def _get_students_data(
+    async def _get_student_data_map(
         self,
         subject_id: int,
         homeworks: Sequence[SohoHomework],
-    ) -> Sequence[StudentDistributeData]:
+    ) -> Mapping[int, StudentDistributeData]:
         vk_ids = set(hw.student_vk_id for hw in homeworks if hw.student_vk_id)
         return await self.uow.student_product.distribute_data(
             subject_id=subject_id,
             vk_ids=vk_ids,
         )
-
-    async def _filter_homeworks(
-        self,
-        student_data: Sequence[StudentDistributeData],
-        homeworks: Sequence[SohoHomework],
-    ) -> tuple[Sequence[StudentHomework], Sequence[ErrorHomework]]:
-        pre_filtered_homeworks: list[StudentHomework] = list()
-        error_homeworks: list[ErrorHomework] = list()
-        student_map = {st.vk_id: st for st in student_data}
-        for hw in homeworks:
-            if hw.student_vk_id is None:
-                error_homeworks.append(
-                    ErrorHomework(
-                        homework=hw,
-                        error_message=DistributionErrorMessage.HOMEWORK_WITHOUT_VK_ID,
-                    )
-                )
-            elif hw.student_vk_id not in student_map:
-                error_homeworks.append(
-                    ErrorHomework(
-                        homework=hw,
-                        error_message=DistributionErrorMessage.STUDENT_WITH_VK_ID_NOT_FOUND,
-                    )
-                )
-            elif student_map[hw.student_vk_id].is_expulsed:
-                error_homeworks.append(
-                    ErrorHomework(
-                        homework=hw,
-                        error_message=DistributionErrorMessage.STUDENT_WAS_EXPULSED,
-                    )
-                )
-            else:
-                pre_filtered_homeworks.append(
-                    StudentHomework(
-                        student_name=student_map[hw.student_vk_id].name,
-                        student_vk_id=student_map[hw.student_vk_id].vk_id,
-                        student_soho_id=hw.student_soho_id,
-                        submission_url=hw.chat_url,
-                        teacher_product_id=student_map[
-                            hw.student_vk_id
-                        ].teacher_product_id,
-                    )
-                )
-        return pre_filtered_homeworks, error_homeworks
 
     async def _add_folder_to_notification(
         self, subject_id: int, folder_id: str
@@ -206,3 +162,44 @@ class Distributor:
             values=distribution.serialize_for_sheet(),
             major_dimension=SHEET_MAJOR_DIMENSION,
         )
+
+
+async def _filter_homeworks(
+    homeworks: Sequence[SohoHomework],
+    student_map: Mapping[int, StudentDistributeData],
+) -> tuple[Sequence[StudentHomework], Sequence[ErrorHomework]]:
+    pre_filtered_homeworks: list[StudentHomework] = list()
+    error_homeworks: list[ErrorHomework] = list()
+    for hw in homeworks:
+        if hw.student_vk_id is None:
+            error_homeworks.append(
+                ErrorHomework(
+                    homework=hw,
+                    error_message=DistributionErrorMessage.HOMEWORK_WITHOUT_VK_ID,
+                )
+            )
+        elif hw.student_vk_id not in student_map:
+            error_homeworks.append(
+                ErrorHomework(
+                    homework=hw,
+                    error_message=DistributionErrorMessage.STUDENT_WITH_VK_ID_NOT_FOUND,
+                )
+            )
+        elif student_map[hw.student_vk_id].is_expulsed:
+            error_homeworks.append(
+                ErrorHomework(
+                    homework=hw,
+                    error_message=DistributionErrorMessage.STUDENT_WAS_EXPULSED,
+                )
+            )
+        else:
+            pre_filtered_homeworks.append(
+                StudentHomework(
+                    student_name=student_map[hw.student_vk_id].name,
+                    student_vk_id=student_map[hw.student_vk_id].vk_id,
+                    student_soho_id=hw.student_soho_id,
+                    submission_url=hw.chat_url,
+                    teacher_product_id=student_map[hw.student_vk_id].teacher_product_id,
+                )
+            )
+    return pre_filtered_homeworks, error_homeworks
