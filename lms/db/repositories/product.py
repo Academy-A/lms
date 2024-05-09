@@ -46,11 +46,11 @@ class ProductRepository(PaginateMixin, Repository[ProductDb]):
         except NoResultFound as e:
             raise ProductNotFoundError from e
 
-    async def read_actual_list(self, dt: datetime) -> Sequence[Product]:
+    async def get_actual_list(self, dt: datetime) -> Sequence[Product]:
         stmt = (
             select(ProductDb)
             .where(ProductDb.end_date > dt.date())
             .order_by(ProductDb.created_at)
         )
-        objs = (await self._session.scalars(stmt)).all()
-        return [Product.model_validate(obj) for obj in objs]
+        result = await self._session.scalars(stmt)
+        return [Product.model_validate(obj) for obj in result]

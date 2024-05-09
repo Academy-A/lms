@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from lms.db.base import Base
+from lms.db.repositories.reviewer import ReviewerRepository
 from lms.db.uow import UnitOfWork
 from lms.db.utils import make_alembic_config
 from tests.plugins.factories.factories import factories
@@ -88,6 +89,11 @@ async def session(
     await clear_db(async_engine)
 
 
-@pytest.fixture()
-async def uow(sessionmaker) -> UnitOfWork:
+@pytest.fixture
+def uow(sessionmaker) -> UnitOfWork:
     return UnitOfWork(sessionmaker=sessionmaker)
+
+
+@pytest.fixture
+def reviewer_repository(session: AsyncSession) -> ReviewerRepository:
+    return ReviewerRepository(session=session)

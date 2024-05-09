@@ -87,6 +87,7 @@ class Distribution(BaseModel):
             "Finish min distribution. Left %d homeworks",
             len(self.filtered_homeworks),
         )
+        self._log_reviewers("minimum")
 
     async def _distribute_premium(self) -> None:
         pass
@@ -94,6 +95,7 @@ class Distribution(BaseModel):
     async def _distribute_main(self) -> None:
         self._calculate_actual()
         self._filled_main()
+        self._log_reviewers("main")
 
     async def _distribute_rechecks(self) -> None:
         pass
@@ -219,3 +221,9 @@ class Distribution(BaseModel):
             error_message.append(e_hw.error_message)
         data.extend([[], error_identify, error_name, error_message])
         return data
+
+    def _log_reviewers(self, step: str) -> None:
+        log_str = [f"Reviewers on step `{step}`:"]
+        for r in self.reviewers:
+            log_str.append(f"{r.name}: {len(r.student_homeworks)},")
+        log.info(" ".join(log_str))

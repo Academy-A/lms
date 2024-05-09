@@ -22,7 +22,7 @@ parser.add_argument(
 )
 
 group = parser.add_argument_group("Logging options")
-group.add_argument("--log-level", default=LogLevel.info, choices=LogLevel.choices())
+group.add_argument("--log-level", choices=LogLevel.choices(), default=LogLevel.info)
 group.add_argument("--log-format", choices=LogFormat.choices(), default=LogFormat.color)
 
 group = parser.add_argument_group("Project options")
