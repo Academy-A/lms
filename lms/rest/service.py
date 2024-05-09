@@ -33,6 +33,8 @@ from lms.rest.api.v1.handler import (
 
 log = logging.getLogger(__name__)
 
+ExceptionHandlersType = tuple[tuple[type[Exception], Callable], ...]
+
 
 class REST(UvicornService):
     __required__ = (
@@ -42,7 +44,6 @@ class REST(UvicornService):
         "project_version",
         "secret_key",
     )
-
     __dependencies__ = (
         "autopilot",
         "soho",
@@ -50,6 +51,12 @@ class REST(UvicornService):
         "session_factory",
         "get_distributor",
         "enroller",
+    )
+
+    EXCEPTION_HANDLERS: ExceptionHandlersType = (
+        (HTTPException, http_exception_handler),
+        (RequestValidationError, requset_validation_handler),
+        (LMSError, lms_exception_handler),
     )
 
     session_factory: async_sessionmaker[AsyncSession]
@@ -72,7 +79,27 @@ class REST(UvicornService):
             title=self.project_name,
             description=self.project_description,
             version=self.project_version,
+            openapi_url="/docs/openapi.json",
+            docs_url="/docs/swagger",
+            redoc_url="/docs/redoc",
         )
+
+        self._set_middlewares(app=app)
+        self._set_routes(app=app)
+        self._set_exceptions(app=app)
+        self._set_dependency_overrides(app=app)
+
+        configure_admin(
+            app=app,
+            session_factory=self.session_factory,
+            title=self.project_name,
+            secret_key=self.secret_key,
+            debug=self.debug,
+        )
+        log.info("REST service app configured")
+        return app
+
+    def _set_middlewares(self, app: FastAPI) -> None:
         app.add_middleware(
             CORSMiddleware,
             allow_origins=["*"],
@@ -81,11 +108,14 @@ class REST(UvicornService):
             allow_headers=["*"],
         )
 
+    def _set_routes(self, app: FastAPI) -> None:
         app.include_router(api_router)
-        app.exception_handler(HTTPException)(http_exception_handler)
-        app.exception_handler(RequestValidationError)(requset_validation_handler)
-        app.exception_handler(LMSError)(lms_exception_handler)
 
+    def _set_exceptions(self, app: FastAPI) -> None:
+        for exception, handler in self.EXCEPTION_HANDLERS:
+            app.add_exception_handler(exception, handler)
+
+    def _set_dependency_overrides(self, app: FastAPI) -> None:
         app.dependency_overrides.update(
             {
                 UnitOfWorkMarker: lambda: UnitOfWork(self.session_factory),
@@ -98,12 +128,3 @@ class REST(UvicornService):
                 DistributorMarker: self.get_distributor,
             }
         )
-        configure_admin(
-            app=app,
-            session_factory=self.session_factory,
-            title=self.project_name,
-            secret_key=self.secret_key,
-            debug=self.debug,
-        )
-        log.info("REST service app configured")
-        return app

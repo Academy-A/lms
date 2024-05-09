@@ -61,6 +61,6 @@ async def create_distribution(
     await distributor.make_distribution(params=params, created_at=now)
     return StatusResponseSchema(
         ok=True,
-        status_code=201,
+        status_code=HTTPStatus.CREATED,
         message="The distribution was created",
     )

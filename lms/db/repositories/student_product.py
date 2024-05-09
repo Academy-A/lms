@@ -1,4 +1,4 @@
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping
 from typing import Any, NamedTuple
 
 from sqlalchemy import func, insert, select
@@ -110,7 +110,7 @@ class StudentProductRepository(Repository[StudentProductDb]):
         self,
         subject_id: int,
         vk_ids: Iterable[int],
-    ) -> Sequence[StudentDistributeData]:
+    ) -> Mapping[int, StudentDistributeData]:
         query = (
             select(
                 StudentDb.vk_id,
@@ -127,6 +127,8 @@ class StudentProductRepository(Repository[StudentProductDb]):
                 StudentDb.vk_id.in_(vk_ids),
             )
         )
-        return [
-            StudentDistributeData(*res) for res in await self._session.execute(query)
-        ]
+        student_data_map = {}
+        for res in await self._session.execute(query):
+            data = StudentDistributeData(*res)
+            student_data_map[data.vk_id] = data
+        return student_data_map
