@@ -1,7 +1,7 @@
 PROJECT_PATH := ./lms/
 TEST_PATH := ./tests/
 
-VERSION = $(shell poetry version -s)
+PYTHON_VERSION := 3.11
 
 HELP_FUN = \
 	%help; while(<>){push@{$$help{$$2//'options'}},[$$1,$$3] \
@@ -14,18 +14,21 @@ help: ##@Help Show this help
 	@perl -e '$(HELP_FUN)' $(MAKEFILE_LIST)
 
 develop: ##@Deps Installing dependencies
-	poetry -V
-	poetry install
+	python$(PYTHON_VERSION) -m venv .venv
+	.venv/bin/pip install -U pip poetry
+	.venv/bin/poetry config virtualenvs.create false
+	.venv/bin/poetry install
+	.venv/bin/pre-commit install
 
 local:
-	docker-compose -f docker-compose.dev.yaml up --force-recreate --renew-anon-volumes --build
+	docker compose -f docker-compose.dev.yaml up --force-recreate --renew-anon-volumes --build
 
 test: ##@Test Run tests
-	pytest $(TEST_PATH) -vx
+	.venv/bin/pytest $(TEST_PATH) -vx
 
 lint: ##@Code Check project with mypy and ruff
-	poetry run mypy $(PROJECT_PATH)
-	poetry run ruff check $(PROJECT_PATH) $(TEST_PATH)
+	.venv/bin/poetry run mypy $(PROJECT_PATH)
+	.venv/bin/poetry run ruff check $(PROJECT_PATH) $(TEST_PATH)
 
 format: ##@Code Format project
-	poetry run ruff format $(PROJECT_PATH) $(TEST_PATH)
+	.venv/bin/poetry run ruff format $(PROJECT_PATH) $(TEST_PATH)
