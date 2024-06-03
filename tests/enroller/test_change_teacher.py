@@ -36,7 +36,7 @@ async def test_change_teacher_if_same_teacher(
         student_product=student_product,
         removed_at=None,
     )
-    async with enroller.uow:
+    async with enroller.uow.start():
         await enroller.change_teacher_for_student(
             product_id=product.id,
             student_vk_id=student_product.student.vk_id,
@@ -75,7 +75,7 @@ async def test_change_teacher_if_have_not_teacher_earlier(
         teacher_product=None,
         teacher_type=None,
     )
-    async with enroller.uow:
+    async with enroller.uow.start():
         await enroller.change_teacher_for_student(
             product_id=product.id,
             student_vk_id=student_product.student.vk_id,
@@ -116,7 +116,7 @@ async def test_change_teacher_if_old_teacher_product_ok_change_teacher(
         teacher_product=old_teacher_product,
         teacher_type=old_teacher_product.type,
     )
-    async with enroller.uow:
+    async with enroller.uow.start():
         await enroller.change_teacher_for_student(
             product_id=product.id,
             student_vk_id=student_product.student.vk_id,
@@ -152,7 +152,7 @@ async def test_change_teacher_ifold_teacher_product_ok_teacher_assignment(
         teacher_product=old_teacher_product,
         teacher_type=old_teacher_product.type,
     )
-    async with enroller.uow:
+    async with enroller.uow.start():
         await enroller.change_teacher_for_student(
             product_id=product.id,
             student_vk_id=student_product.student.vk_id,

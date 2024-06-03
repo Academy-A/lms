@@ -25,7 +25,7 @@ async def ping(
 ) -> MonitoringSchema:
     db_status = "ok"
     status_code = HTTPStatus.OK
-    async with uow:
+    async with uow.start():
         if not await check_db(uow):
             db_status = "internal_error"
             status_code = HTTPStatus.INTERNAL_SERVER_ERROR
