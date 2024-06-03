@@ -19,7 +19,7 @@ async def read_list(
     page_size: int = Query(gt=0, le=100, default=20),
     uow: UnitOfWork = Depends(UnitOfWorkMarker),
 ) -> Pagination[ShortSubject]:
-    async with uow:
+    async with uow.start():
         pagination = await uow.subject.paginate(
             page=page,
             page_size=page_size,
@@ -32,6 +32,6 @@ async def read_by_id(
     subject_id: int,
     uow: UnitOfWork = Depends(UnitOfWorkMarker),
 ) -> Subject:
-    async with uow:
+    async with uow.start():
         subject = await uow.subject.read_by_id(subject_id=subject_id)
     return subject

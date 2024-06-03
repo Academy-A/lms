@@ -26,7 +26,7 @@ async def read_products(
     page_size: int = Query(gt=0, le=100, default=20),
     uow: UnitOfWork = Depends(UnitOfWorkMarker),
 ) -> Pagination[Product]:
-    async with uow:
+    async with uow.start():
         pagination = await uow.product.paginate(
             page=page,
             page_size=page_size,
@@ -47,7 +47,7 @@ async def read_product_by_id(
     product_id: PositiveInt,
     uow: UnitOfWork = Depends(UnitOfWorkMarker),
 ) -> Product:
-    async with uow:
+    async with uow.start():
         product = await uow.product.read_by_id(product_id=product_id)
     return product
 
