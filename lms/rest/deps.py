@@ -75,7 +75,8 @@ def configure_dependencies(args: Namespace) -> None:  # noqa: C901
         soho: Soho,
     ) -> Callable:
         async def new_distributor() -> AsyncGenerator[Distributor, None]:
-            async with UnitOfWork(sessionmaker=session_factory) as uow:
+            uow = UnitOfWork(sessionmaker=session_factory)
+            async with uow.start():
                 yield Distributor(
                     uow=uow,
                     google_drive=google_drive,

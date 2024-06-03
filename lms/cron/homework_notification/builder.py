@@ -35,7 +35,8 @@ class NotificationBuilder:
     async def _build_regular_notify_callbacks(
         self,
     ) -> AsyncGenerator[Callable, None]:
-        async with UnitOfWork(self.session_factory) as uow:
+        uow = UnitOfWork(self.session_factory)
+        async with uow.start():
             subjects = await uow.subject.read_all()
             for subject in subjects:
                 yield await self._build_notify_callback(
@@ -48,7 +49,8 @@ class NotificationBuilder:
     async def _build_subscription_notify_callbacks(
         self,
     ) -> AsyncGenerator[Callable, None]:
-        async with UnitOfWork(self.session_factory) as uow:
+        uow = UnitOfWork(self.session_factory)
+        async with uow.start():
             subject = await uow.subject.read_by_id(1)
             yield await self._build_notify_callback(
                 subject=subject,
@@ -60,7 +62,8 @@ class NotificationBuilder:
     async def _build_additional_notify_callbacks(
         self,
     ) -> AsyncGenerator[Callable, None]:
-        async with UnitOfWork(self.session_factory) as uow:
+        uow = UnitOfWork(self.session_factory)
+        async with uow.start():
             subject = await uow.subject.read_by_id(1)
             yield await self._build_notify_callback(
                 subject=subject,
@@ -77,7 +80,8 @@ class NotificationBuilder:
         notification_class: type[BaseNotification],
     ) -> Callable:
         async def notify() -> None:
-            async with UnitOfWork(self.session_factory) as uow:
+            uow = UnitOfWork(self.session_factory)
+            async with uow.start():
                 notification = notification_class(
                     autopilot=self.autopilot,
                     uow=uow,
