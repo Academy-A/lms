@@ -8,7 +8,7 @@ from lms.generals.models.reviewer import Reviewer
 async def test_get_list_by_subject_id__subject_unknown(
     uow: UnitOfWork,
 ):
-    async with uow:
+    async with uow.start():
         result = await uow.reviewer.get_list_by_subject_id(subject_id=1)
     assert result == IsListOrTuple(length=0)
 

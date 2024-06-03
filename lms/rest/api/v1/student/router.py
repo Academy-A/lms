@@ -33,7 +33,7 @@ async def enroll_student_route(
     enrollment: EnrollStudentSchema,
     enroller: Enroller = Depends(EnrollerMarker),
 ) -> StudentProduct:
-    async with enroller.uow:
+    async with enroller.uow.start():
         student_product = await enroller.enroll_student(
             new_student=NewStudent(
                 vk_id=enrollment.student.vk_id,
@@ -54,7 +54,7 @@ async def expulsion_student_route(
     expulsion_data: ExpulsionStudentSchema,
     uow: UnitOfWork = Depends(UnitOfWorkMarker),
 ) -> StatusResponseSchema:
-    async with uow:
+    async with uow.start():
         await expulse_student_by_offer_id(
             uow=uow,
             student_vk_id=expulsion_data.vk_id,
@@ -73,7 +73,7 @@ async def change_teacher_product(
     change_teacher_data: ChangeTeacherSchema,
     enroller: Enroller = Depends(EnrollerMarker),
 ) -> StatusResponseSchema:
-    async with enroller.uow:
+    async with enroller.uow.start():
         await enroller.change_teacher_for_student(
             product_id=change_teacher_data.product_id,
             student_vk_id=change_teacher_data.student_vk_id,
@@ -100,7 +100,7 @@ async def read_student_by_id_route(
     student_id: PositiveInt = Path(),
     uow: UnitOfWork = Depends(UnitOfWorkMarker),
 ) -> Student:
-    async with uow:
+    async with uow.start():
         student = await uow.student.read_by_id(student_id=student_id)
     return student
 
@@ -111,7 +111,7 @@ async def change_vk_id_by_soho_id_route(
     vk_id_data: ChangeVKIDSchema,
     uow: UnitOfWork = Depends(UnitOfWorkMarker),
 ) -> Student:
-    async with uow:
+    async with uow.start():
         student = await change_student_vk_id_by_soho_id(
             uow=uow,
             soho_id=soho_id,
@@ -127,7 +127,7 @@ async def grade_teacher_route(
     grade_data: GradeTeacherSchema,
     uow: UnitOfWork = Depends(UnitOfWorkMarker),
 ) -> StatusResponseSchema:
-    async with uow:
+    async with uow.start():
         await grade_teacher(
             uow=uow,
             soho_id=soho_id,

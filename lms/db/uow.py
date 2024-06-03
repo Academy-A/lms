@@ -1,5 +1,6 @@
-from types import TracebackType
-from typing import Self
+from contextlib import asynccontextmanager
+from typing import AsyncIterator, Self
+from aiomisc import timeout
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -23,31 +24,26 @@ class UnitOfWork:
     def __init__(self, sessionmaker: async_sessionmaker[AsyncSession]) -> None:
         self._sessionmaker = sessionmaker
 
-    async def __aenter__(self) -> Self:
-        self._session = self._sessionmaker()
-        self.distribution = DistributionRepository(session=self._session)
-        self.file = FileRepository(session=self._session)
-        self.flow = FlowRepository(session=self._session)
-        self.offer = OfferRepository(session=self._session)
-        self.product = ProductRepository(session=self._session)
-        self.reviewer = ReviewerRepository(session=self._session)
-        self.setting = SettingRepository(session=self._session)
-        self.soho = SohoRepository(session=self._session)
-        self.student = StudentRepository(session=self._session)
-        self.student_product = StudentProductRepository(session=self._session)
-        self.subject = SubjectRepository(session=self._session)
-        self.teacher = TeacherRepository(session=self._session)
-        self.teacher_assignment = TeacherAssignmentRepository(session=self._session)
-        self.teacher_product = TeacherProductRepository(session=self._session)
-        return self
-
-    async def __aexit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: TracebackType | None,
-    ) -> None:
-        await self._session.rollback()
+    @asynccontextmanager
+    async def start(self) -> AsyncIterator[Self]:
+        async with self._sessionmaker() as session:
+            self._session = session
+            self.distribution = DistributionRepository(session=self._session)
+            self.file = FileRepository(session=self._session)
+            self.flow = FlowRepository(session=self._session)
+            self.offer = OfferRepository(session=self._session)
+            self.product = ProductRepository(session=self._session)
+            self.reviewer = ReviewerRepository(session=self._session)
+            self.setting = SettingRepository(session=self._session)
+            self.soho = SohoRepository(session=self._session)
+            self.student = StudentRepository(session=self._session)
+            self.student_product = StudentProductRepository(session=self._session)
+            self.subject = SubjectRepository(session=self._session)
+            self.teacher = TeacherRepository(session=self._session)
+            self.teacher_assignment = TeacherAssignmentRepository(session=self._session)
+            self.teacher_product = TeacherProductRepository(session=self._session)
+            yield self
+            await self._session.rollback()
 
     async def rollback(self) -> None:
         await self._session.rollback()
