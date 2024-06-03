@@ -39,9 +39,9 @@ ExceptionHandlersType = tuple[tuple[type[Exception], Callable], ...]
 class REST(UvicornService):
     __required__ = (
         "debug",
-        "project_name",
-        "project_description",
-        "project_version",
+        "title",
+        "description",
+        "version",
         "secret_key",
     )
     __dependencies__ = (
@@ -67,18 +67,18 @@ class REST(UvicornService):
     enroller: Enroller
 
     debug: bool
-    project_name: str
-    project_description: str
-    project_version: str
+    title: str
+    description: str
+    version: str
 
     secret_key: str
 
     async def create_application(self) -> UvicornApplication:
         app = FastAPI(
             debug=self.debug,
-            title=self.project_name,
-            description=self.project_description,
-            version=self.project_version,
+            title=self.title,
+            description=self.description,
+            version=self.version,
             openapi_url="/docs/openapi.json",
             docs_url="/docs/swagger",
             redoc_url="/docs/redoc",
@@ -92,7 +92,7 @@ class REST(UvicornService):
         configure_admin(
             app=app,
             session_factory=self.session_factory,
-            title=self.project_name,
+            title=self.title,
             secret_key=self.secret_key,
             debug=self.debug,
         )

@@ -1,5 +1,3 @@
-from argparse import Namespace
-
 import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from aiohttp.web_app import Application
@@ -13,6 +11,7 @@ from lms.clients.telegram import Telegram
 from lms.db.uow import UnitOfWork
 from lms.logic.enroll_student import Enroller
 from lms.rest.api.auth import generate_token
+from lms.rest.args import Parser
 from lms.rest.service import REST
 
 
@@ -41,7 +40,7 @@ def enroller(
 
 @pytest.fixture
 def rest_service(
-    args: Namespace,
+    parser: Parser,
     async_engine: AsyncEngine,
     autopilot: Autopilot,
     soho: Soho,
@@ -51,13 +50,13 @@ def rest_service(
     get_distributor,
 ) -> REST:
     return REST(
-        debug=args.debug,
-        project_name=args.project_name,
-        project_description=args.project_description,
-        project_version=args.project_version,
-        secret_key=args.api_secret_key,
-        address=args.api_address,
-        port=args.api_port,
+        debug=parser.debug,
+        title=parser.api.title,
+        description=parser.api.description,
+        version=parser.api.version,
+        secret_key=parser.security.secret_key,
+        host=parser.api.host,
+        port=parser.api.port,
         engine=async_engine,
         autopilot=autopilot,
         soho=soho,

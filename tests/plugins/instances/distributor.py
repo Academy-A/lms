@@ -1,5 +1,4 @@
 import base64
-from argparse import Namespace
 
 import pytest
 from google_api_service_helper import GoogleDrive, GoogleSheets
@@ -8,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from lms.clients.soho import Soho
 from lms.db.uow import UnitOfWork
 from lms.logic.distribute_homeworks import Distributor
+from lms.rest.args import Parser
 from lms.utils.settings import SettingStorage
 
 
@@ -35,13 +35,13 @@ def google_keys_encoded(google_keys: str) -> str:
 
 
 @pytest.fixture
-def google_sheets(args: Namespace) -> GoogleSheets:
+def google_sheets(parser: Parser) -> GoogleSheets:
     # return GoogleSheets(google_keys=args.google_keys)
     return None
 
 
 @pytest.fixture
-def google_drive(args: Namespace) -> GoogleDrive:
+def google_drive(parser: Parser) -> GoogleDrive:
     # return GoogleDrive(google_keys=args.google_keys)
     return None
 

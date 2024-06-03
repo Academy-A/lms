@@ -1,40 +1,26 @@
-import argparse
+import argclass
 
-import configargparse
-from aiomisc_log import LogFormat, LogLevel
-
-from lms.utils.args import load_google_keys
-
-parser = configargparse.ArgumentParser(
-    allow_abbrev=False,
-    auto_env_var_prefix="APP_",
-    description="Project LMS",
-    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+from lms.domains.args import (
+    AutopilotGroup,
+    CronGroup,
+    DatabaseGroup,
+    GoogleGroup,
+    LogGroup,
 )
 
-parser.add_argument("-D", "--debug", action="store_true")
-parser.add_argument(
-    "-s",
-    "--pool-size",
-    type=int,
-    default=6,
-    help="Thread pool size",
-)
 
-group = parser.add_argument_group("Logging options")
-group.add_argument("--log-level", default=LogLevel.info, choices=LogLevel.choices())
-group.add_argument("--log-format", choices=LogFormat.choices(), default=LogFormat.color)
-
-group = parser.add_argument_group("PostgreSQL options")
-group.add_argument("--pg-dsn", required=True, type=str)
-
-group = parser.add_argument_group("Cron options")
-group.add_argument("--scheduler", default="0/30 * * * *")
-
-group = parser.add_argument_group("Google Keys")
-group.add_argument("--google-keys", required=True, type=load_google_keys)
-
-group = parser.add_argument_group("Autopilot URLs")
-group.add_argument("--regular-notification-url", required=True, type=str)
-group.add_argument("--subscription-notification-url", required=True, type=str)
-group.add_argument("--additional-notification-url", required=True, type=str)
+class Parser(argclass.Parser):
+    debug: bool = argclass.Argument(
+        "-D",
+        "--debug",
+        default=False,
+        type=lambda x: x.lower() == "true",
+    )
+    pool_size: int = argclass.Argument(
+        "-s", "--pool-size", type=int, default=4, help="Thread pool size"
+    )
+    log = LogGroup(title="Logging options")
+    cron = CronGroup(title="Cron options")
+    autopilot = AutopilotGroup(title="Autopilot options")
+    db = DatabaseGroup(title="Database options")
+    google = GoogleGroup(title="Google options")

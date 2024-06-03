@@ -31,6 +31,7 @@ wtforms = "^3.1.2"
 wtforms-sqlalchemy = "^0.4.1"
 aiocache = "^0.12.2"
 sqladmin = {extras = ["full"], version = "^0.16.0"}
+argclass = "^1.0.3"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.5.0"
@@ -71,42 +72,6 @@ target-version = ["py311"]
 known_local_folder = ["lms", "tests"]
 py_version = "311"
 profile = "black"
-
-[tool.mypy]
-plugins = ["pydantic.mypy", "sqlalchemy.ext.mypy.plugin"]
-check_untyped_defs = true
-disallow_incomplete_defs = true
-disallow_untyped_defs = true
-ignore_missing_imports = false
-no_implicit_optional = true
-
-[[tool.mypy.overrides]]
-module = "gunicorn.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "sqlalchemy_utils.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "celery.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "configargparse.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "aiomisc_dependency.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "google_api_service_helper.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "aiocache"
-ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = [
@@ -154,3 +119,20 @@ fixable = ["ALL"]
 quote-style = "double"
 indent-style = "space"
 
+[tool.mypy]
+plugins = ["pydantic.mypy", "sqlalchemy.ext.mypy.plugin"]
+check_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+ignore_missing_imports = false
+no_implicit_optional = true
+
+[[tool.mypy.overrides]]
+module = [
+    "aiocache.*",
+    "aiomisc_dependency.*",
+    "argclass.*",
+    "configargparse.*",
+    "google_api_service_helper.*",
+]
+ignore_missing_imports = true
