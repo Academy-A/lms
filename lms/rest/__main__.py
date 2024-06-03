@@ -3,7 +3,7 @@ import logging
 from aiomisc import entrypoint
 from aiomisc_log import basic_config
 
-from lms.rest.args import parser
+from lms.rest.args import Parser
 from lms.rest.deps import configure_dependencies
 from lms.rest.service import REST
 
@@ -11,34 +11,36 @@ log = logging.getLogger(__name__)
 
 
 def main() -> None:
-    args = parser.parse_args()
+    parser = Parser(auto_env_var_prefix="APP_")
+    parser.parse_args([])
+    parser.sanitize_env()
 
     basic_config(
-        level=args.log_level,
-        log_format=args.log_format,
+        level=parser.log.level,
+        log_format=parser.log.format,
         buffered=False,
     )
 
-    configure_dependencies(args)
+    configure_dependencies(parser)
 
     services = [
         REST(
-            host=args.api_address,
-            port=args.api_port,
-            debug=args.debug,
-            project_name=args.project_name,
-            project_description=args.project_description,
-            project_version=args.project_version,
-            secret_key=args.api_secret_key,
+            host=parser.api.host,
+            port=parser.api.port,
+            debug=parser.debug,
+            title=parser.api.title,
+            description=parser.api.description,
+            version=parser.api.version,
+            secret_key=parser.security.secret_key,
         ),
     ]
 
     with entrypoint(
         *services,
-        log_level=args.log_level,
-        log_format=args.log_format,
-        pool_size=args.pool_size,
-        debug=args.debug,
+        log_level=parser.log.level,
+        log_format=parser.log.format,
+        pool_size=parser.pool_size,
+        debug=parser.debug,
     ) as loop:
         log.info("Services entrypoint started")
         loop.run_forever()

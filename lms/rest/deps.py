@@ -1,4 +1,3 @@
-from argparse import Namespace
 from collections.abc import AsyncGenerator, Callable
 
 from aiomisc_dependency import dependency
@@ -12,15 +11,16 @@ from lms.db.uow import UnitOfWork
 from lms.db.utils import create_async_engine, create_async_session_factory
 from lms.logic.distribute_homeworks import Distributor
 from lms.logic.enroll_student import Enroller
+from lms.rest.args import Parser
 from lms.utils.http import create_web_session
 from lms.utils.settings import SettingStorage
 
 
-def configure_dependencies(args: Namespace) -> None:  # noqa: C901
+def configure_dependencies(parser: Parser) -> None:  # noqa: C901
     @dependency
     async def engine() -> AsyncGenerator[AsyncEngine, None]:
         engine = create_async_engine(
-            connection_uri=args.pg_dsn,
+            connection_uri=parser.db.pg_dsn,
             pool_pre_ping=True,
         )
         yield engine
@@ -44,9 +44,9 @@ def configure_dependencies(args: Namespace) -> None:  # noqa: C901
             yield Telegram(
                 session=session,
                 url=TELEGRAM_BASE_URL,
-                bot_token=args.telegram_bot_token,
-                default_chat_id=args.telegram_chat_id,
-                default_parse_mode=args.telegram_parse_mode,
+                bot_token=parser.telegram.bot_token,
+                default_chat_id=parser.telegram.chat_id,
+                default_parse_mode=parser.telegram.parse_mode,
             )
 
     @dependency
@@ -55,17 +55,17 @@ def configure_dependencies(args: Namespace) -> None:  # noqa: C901
             yield Soho(
                 url=SOHO_BASE_URL,
                 session=session,
-                auth_token=args.soho_api_token,
+                auth_token=parser.soho.token,
                 client_name="Soho Client",
             )
 
     @dependency
     async def google_sheets() -> GoogleSheets:
-        return GoogleSheets(google_keys=args.google_keys)
+        return GoogleSheets(google_keys=parser.google.keys)
 
     @dependency
     async def google_drive() -> GoogleDrive:
-        return GoogleDrive(google_keys=args.google_keys)
+        return GoogleDrive(google_keys=parser.google.keys)
 
     @dependency
     async def get_distributor(
