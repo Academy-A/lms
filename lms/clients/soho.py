@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from http import HTTPStatus
 from types import MappingProxyType
@@ -13,7 +14,7 @@ from lms.clients.base.root_handler import ResponseHandlersType
 from lms.clients.base.timeout import TimeoutType
 
 
-class SohoHomework(BaseModel):
+class SohoHomeworkResponse(BaseModel):
     student_homework_id: int = Field(alias="clientHomeworkId")
     student_soho_id: int = Field(alias="clientId")
     sent_to_review_at: datetime = Field(alias="sentToReviewAt")
@@ -22,7 +23,7 @@ class SohoHomework(BaseModel):
 
 
 class SohoHomeworksResponse(BaseModel):
-    homeworks: list[SohoHomework]
+    homeworks: list[SohoHomeworkResponse]
 
 
 class ClientSchema(BaseModel):
@@ -102,6 +103,18 @@ class Soho(BaseHttpClient):
                 "homeworkId": homework_id,
             },
         )
+
+    async def fetch_all_clients(self) -> list[ClientSchema]:
+        clients = []
+        offset = 0
+        while True:
+            response = await self.client_list(offset=offset)
+            clients.extend(response.clients)
+            if len(response.clients) < response.limit:
+                break
+            offset += len(response.clients)
+            await asyncio.sleep(0.1)
+        return clients
 
     async def client_list(
         self,

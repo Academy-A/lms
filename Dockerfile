@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 RUN pip install -U pip poetry && poetry config virtualenvs.create false
 

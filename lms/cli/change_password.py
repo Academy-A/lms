@@ -63,10 +63,9 @@ async def create_user(
 
 
 async def amain(username: str, password: SecretStr, pg_dsn: PostgresDsn) -> None:
-    engine = create_async_engine(connection_uri=str(pg_dsn))
-    async with AsyncSession(engine) as session:
-        await create_user(session=session, username=username, password=password)
-    await engine.dispose()
+    async with create_async_engine(connection_uri=str(pg_dsn)) as engine:
+        async with AsyncSession(engine) as session:
+            await create_user(session=session, username=username, password=password)
 
 
 def main() -> None:
