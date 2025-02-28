@@ -6,7 +6,7 @@ from alembic.config import CommandLine
 
 from lms.db.utils import make_alembic_config
 
-DEFAULT_PG_DSN = "postgresql://pguser:pgpass@127.0.0.1/pgdb"
+DEFAULT_PG_DSN = "postgresql+asyncpg://pguser:pgpass@127.0.0.1/pgdb"
 
 
 def main() -> None:

@@ -41,7 +41,7 @@ def enroller(
 @pytest.fixture
 def rest_service(
     parser: Parser,
-    async_engine: AsyncEngine,
+    engine: AsyncEngine,
     autopilot: Autopilot,
     soho: Soho,
     telegram: Telegram,
@@ -57,7 +57,7 @@ def rest_service(
         secret_key=parser.security.secret_key,
         host=parser.api.host,
         port=parser.api.port,
-        engine=async_engine,
+        engine=engine,
         autopilot=autopilot,
         soho=soho,
         telegram=telegram,

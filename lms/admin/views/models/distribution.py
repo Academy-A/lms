@@ -53,9 +53,9 @@ class DistributionModelView(BaseModelView, model=DistributionDb):
             distribution = await DistributionRepository(session=session).read_by_id(id)
         dumped_distr = distribution_dump_to_csv_string(distribution)
         response = StreamingResponse(iter([dumped_distr]), media_type="text/csv")
-        response.headers[
-            "Content-Disposition"
-        ] = f"attachment; filename=soho_homeworks_{id}.csv"
+        response.headers["Content-Disposition"] = (
+            f"attachment; filename=soho_homeworks_{id}.csv"
+        )
         return response
 
     @action(

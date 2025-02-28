@@ -19,12 +19,11 @@ from lms.utils.settings import SettingStorage
 def configure_dependencies(parser: Parser) -> None:  # noqa: C901
     @dependency
     async def engine() -> AsyncGenerator[AsyncEngine, None]:
-        engine = create_async_engine(
+        async with create_async_engine(
             connection_uri=parser.db.pg_dsn,
             pool_pre_ping=True,
-        )
-        yield engine
-        await engine.dispose()
+        ) as engine:
+            yield engine
 
     @dependency
     async def session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:

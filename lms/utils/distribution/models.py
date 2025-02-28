@@ -2,11 +2,10 @@ import logging
 import random
 from collections.abc import MutableSequence, Sequence
 from datetime import datetime
-from typing import Any
+from typing import Any, NamedTuple
 
 from pydantic import BaseModel, Field
 
-from lms.clients.soho import SohoHomework
 from lms.generals.enums import DistributionErrorMessage
 from lms.generals.models.distribution import DistributionParams
 from lms.generals.models.reviewer import Reviewer
@@ -15,9 +14,24 @@ from lms.utils.distribution.utils import NameGen
 log = logging.getLogger(__name__)
 
 
-class ErrorHomework(BaseModel):
-    homework: SohoHomework
-    error_message: DistributionErrorMessage
+class StudentDistributeData(NamedTuple):
+    vk_id: int
+    first_name: str
+    last_name: str
+    homework_id: int
+
+    @property
+    def name(self) -> str:
+        return f"{self.first_name} {self.last_name}"
+
+
+class SohoHomework(BaseModel):
+    student_homework_id: int
+    student_soho_id: int
+    sent_to_review_at: datetime
+    chat_url: str
+    student_vk_id: int | None
+    homework_id: int
 
 
 class StudentHomework(BaseModel):
@@ -25,7 +39,12 @@ class StudentHomework(BaseModel):
     student_vk_id: int
     student_soho_id: int
     submission_url: str
-    teacher_product_id: int | None = None
+    homework_id: int
+
+
+class ErrorHomework(BaseModel):
+    homework: StudentHomework
+    error_message: DistributionErrorMessage
 
 
 class DistributionReviewer(Reviewer):
@@ -158,13 +177,7 @@ class Distribution(BaseModel):
         for hw in self.filtered_homeworks[total_actual:]:
             self.error_homeworks.append(
                 ErrorHomework(
-                    homework=SohoHomework(
-                        clientHomeworkId=0,
-                        clientId=0,
-                        sentToReviewAt=datetime.now(),
-                        chatUrl=hw.submission_url,
-                        vk_id=hw.student_vk_id,
-                    ),
+                    homework=hw,
                     error_message=DistributionErrorMessage.STACK_OVERFLOW,
                 )
             )
@@ -201,22 +214,30 @@ class Distribution(BaseModel):
                 r.id,
                 r.optimal_max,
                 len(r.student_homeworks),
-                f"=COUNTA(OFFSET(A2;4;{3 + (5 * (counter - 1))};200;1))",
+                f"=COUNTA(OFFSET(A2;4;{3 + (6 * (counter - 1))};200;1))",
                 "Имя Фамилия",
+            ]
+            column_homework_id: list[int | str] = [
+                "",
+                "",
+                "",
+                "",
+                "Homework ID",
             ]
             for hw in r.student_homeworks:
                 column_identify.append(str(hw.student_vk_id))
                 column_name.append(
                     f'=HYPERLINK("{hw.submission_url}";"{hw.student_name}")'
                 )
-            data.extend([column_identify, column_name, [], [], []])
+                column_homework_id.append(hw.homework_id)
+            data.extend([column_identify, column_name, column_homework_id, [], [], []])
         error_identify: list[int | str] = ["Домашние работы с ошибками"]
         error_name: list[str | int] = [""]
         error_message: list[str | int] = [""]
         for e_hw in self.error_homeworks:
             error_identify.append(e_hw.homework.student_soho_id)
             error_name.append(
-                f'=HYPERLINK("{e_hw.homework.chat_url}";"Ссылка на работу")'
+                f'=HYPERLINK("{e_hw.homework.submission_url}";"Ссылка на работу")'
             )
             error_message.append(e_hw.error_message)
         data.extend([[], error_identify, error_name, error_message])
