@@ -73,8 +73,9 @@ class Telegram(BaseHttpClient):
     async def teacher_overflow_alert(
         self, name: str, max_students: int, vk_id: int, product_id: int
     ) -> None:
-        text = "Teacher {} with VK ID {} was overflow limit {} on product {}".format(
-            name, vk_id, max_students, product_id
+        text = (
+            f"Teacher {name} with VK ID {vk_id} was overflow "
+            "limit {max_students} on product {product_id}"
         )
         data = {
             "chat_id": self._default_chat_id,

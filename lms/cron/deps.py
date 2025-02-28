@@ -14,12 +14,11 @@ from lms.utils.http import create_web_session
 def configure_cron_dependencies(parser: Parser) -> None:
     @dependency
     async def engine() -> AsyncGenerator[AsyncEngine, None]:
-        engine = create_async_engine(
+        async with create_async_engine(
             connection_uri=parser.db.pg_dsn,
             pool_pre_ping=True,
-        )
-        yield engine
-        await engine.dispose()
+        ) as engine:
+            yield engine
 
     @dependency
     async def session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:

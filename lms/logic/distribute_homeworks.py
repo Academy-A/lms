@@ -5,8 +5,7 @@ from datetime import datetime
 from aiomisc import threaded
 from google_api_service_helper import GoogleDrive, GoogleSheets
 
-from lms.clients.soho import Soho, SohoHomework
-from lms.db.repositories.student_product import StudentDistributeData
+from lms.clients.soho import Soho
 from lms.db.uow import UnitOfWork
 from lms.generals.enums import DistributionErrorMessage
 from lms.generals.models.distribution import DistributionParams
@@ -15,6 +14,8 @@ from lms.utils.distribution.models import (
     Distribution,
     DistributionReviewer,
     ErrorHomework,
+    SohoHomework,
+    StudentDistributeData,
     StudentHomework,
 )
 from lms.utils.settings import SettingStorage
@@ -39,11 +40,8 @@ class Distributor:
         homeworks = await self._get_soho_homeworks(params.homework_ids)
         subject = await self._get_subject(params.product_ids[0])
         reviewers = await self._get_reviewers(subject_id=subject.id)
-        student_map = await self._get_student_data_map(
-            subject_id=subject.id,
-            homeworks=homeworks,
-        )
-        filtered_homeworks, error_homeworks = await _filter_homeworks(
+        student_map = await self._get_student_data_map(homeworks=homeworks)
+        filtered_homeworks, error_homeworks = _filter_homeworks(
             homeworks=homeworks,
             student_map=student_map,
         )
@@ -82,7 +80,10 @@ class Distributor:
         homeworks: list[SohoHomework] = []
         for homework_id in homework_ids:
             response = await self.soho.homeworks(homework_id)
-            homeworks.extend(response.homeworks)
+            for homework in response.homeworks:
+                homeworks.append(
+                    SohoHomework(**homework.model_dump(), homework_id=homework_id)
+                )
         return homeworks
 
     async def _get_subject(self, product_id: int) -> Subject:
@@ -95,14 +96,23 @@ class Distributor:
 
     async def _get_student_data_map(
         self,
-        subject_id: int,
         homeworks: Sequence[SohoHomework],
     ) -> Mapping[int, StudentDistributeData]:
-        vk_ids = set(hw.student_vk_id for hw in homeworks if hw.student_vk_id)
-        return await self.uow.student_product.distribute_data(
-            subject_id=subject_id,
-            vk_ids=vk_ids,
-        )
+        clients = await self.soho.fetch_all_clients()
+        student_data_map = {}
+        for homework in homeworks:
+            for client in clients:
+                if client.id == homework.student_soho_id:
+                    student_data_map[homework.student_vk_id or 0] = (
+                        StudentDistributeData(
+                            vk_id=homework.student_vk_id or 0,
+                            first_name=client.first_name,
+                            last_name=client.last_name,
+                            homework_id=homework.homework_id,
+                        )
+                    )
+                    break
+        return student_data_map
 
     async def _add_folder_to_notification(
         self, subject_id: int, folder_id: str
@@ -164,7 +174,7 @@ class Distributor:
         )
 
 
-async def _filter_homeworks(
+def _filter_homeworks(
     homeworks: Sequence[SohoHomework],
     student_map: Mapping[int, StudentDistributeData],
 ) -> tuple[Sequence[StudentHomework], Sequence[ErrorHomework]]:
@@ -185,13 +195,6 @@ async def _filter_homeworks(
                     error_message=DistributionErrorMessage.STUDENT_WITH_VK_ID_NOT_FOUND,
                 )
             )
-        elif student_map[hw.student_vk_id].is_expulsed:
-            error_homeworks.append(
-                ErrorHomework(
-                    homework=hw,
-                    error_message=DistributionErrorMessage.STUDENT_WAS_EXPULSED,
-                )
-            )
         else:
             pre_filtered_homeworks.append(
                 StudentHomework(
@@ -199,7 +202,7 @@ async def _filter_homeworks(
                     student_vk_id=student_map[hw.student_vk_id].vk_id,
                     student_soho_id=hw.student_soho_id,
                     submission_url=hw.chat_url,
-                    teacher_product_id=student_map[hw.student_vk_id].teacher_product_id,
+                    homework_id=hw.homework_id,
                 )
             )
     return pre_filtered_homeworks, error_homeworks
