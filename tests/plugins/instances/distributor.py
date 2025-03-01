@@ -4,11 +4,10 @@ import pytest
 from google_api_service_helper import GoogleDrive, GoogleSheets
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from lms.adapters.db.uow import UnitOfWork
 from lms.clients.soho import Soho
-from lms.db.uow import UnitOfWork
 from lms.logic.distribute_homeworks import Distributor
-from lms.rest.args import Parser
-from lms.utils.settings import SettingStorage
+from lms.presentation.rest.config import Config
 
 
 @pytest.fixture
@@ -35,13 +34,13 @@ def google_keys_encoded(google_keys: str) -> str:
 
 
 @pytest.fixture
-def google_sheets(parser: Parser) -> GoogleSheets:
+def google_sheets(config: Config) -> GoogleSheets:
     # return GoogleSheets(google_keys=args.google_keys)
     return None
 
 
 @pytest.fixture
-def google_drive(parser: Parser) -> GoogleDrive:
+def google_drive(config: Config) -> GoogleDrive:
     # return GoogleDrive(google_keys=args.google_keys)
     return None
 
@@ -60,7 +59,6 @@ async def get_distributor(
             google_drive=google_drive,
             google_sheets=google_sheets,
             soho=soho,
-            settings=SettingStorage(uow=uow),
         )
 
     return new_distributor

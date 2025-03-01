@@ -5,14 +5,14 @@ from aiomisc_log import LogFormat, LogLevel
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from yarl import URL
 
+from lms.adapters.db.uow import UnitOfWork
 from lms.clients.autopilot import Autopilot
 from lms.clients.soho import Soho
 from lms.clients.telegram import Telegram
-from lms.db.uow import UnitOfWork
 from lms.logic.enroll_student import Enroller
-from lms.rest.api.auth import generate_token
-from lms.rest.args import Parser
-from lms.rest.service import REST
+from lms.presentation.rest.api.auth import generate_token
+from lms.presentation.rest.config import Config
+from lms.presentation.rest.service import REST
 
 
 @pytest.fixture
@@ -40,7 +40,7 @@ def enroller(
 
 @pytest.fixture
 def rest_service(
-    parser: Parser,
+    config: Config,
     engine: AsyncEngine,
     autopilot: Autopilot,
     soho: Soho,
@@ -50,13 +50,13 @@ def rest_service(
     get_distributor,
 ) -> REST:
     return REST(
-        debug=parser.debug,
-        title=parser.api.title,
-        description=parser.api.description,
-        version=parser.api.version,
-        secret_key=parser.security.secret_key,
-        host=parser.api.host,
-        port=parser.api.port,
+        debug=config.app.debug,
+        title=config.http.title,
+        description=config.http.description,
+        version=config.http.version,
+        secret_key=config.security.secret_key,
+        host=config.http.host,
+        port=config.http.port,
         engine=engine,
         autopilot=autopilot,
         soho=soho,

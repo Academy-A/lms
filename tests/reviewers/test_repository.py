@@ -1,7 +1,7 @@
 from dirty_equals import IsListOrTuple
 
-from lms.db.repositories.reviewer import ReviewerRepository
-from lms.db.uow import UnitOfWork
+from lms.adapters.db.repositories.reviewer import ReviewerRepository
+from lms.adapters.db.uow import UnitOfWork
 from lms.generals.models.reviewer import Reviewer
 
 

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from lms.db.uow import UnitOfWork
+from lms.adapters.db.uow import UnitOfWork
 from lms.exceptions import (
     StudentNotFoundError,
     StudentProductAlreadyExpulsedError,

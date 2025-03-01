@@ -2,7 +2,7 @@ import factory
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lms.db.models import Reviewer
+from lms.adapters.db.models import Reviewer
 
 
 class ReviewerFactory(factory.Factory):

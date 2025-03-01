@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from yarl import URL
 
-from lms.db.models import TeacherAssignment
+from lms.adapters.db.models import TeacherAssignment
 from lms.generals.enums import TeacherType
 
 API_URL = URL("/v1/students/change-teacher")

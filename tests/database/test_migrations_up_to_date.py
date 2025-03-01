@@ -1,7 +1,7 @@
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from lms.db.models import Base
+from lms.adapters.db.models import Base
 from tests.utils.database import get_diff_db_metadata, run_async_migrations
 
 

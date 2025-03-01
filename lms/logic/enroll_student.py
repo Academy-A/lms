@@ -4,9 +4,9 @@ from collections.abc import Coroutine, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 
+from lms.adapters.db.uow import UnitOfWork
 from lms.clients.autopilot import Autopilot
 from lms.clients.telegram import Telegram
-from lms.db.uow import UnitOfWork
 from lms.exceptions import (
     StudentNotFoundError,
     StudentProductNotFoundError,

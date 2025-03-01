@@ -5,7 +5,7 @@ import pytest
 from factory import fuzzy
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lms.db.models import (
+from lms.adapters.db.models import (
     Teacher,
     TeacherProduct,
 )

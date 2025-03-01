@@ -1,4 +1,4 @@
-from lms.db.uow import UnitOfWork
+from lms.adapters.db.uow import UnitOfWork
 from lms.generals.models.student import Student
 
 
