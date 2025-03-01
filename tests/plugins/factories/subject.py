@@ -4,7 +4,7 @@ import factory
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lms.db.models import Subject
+from lms.adapters.db.models import Subject
 
 
 class SubjectPropertiesFactory(factory.Factory):

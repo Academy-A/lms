@@ -4,7 +4,7 @@ from polyfactory import Use
 from polyfactory.factories.pydantic_factory import ModelFactory
 from polyfactory.factories.sqlalchemy_factory import SQLAlchemyFactory
 
-from lms.db.models import (
+from lms.adapters.db.models import (
     Offer,
     Product,
     ProductGroup,

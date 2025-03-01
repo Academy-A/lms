@@ -2,7 +2,7 @@ from dirty_equals import IsPartialDict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lms.db.models import TeacherAssignment
+from lms.adapters.db.models import TeacherAssignment
 from lms.generals.enums import TeacherType
 from lms.logic.enroll_student import Enroller
 

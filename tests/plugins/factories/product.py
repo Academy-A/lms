@@ -5,7 +5,7 @@ import factory
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lms.db.models import Product, ProductGroup
+from lms.adapters.db.models import Product, ProductGroup
 from tests.plugins.factories.subject import SubjectFactory
 
 

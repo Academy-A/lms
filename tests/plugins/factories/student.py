@@ -5,7 +5,7 @@ import factory
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lms.db.models import Student, StudentProduct
+from lms.adapters.db.models import Student, StudentProduct
 from lms.generals.enums import TeacherType
 from tests.plugins.factories.flow import FlowFactory
 from tests.plugins.factories.offer import OfferFactory

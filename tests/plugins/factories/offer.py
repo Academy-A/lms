@@ -5,7 +5,7 @@ import pytest
 from factory import fuzzy
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lms.db.models import Offer
+from lms.adapters.db.models import Offer
 from lms.generals.enums import TeacherType
 from tests.plugins.factories.product import ProductFactory
 

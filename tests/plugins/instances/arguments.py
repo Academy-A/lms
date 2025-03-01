@@ -1,10 +1,16 @@
 import pytest
 
-from lms.rest.args import Parser
+from lms.adapters.db.config import DatabaseConfig
+from lms.adapters.google.config import GoogleConfig
+from lms.adapters.soho.config import SohoConfig
+from lms.adapters.telegram.config import TelegramConfig
+from lms.application.http import HttpConfig
+from lms.application.security import SecurityConfig
+from lms.presentation.rest.config import Config
 
 
 @pytest.fixture
-def parser(
+def config(
     api_secret_key: str,
     localhost: str,
     rest_port: int,
@@ -13,21 +19,18 @@ def parser(
     telegram_bot_token: str,
     telegram_chat_id: int,
     google_keys_encoded: str,
-) -> Parser:
-    parser = Parser()
-    return parser.parse_args(
-        [
-            "--log-level=debug",
-            "--log-format=color",
-            "--pool-size=6",
-            f"--api-host={localhost}",
-            f"--api-port={rest_port}",
-            f"--api-secret-key={api_secret_key}",
-            f"--pg-dsn={pg_dsn}",
-            f"--soho-api-token={soho_api_token}",
-            f"--telegram-bot-token={telegram_bot_token}",
-            f"--telegram-chat-id={telegram_chat_id}",
-            "--telegram-parse-mode=markdown",
-            f"--google-keys={google_keys_encoded}",
-        ],
+) -> Config:
+    return Config(
+        security=SecurityConfig(secret_key=api_secret_key),
+        http=HttpConfig(
+            host=localhost,
+            port=rest_port,
+        ),
+        db=DatabaseConfig(dsn=pg_dsn),
+        soho=SohoConfig(token=soho_api_token),
+        telegram=TelegramConfig(
+            bot_token=telegram_bot_token,
+            chat_id=telegram_chat_id,
+        ),
+        google=GoogleConfig(keys=google_keys_encoded),
     )

@@ -10,10 +10,10 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
 )
 
-from lms.db.base import Base
-from lms.db.repositories.reviewer import ReviewerRepository
-from lms.db.uow import UnitOfWork
-from lms.db.utils import create_async_engine, make_alembic_config
+from lms.adapters.db.base import Base
+from lms.adapters.db.repositories.reviewer import ReviewerRepository
+from lms.adapters.db.uow import UnitOfWork
+from lms.adapters.db.utils import create_async_engine, make_alembic_config
 from tests.plugins.factories.factories import factories
 
 
@@ -28,11 +28,10 @@ def alembic_config(pg_dsn: str) -> AlembicConfig:
     cmd_options = SimpleNamespace(
         config="alembic.ini",
         name="alembic",
-        pg_dsn=pg_dsn,
         raiseerr=False,
         x=None,
     )
-    return make_alembic_config(cmd_options)
+    return make_alembic_config(cmd_options, dsn=pg_dsn)
 
 
 @pytest.fixture

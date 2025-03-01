@@ -11,5 +11,3 @@ RUN poetry install --no-interaction --no-ansi --without dev --no-root
 COPY ./lms /app/lms
 
 ENV PYTHONPATH=/app
-
-ENTRYPOINT [ "python", "-m", "lms.db", "upgrade", "head" ]

@@ -5,8 +5,8 @@ from datetime import datetime
 from aiomisc import threaded
 from google_api_service_helper import GoogleDrive, GoogleSheets
 
+from lms.adapters.db.uow import UnitOfWork
 from lms.clients.soho import Soho
-from lms.db.uow import UnitOfWork
 from lms.generals.enums import DistributionErrorMessage
 from lms.generals.models.distribution import DistributionParams
 from lms.generals.models.subject import Subject
@@ -18,7 +18,6 @@ from lms.utils.distribution.models import (
     StudentDistributeData,
     StudentHomework,
 )
-from lms.utils.settings import SettingStorage
 
 SHEET_INDEX = 4
 SHEET_MAJOR_DIMENSION = "COLUMNS"
@@ -26,7 +25,6 @@ SHEET_MAJOR_DIMENSION = "COLUMNS"
 
 @dataclass(frozen=True, slots=True)
 class Distributor:
-    settings: SettingStorage
     uow: UnitOfWork
     google_sheets: GoogleSheets
     google_drive: GoogleDrive

@@ -296,18 +296,6 @@ test = ["anyio[trio]", "coverage[toml] (>=4.5)", "hypothesis (>=4.0)", "mock (>=
 trio = ["trio (<0.22)"]
 
 [[package]]
-name = "argclass"
-version = "1.1.0"
-description = "A wrapper around the standard argparse module that allows you to describe argument parsers declaratively"
-optional = false
-python-versions = "<4.0,>=3.8"
-groups = ["main"]
-files = [
-    {file = "argclass-1.1.0-py3-none-any.whl", hash = "sha256:6169f275670125851edec25387d87a23504ba55fc0576d65de343cbd7a75b67b"},
-    {file = "argclass-1.1.0.tar.gz", hash = "sha256:655964e13f1fc1b6a8837cdd69abe6345230afbd3316bc5f78ab0fcb5623238e"},
-]
-
-[[package]]
 name = "asgiref"
 version = "3.8.1"
 description = "ASGI specs, helper code, and adapters"
@@ -3091,4 +3079,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "0733d3be0ec1de086d19445c5b423d93d05a4a82db11c8ae901b3324aa617d02"
+content-hash = "4169a94fabb5c5c2e95e66030ab9bccec88801f8f0f47348ea4886e16ed8a107"

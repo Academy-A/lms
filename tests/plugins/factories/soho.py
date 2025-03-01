@@ -2,7 +2,7 @@ import factory
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lms.db.models import SohoAccount
+from lms.adapters.db.models import SohoAccount
 from tests.plugins.factories.student import StudentFactory
 
 
