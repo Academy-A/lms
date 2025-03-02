@@ -1,16 +1,15 @@
 import logging
+from collections.abc import Callable
 from http import HTTPStatus
+from inspect import iscoroutinefunction
 from types import MappingProxyType
-from typing import ClassVar
+from typing import Any, ClassVar
 
-from aiohttp import hdrs
+from aiohttp import ClientResponse
+from asyncly import BaseHttpClient, ResponseHandlersType, TimeoutType
 from pydantic import BaseModel
 from yarl import URL
 
-from lms.clients.base.client import BaseHttpClient
-from lms.clients.base.handlers import text_parser
-from lms.clients.base.root_handler import ResponseHandlersType
-from lms.clients.base.timeout import TimeoutType
 from lms.generals.enums import TeacherType
 
 log = logging.getLogger(__name__)
@@ -21,6 +20,17 @@ AUTOPILOT_TEACHER_TYPE = {
     TeacherType.CURATOR: 2,
     TeacherType.MENTOR: 3,
 }
+
+
+def text_parser(parser: Callable) -> Callable:
+    async def _parse(resp: ClientResponse) -> Any:
+        resp_data = await resp.text()
+        if iscoroutinefunction(parser):
+            return await parser(resp_data)
+        else:
+            return parser(resp_data)
+
+    return _parse
 
 
 class AutopilotResponseSchema(BaseModel):
@@ -51,7 +61,7 @@ class Autopilot(BaseHttpClient):
         timeout: TimeoutType = DEFAULT_TIMEOUT,
     ) -> AutopilotResponseSchema:
         return await self._make_req(
-            method=hdrs.METH_GET,
+            method="GET",
             url=self._url / target_path,
             handlers=self.SEND_TEACHER_HANDLERS,
             timeout=timeout,
@@ -73,7 +83,7 @@ class Autopilot(BaseHttpClient):
         timeout: TimeoutType = DEFAULT_TIMEOUT,
     ) -> AutopilotResponseSchema:
         return await self._make_req(
-            method=hdrs.METH_GET,
+            method="GET",
             url=self._url / target_path,
             handlers=self.SEND_HOMEWORK_HANDLERS,
             timeout=timeout,

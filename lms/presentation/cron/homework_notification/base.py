@@ -7,8 +7,8 @@ from collections.abc import Sequence
 from google_api_service_helper import GoogleDrive
 from google_api_service_helper.drive.schemas import FileResponse
 
+from lms.adapters.autopilot.client import Autopilot
 from lms.adapters.db.uow import UnitOfWork
-from lms.clients.autopilot import Autopilot
 from lms.generals.models.parsed_file import ParsedFile
 from lms.presentation.cron.homework_notification.utils import (
     get_google_folder_files_recursively,

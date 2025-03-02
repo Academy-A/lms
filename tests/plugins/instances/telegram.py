@@ -1,7 +1,7 @@
 import pytest
 from yarl import URL
 
-from lms.clients.telegram import Telegram
+from lms.adapters.telegram.telegram import Telegram
 from lms.utils.http import create_web_session
 from tests.utils.srvmocker import JsonResponse, MockRoute, MockService, start_service
 
@@ -50,4 +50,5 @@ async def telegram(
             bot_token=telegram_bot_token,
             default_chat_id=telegram_chat_id,
             default_parse_mode=telegram_parse_mode,
+            client_name="telegram",
         )

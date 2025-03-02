@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from google_api_service_helper import GoogleDrive
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from lms.adapters.autopilot.client import Autopilot
 from lms.adapters.db.uow import UnitOfWork
-from lms.clients.autopilot import Autopilot
 from lms.generals.models.subject import Subject
 from lms.presentation.cron.homework_notification.additional import (
     AdditionalNotification,

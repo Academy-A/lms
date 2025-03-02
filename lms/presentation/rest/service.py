@@ -7,10 +7,10 @@ from fastapi.exceptions import RequestValidationError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from starlette.middleware.cors import CORSMiddleware
 
+from lms.adapters.autopilot.client import Autopilot
 from lms.adapters.db.uow import UnitOfWork
-from lms.clients.autopilot import Autopilot
-from lms.clients.soho import Soho
-from lms.clients.telegram import Telegram
+from lms.adapters.soho.soho import Soho
+from lms.adapters.telegram.telegram import Telegram
 from lms.exceptions.base import LMSError
 from lms.logic.enroll_student import Enroller
 from lms.presentation.rest.admin.setup_admin import configure_admin
@@ -95,6 +95,8 @@ class REST(UvicornService):
             title=self.title,
             secret_key=self.secret_key,
             debug=self.debug,
+            host=self.host,
+            port=self.port,
         )
         log.info("REST service app configured")
         return app

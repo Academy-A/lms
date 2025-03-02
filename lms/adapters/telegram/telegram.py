@@ -3,15 +3,12 @@ from http import HTTPStatus
 from types import MappingProxyType
 from typing import Any, ClassVar
 
-from aiohttp import ClientSession, hdrs
+from aiohttp import ClientSession
 from aiomisc import asyncbackoff
+from asyncly import BaseHttpClient, ResponseHandlersType, TimeoutType
+from asyncly.client.handlers.pydantic import parse_model
 from pydantic import BaseModel, Field
 from yarl import URL
-
-from lms.clients.base.client import BaseHttpClient
-from lms.clients.base.handlers import parse_model
-from lms.clients.base.root_handler import ResponseHandlersType
-from lms.clients.base.timeout import TimeoutType
 
 TELEGRAM_BASE_URL = URL("https://api.telegram.org")
 
@@ -63,7 +60,7 @@ class Telegram(BaseHttpClient):
         default_parse_mode: str,
         url: URL,
         session: ClientSession,
-        client_name: str | None = None,
+        client_name: str,
     ):
         super().__init__(url=url, session=session, client_name=client_name)
         self._bot_token = bot_token
@@ -91,7 +88,7 @@ class Telegram(BaseHttpClient):
         timeout: TimeoutType = DEFAULT_TIMEOUT,
     ) -> TelegramSendMessageSchema:
         return await self._make_req(
-            method=hdrs.METH_POST,
+            method="POST",
             url=self._url / f"bot{self._bot_token}/sendMessage",
             handlers=self.SEND_MESSAGE_HANDLERS,
             timeout=timeout,

@@ -4,14 +4,11 @@ from http import HTTPStatus
 from types import MappingProxyType
 from typing import ClassVar
 
-from aiohttp import ClientSession, hdrs
+from aiohttp import ClientSession
+from asyncly import BaseHttpClient, ResponseHandlersType, TimeoutType
+from asyncly.client.handlers.pydantic import parse_model
 from pydantic import BaseModel, Field
 from yarl import URL
-
-from lms.clients.base.client import BaseHttpClient
-from lms.clients.base.handlers import parse_model
-from lms.clients.base.root_handler import ResponseHandlersType
-from lms.clients.base.timeout import TimeoutType
 
 
 class SohoHomeworkResponse(BaseModel):
@@ -60,7 +57,7 @@ SOHO_BASE_URL = URL("https://api.soholms.com")
 
 
 class Soho(BaseHttpClient):
-    DEFAULT_TIMEOUT: ClassVar[TimeoutType] = 2
+    DEFAULT_TIMEOUT: ClassVar[TimeoutType] = 30
 
     HOMEWORKS_FOR_REVIEW_HANDLERS: ResponseHandlersType = MappingProxyType(
         {
@@ -83,7 +80,7 @@ class Soho(BaseHttpClient):
         url: URL,
         session: ClientSession,
         auth_token: str,
-        client_name: str | None = None,
+        client_name: str,
     ):
         super().__init__(url, session, client_name)
         self._auth_header = {"Authorization": auth_token}
@@ -94,7 +91,7 @@ class Soho(BaseHttpClient):
         timeout: TimeoutType = DEFAULT_TIMEOUT,
     ) -> SohoHomeworksResponse:
         return await self._make_req(
-            method=hdrs.METH_POST,
+            method="POST",
             url=self._url / "api/v1/learning/homework/for_review_list",
             headers=self._auth_header,
             handlers=self.HOMEWORKS_FOR_REVIEW_HANDLERS,
@@ -113,7 +110,7 @@ class Soho(BaseHttpClient):
             if len(response.clients) < response.limit:
                 break
             offset += len(response.clients)
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.5)
         return clients
 
     async def client_list(
@@ -123,7 +120,7 @@ class Soho(BaseHttpClient):
         timeout: TimeoutType = DEFAULT_TIMEOUT,
     ) -> SohoClientListSchema:
         return await self._make_req(
-            method=hdrs.METH_POST,
+            method="POST",
             url=self._url / "api/v1/client/find_clients",
             headers=self._auth_header,
             handlers=self.CLIENT_LIST_HANDLERS,
@@ -139,7 +136,7 @@ class Soho(BaseHttpClient):
         timeout: TimeoutType = DEFAULT_TIMEOUT,
     ) -> SohoProductListSchema:
         return await self._make_req(
-            method=hdrs.METH_POST,
+            method="POST",
             url=self._url / "api/v1/product/list",
             headers=self._auth_header,
             handlers=self.PRODUCT_LIST_HANDLERS,

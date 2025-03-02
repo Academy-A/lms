@@ -41,6 +41,8 @@ def configure_admin(
     session_factory: async_sessionmaker[AsyncSession],
     title: str,
     secret_key: str,
+    host: str,
+    port: int,
     debug: bool,
 ) -> None:
     auth_backend = AuthBackend(
@@ -74,5 +76,7 @@ def configure_admin(
     admin.add_view(DistributionView)
     admin._views[-1].session_factory = session_factory  # type: ignore[union-attr]
     admin._views[-1].secret_key = secret_key  # type: ignore[union-attr]
+    admin._views[-1].host = host  # type: ignore[union-attr]
+    admin._views[-1].port = port  # type: ignore[union-attr]
     admin.add_view(TeacherProductDashboardView)
     admin._views[-1].session_factory = session_factory  # type: ignore[union-attr]
