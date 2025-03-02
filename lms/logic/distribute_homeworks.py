@@ -188,14 +188,7 @@ def _filter_homeworks(
             submission_url=hw.chat_url,
             homework_id=hw.homework_id,
         )
-        if hw.student_vk_id is None:
-            error_homeworks.append(
-                ErrorHomework(
-                    homework=sh,
-                    error_message=DistributionErrorMessage.HOMEWORK_WITHOUT_VK_ID,
-                )
-            )
-        elif hw.student_vk_id not in student_map:
+        if hw.student_vk_id not in student_map:
             error_homeworks.append(
                 ErrorHomework(
                     homework=sh,
