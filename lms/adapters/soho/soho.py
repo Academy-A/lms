@@ -5,6 +5,7 @@ from types import MappingProxyType
 from typing import ClassVar
 
 from aiohttp import ClientSession
+from aiomisc import asyncretry
 from asyncly import BaseHttpClient, ResponseHandlersType, TimeoutType
 from asyncly.client.handlers.pydantic import parse_model
 from pydantic import BaseModel, Field
@@ -113,6 +114,7 @@ class Soho(BaseHttpClient):
             await asyncio.sleep(0.5)
         return clients
 
+    @asyncretry(max_tries=5, pause=1)
     async def client_list(
         self,
         offset: int = 0,
