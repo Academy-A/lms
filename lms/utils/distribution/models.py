@@ -19,6 +19,7 @@ class StudentDistributeData(NamedTuple):
     first_name: str
     last_name: str
     homework_id: int
+    soho_id: int
 
     @property
     def name(self) -> str:
