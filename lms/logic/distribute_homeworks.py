@@ -7,7 +7,6 @@ from google_api_service_helper import GoogleDrive, GoogleSheets
 
 from lms.adapters.db.uow import UnitOfWork
 from lms.adapters.soho.soho import Soho
-from lms.generals.enums import DistributionErrorMessage
 from lms.generals.models.distribution import DistributionParams
 from lms.generals.models.subject import Subject
 from lms.utils.distribution.models import (
@@ -188,13 +187,5 @@ def _filter_homeworks(
             submission_url=hw.chat_url,
             homework_id=hw.homework_id,
         )
-        if hw.student_vk_id not in student_map:
-            error_homeworks.append(
-                ErrorHomework(
-                    homework=sh,
-                    error_message=DistributionErrorMessage.STUDENT_WITH_VK_ID_NOT_FOUND,
-                )
-            )
-        else:
-            pre_filtered_homeworks.append(sh)
+        pre_filtered_homeworks.append(sh)
     return pre_filtered_homeworks, error_homeworks
