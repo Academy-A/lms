@@ -100,13 +100,12 @@ class Distributor:
         for homework in homeworks:
             for client in clients:
                 if client.id == homework.student_soho_id:
-                    student_data_map[homework.student_vk_id or 0] = (
-                        StudentDistributeData(
-                            vk_id=homework.student_vk_id or 0,
-                            first_name=client.first_name,
-                            last_name=client.last_name,
-                            homework_id=homework.homework_id,
-                        )
+                    student_data_map[client.id] = StudentDistributeData(
+                        vk_id=homework.student_vk_id or 0,
+                        first_name=client.first_name,
+                        last_name=client.last_name,
+                        homework_id=homework.homework_id,
+                        soho_id=client.id,
                     )
                     break
         return student_data_map
@@ -179,10 +178,8 @@ def _filter_homeworks(
     error_homeworks: list[ErrorHomework] = list()
     for hw in homeworks:
         sh = StudentHomework(
-            student_name=student_map[hw.student_vk_id].name if hw.student_vk_id else "",
-            student_vk_id=student_map[hw.student_vk_id].vk_id
-            if hw.student_vk_id
-            else 0,
+            student_name=student_map[hw.student_soho_id].name,
+            student_vk_id=student_map[hw.student_soho_id].vk_id,
             student_soho_id=hw.student_soho_id,
             submission_url=hw.chat_url,
             homework_id=hw.homework_id,
