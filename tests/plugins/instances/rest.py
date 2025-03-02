@@ -5,10 +5,10 @@ from aiomisc_log import LogFormat, LogLevel
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from yarl import URL
 
+from lms.adapters.autopilot.client import Autopilot
 from lms.adapters.db.uow import UnitOfWork
-from lms.clients.autopilot import Autopilot
-from lms.clients.soho import Soho
-from lms.clients.telegram import Telegram
+from lms.adapters.soho.soho import Soho
+from lms.adapters.telegram.telegram import Telegram
 from lms.logic.enroll_student import Enroller
 from lms.presentation.rest.api.auth import generate_token
 from lms.presentation.rest.config import Config

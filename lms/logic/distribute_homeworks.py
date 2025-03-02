@@ -6,7 +6,7 @@ from aiomisc import threaded
 from google_api_service_helper import GoogleDrive, GoogleSheets
 
 from lms.adapters.db.uow import UnitOfWork
-from lms.clients.soho import Soho
+from lms.adapters.soho.soho import Soho
 from lms.generals.enums import DistributionErrorMessage
 from lms.generals.models.distribution import DistributionParams
 from lms.generals.models.subject import Subject
@@ -179,28 +179,29 @@ def _filter_homeworks(
     pre_filtered_homeworks: list[StudentHomework] = list()
     error_homeworks: list[ErrorHomework] = list()
     for hw in homeworks:
+        sh = StudentHomework(
+            student_name=student_map[hw.student_vk_id].name if hw.student_vk_id else "",
+            student_vk_id=student_map[hw.student_vk_id].vk_id
+            if hw.student_vk_id
+            else 0,
+            student_soho_id=hw.student_soho_id,
+            submission_url=hw.chat_url,
+            homework_id=hw.homework_id,
+        )
         if hw.student_vk_id is None:
             error_homeworks.append(
                 ErrorHomework(
-                    homework=hw,
+                    homework=sh,
                     error_message=DistributionErrorMessage.HOMEWORK_WITHOUT_VK_ID,
                 )
             )
         elif hw.student_vk_id not in student_map:
             error_homeworks.append(
                 ErrorHomework(
-                    homework=hw,
+                    homework=sh,
                     error_message=DistributionErrorMessage.STUDENT_WITH_VK_ID_NOT_FOUND,
                 )
             )
         else:
-            pre_filtered_homeworks.append(
-                StudentHomework(
-                    student_name=student_map[hw.student_vk_id].name,
-                    student_vk_id=student_map[hw.student_vk_id].vk_id,
-                    student_soho_id=hw.student_soho_id,
-                    submission_url=hw.chat_url,
-                    homework_id=hw.homework_id,
-                )
-            )
+            pre_filtered_homeworks.append(sh)
     return pre_filtered_homeworks, error_homeworks

@@ -311,6 +311,26 @@ files = [
 tests = ["mypy (>=0.800)", "pytest", "pytest-asyncio"]
 
 [[package]]
+name = "asyncly"
+version = "0.3.3"
+description = "Simple HTTP client and server for your integrations based on aiohttp"
+optional = false
+python-versions = "<4.0,>=3.10"
+groups = ["main"]
+files = [
+    {file = "asyncly-0.3.3-py3-none-any.whl", hash = "sha256:11902c8039798e1884f56d4e5bd213c456c57e17f67567b23eb80b00066916be"},
+    {file = "asyncly-0.3.3.tar.gz", hash = "sha256:5cc2910d1fa3d7aede98ffc096278416f071223baf1b05db436a0d696edb2b96"},
+]
+
+[package.dependencies]
+aiohttp = ">=3.9.5,<4.0.0"
+
+[package.extras]
+msgspec = ["msgspec (>=0.18.6,<0.19.0)"]
+orjson = ["orjson (>=3.10.6,<4.0.0)"]
+pydantic = ["pydantic (>=2.8.2,<3.0.0)"]
+
+[[package]]
 name = "asyncpg"
 version = "0.30.0"
 description = "An asyncio PostgreSQL driver"
@@ -3079,4 +3099,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "4169a94fabb5c5c2e95e66030ab9bccec88801f8f0f47348ea4886e16ed8a107"
+content-hash = "cdf16c98c881d760b31b2b4c71a9a416ef5f877871266f768a8b88465e54ebe0"

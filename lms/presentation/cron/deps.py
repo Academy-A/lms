@@ -4,8 +4,8 @@ from aiomisc_dependency import dependency
 from google_api_service_helper import GoogleDrive
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
+from lms.adapters.autopilot.client import AUTOPILOT_BASE_URL, Autopilot
 from lms.adapters.db.utils import create_async_engine, create_async_session_factory
-from lms.clients.autopilot import AUTOPILOT_BASE_URL, Autopilot
 from lms.presentation.cron.config import Config
 from lms.presentation.cron.homework_notification.builder import NotificationBuilder
 from lms.utils.http import create_web_session
@@ -30,6 +30,7 @@ def configure_cron_dependencies(config: Config) -> None:
             yield Autopilot(
                 url=AUTOPILOT_BASE_URL,
                 session=session,
+                client_name="autopilot",
             )
 
     @dependency

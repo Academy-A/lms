@@ -4,11 +4,11 @@ from aiomisc_dependency import dependency
 from google_api_service_helper import GoogleDrive, GoogleSheets
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
+from lms.adapters.autopilot.client import AUTOPILOT_BASE_URL, Autopilot
 from lms.adapters.db.uow import UnitOfWork
 from lms.adapters.db.utils import create_async_engine, create_async_session_factory
-from lms.clients.autopilot import AUTOPILOT_BASE_URL, Autopilot
-from lms.clients.soho import SOHO_BASE_URL, Soho
-from lms.clients.telegram import TELEGRAM_BASE_URL, Telegram
+from lms.adapters.soho.soho import SOHO_BASE_URL, Soho
+from lms.adapters.telegram.telegram import TELEGRAM_BASE_URL, Telegram
 from lms.logic.distribute_homeworks import Distributor
 from lms.logic.enroll_student import Enroller
 from lms.presentation.rest.config import Config
@@ -34,6 +34,7 @@ def configure_dependencies(config: Config) -> None:  # noqa: C901
             yield Autopilot(
                 url=AUTOPILOT_BASE_URL,
                 session=session,
+                client_name="autopilot",
             )
 
     @dependency
@@ -45,6 +46,7 @@ def configure_dependencies(config: Config) -> None:  # noqa: C901
                 bot_token=config.telegram.bot_token,
                 default_chat_id=config.telegram.chat_id,
                 default_parse_mode=config.telegram.parse_mode,
+                client_name="telegram",
             )
 
     @dependency

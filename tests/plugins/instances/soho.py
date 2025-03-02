@@ -1,7 +1,7 @@
 import pytest
 from yarl import URL
 
-from lms.clients.soho import Soho
+from lms.adapters.soho.soho import Soho
 from lms.utils.http import create_web_session
 from tests.utils.srvmocker.models import MockRoute, MockService
 from tests.utils.srvmocker.responses import JsonResponse
@@ -42,4 +42,5 @@ async def soho(
             url=soho_url,
             session=session,
             auth_token=soho_api_token,
+            client_name="soho",
         )

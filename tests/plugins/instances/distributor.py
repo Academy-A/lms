@@ -5,7 +5,7 @@ from google_api_service_helper import GoogleDrive, GoogleSheets
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from lms.adapters.db.uow import UnitOfWork
-from lms.clients.soho import Soho
+from lms.adapters.soho.soho import Soho
 from lms.logic.distribute_homeworks import Distributor
 from lms.presentation.rest.config import Config
 

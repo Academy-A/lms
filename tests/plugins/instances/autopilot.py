@@ -1,7 +1,7 @@
 import pytest
 from yarl import URL
 
-from lms.clients.autopilot import Autopilot
+from lms.adapters.autopilot.client import Autopilot
 from lms.utils.http import create_web_session
 from tests.utils.srvmocker.models import MockService
 from tests.utils.srvmocker.service import start_service
@@ -25,4 +25,5 @@ async def autopilot(autopilot_url: URL) -> Autopilot:
         yield Autopilot(
             url=autopilot_url,
             session=session,
+            client_name="autopilot",
         )
