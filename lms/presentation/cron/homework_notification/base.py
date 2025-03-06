@@ -3,6 +3,7 @@ import asyncio
 import logging
 import re
 from collections.abc import Sequence
+from typing import Final
 
 from google_api_service_helper import GoogleDrive
 from google_api_service_helper.drive.schemas import FileResponse
@@ -14,7 +15,7 @@ from lms.presentation.cron.homework_notification.utils import (
     get_google_folder_files_recursively,
 )
 
-NOTIFICATION_TIME_PAUSE_SECONDS = 0.3
+NOTIFICATION_TIME_PAUSE_SECONDS: Final[float] = 0.3
 
 log = logging.getLogger(__name__)
 
