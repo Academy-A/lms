@@ -1,9 +1,9 @@
 import logging
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from inspect import iscoroutinefunction
 from types import MappingProxyType
-from typing import Any, ClassVar
+from typing import ClassVar, TypeVar
 
 from aiohttp import ClientResponse
 from asyncly import BaseHttpClient, ResponseHandlersType, TimeoutType
@@ -21,10 +21,14 @@ AUTOPILOT_TEACHER_TYPE = {
     TeacherType.MENTOR: 3,
 }
 
+RT = TypeVar("RT")
 
-def text_parser(parser: Callable) -> Callable:
-    async def _parse(resp: ClientResponse) -> Any:
-        resp_data = await resp.text()
+
+def text_parser(
+    parser: Callable[[str], RT],
+) -> Callable[[ClientResponse], Awaitable[RT]]:
+    async def _parse(response: ClientResponse) -> RT:
+        resp_data = await response.text()
         if iscoroutinefunction(parser):
             return await parser(resp_data)
         else:

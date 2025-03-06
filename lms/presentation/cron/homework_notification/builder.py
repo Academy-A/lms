@@ -1,5 +1,6 @@
 from collections.abc import AsyncGenerator, Callable, Sequence
 from dataclasses import dataclass
+from typing import Final
 
 from google_api_service_helper import GoogleDrive
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -15,6 +16,8 @@ from lms.presentation.cron.homework_notification.regular import RegularNotificat
 from lms.presentation.cron.homework_notification.subscription import (
     SubscriptionNotification,
 )
+
+RUSSIA_SUBJECT_ID: Final[int] = 1
 
 
 @dataclass(frozen=True)
@@ -55,7 +58,7 @@ class NotificationBuilder:
     ) -> AsyncGenerator[Callable, None]:
         uow = UnitOfWork(self.session_factory)
         async with uow.start():
-            subject = await uow.subject.read_by_id(1)
+            subject = await uow.subject.read_by_id(RUSSIA_SUBJECT_ID)
             yield await self._build_notify_callback(
                 subject=subject,
                 autopilot_url=self.subscription_notification_url,
@@ -68,7 +71,7 @@ class NotificationBuilder:
     ) -> AsyncGenerator[Callable, None]:
         uow = UnitOfWork(self.session_factory)
         async with uow.start():
-            subject = await uow.subject.read_by_id(1)
+            subject = await uow.subject.read_by_id(RUSSIA_SUBJECT_ID)
             yield await self._build_notify_callback(
                 subject=subject,
                 autopilot_url=self.additional_notification_url,
